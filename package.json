@@ -4,5 +4,11 @@
   "main": "index.js",
   "repository": "https://github.com/amoebajs/builder.git",
   "author": "bigmogician <bigmogician@outlook.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "npx tsc"
+  },
+  "dependencies": {
+    "typescript": "3.7.1-rc"
+  }
 }
