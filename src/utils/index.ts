@@ -19,6 +19,7 @@ export function emitSourceFileSync(options: IFileCreateOptions) {
   fs.writeFileSync(sourceFile.fileName, printer.printFile(sourceFile), {
     flag: "w+"
   });
+  console.log("emit --> " + sourceFile.fileName);
 }
 
 export function createSourceFile(options: IFileCreateOptions) {
@@ -105,7 +106,31 @@ export function createJsxElement(
   );
 }
 
-export function createTextDivBlock(text: string, onClickRefName: string) {
+function createTextDivBlockParenExpression(
+  text: string,
+  onClickRefName: string
+) {
+  return ts.createParen(
+    createJsxElement("div", [], {}, [
+      createJsxElement("span", [], {}, [text]),
+      createJsxElement("br", [], {}),
+      createJsxElement("button", [], {
+        onClick: ts.createJsxExpression(
+          undefined,
+          ts.createPropertyAccess(
+            ts.createIdentifier("props"),
+            ts.createIdentifier(onClickRefName)
+          )
+        )
+      })
+    ])
+  );
+}
+
+export function createTextDivBlockArrowFn(
+  text: string,
+  onClickRefName: string
+) {
   return ts.createArrowFunction(
     [],
     [],
@@ -121,20 +146,58 @@ export function createTextDivBlock(text: string, onClickRefName: string) {
     ],
     undefined,
     ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    ts.createParen(
-      createJsxElement("div", [], {}, [
-        createJsxElement("span", [], {}, [text]),
-        createJsxElement("br", [], {}),
-        createJsxElement("button", [], {
-          onClick: ts.createJsxExpression(
+    createTextDivBlockParenExpression(text, onClickRefName)
+  );
+}
+
+export function createTextDivBlockClass(
+  name: string,
+  text: string,
+  onClickRefName: string,
+  isExport = false
+) {
+  const _ANY = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+  return ts.createClassDeclaration(
+    [],
+    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    ts.createIdentifier(name),
+    [],
+    [
+      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.createExpressionWithTypeArguments(
+          [_ANY, _ANY, _ANY],
+          ts.createPropertyAccess(
+            ts.createIdentifier("React"),
+            ts.createIdentifier("PureComponent")
+          )
+        )
+      ])
+    ],
+    [
+      ts.createMethod(
+        [],
+        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+        undefined,
+        ts.createIdentifier("render"),
+        undefined,
+        [],
+        [],
+        undefined,
+        ts.createBlock([
+          createConstVariableStatement(
+            "props",
+            false,
             undefined,
             ts.createPropertyAccess(
-              ts.createIdentifier("props"),
-              ts.createIdentifier(onClickRefName)
+              ts.createThis(),
+              ts.createIdentifier("props")
             )
+          ),
+          ts.createReturn(
+            createTextDivBlockParenExpression(text, onClickRefName)
           )
-        })
-      ])
-    )
+        ])
+      )
+    ]
   );
 }
