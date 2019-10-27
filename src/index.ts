@@ -5,10 +5,10 @@ import {
   createTextDivBlockArrowFn,
   emitSourceFileSync,
   createReactNamespaceImport,
-  createStatelessReactCompTypeNode,
-  createConstVariableStatement,
-  createTextDivBlockClass
+  createTextDivBlockClass,
+  createCustomPureClass
 } from "./utils";
+import { RandomMathProvider } from "./providers";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -40,6 +40,25 @@ emitSourceFileSync({
       "MyClassComponent",
       "class-demo",
       "onButtonClick",
+      true
+    )
+  ]
+});
+
+emitSourceFileSync({
+  folder: "build",
+  filename: "custom-component.tsx",
+  statements: [
+    // 创建React导入声明语句
+    createReactNamespaceImport(),
+    createCustomPureClass(
+      "MyCustomComponent",
+      [
+        RandomMathProvider,
+        RandomMathProvider,
+        RandomMathProvider,
+        RandomMathProvider
+      ],
       true
     )
   ]
