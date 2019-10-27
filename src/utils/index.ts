@@ -4,6 +4,9 @@ import ts from "typescript";
 import { PROJ_ROOT } from "./env";
 import { FolderError } from "../errors/folder";
 
+const REACT_NS = "React";
+const REACT_PROPS = "props";
+
 export interface IFileCreateOptions {
   folder: string;
   filename: string;
@@ -38,7 +41,7 @@ export function createReactNamespaceImport() {
   return ts.createImportDeclaration(
     [],
     [],
-    ts.createImportClause(ts.createIdentifier("React"), undefined),
+    ts.createImportClause(ts.createIdentifier(REACT_NS), undefined),
     ts.createStringLiteral("react")
   );
 }
@@ -46,7 +49,7 @@ export function createReactNamespaceImport() {
 export function createStatelessReactCompTypeNode() {
   return ts.createTypeReferenceNode(
     ts.createQualifiedName(
-      ts.createIdentifier("React"),
+      ts.createIdentifier(REACT_NS),
       ts.createIdentifier("StatelessComponent")
     ),
     [ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)]
@@ -118,7 +121,7 @@ function createTextDivBlockParenExpression(
         onClick: ts.createJsxExpression(
           undefined,
           ts.createPropertyAccess(
-            ts.createIdentifier("props"),
+            ts.createIdentifier(REACT_PROPS),
             ts.createIdentifier(onClickRefName)
           )
         )
@@ -145,7 +148,7 @@ export function createTextDivBlockArrowFn(
           [],
           [],
           undefined,
-          ts.createIdentifier("props"),
+          ts.createIdentifier(REACT_PROPS),
           undefined,
           ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
         )
@@ -174,7 +177,7 @@ export function createTextDivBlockClass(
         ts.createExpressionWithTypeArguments(
           [_ANY, _ANY, _ANY],
           ts.createPropertyAccess(
-            ts.createIdentifier("React"),
+            ts.createIdentifier(REACT_NS),
             ts.createIdentifier("PureComponent")
           )
         )
@@ -192,12 +195,12 @@ export function createTextDivBlockClass(
         undefined,
         ts.createBlock([
           createConstVariableStatement(
-            "props",
+            REACT_PROPS,
             false,
             undefined,
             ts.createPropertyAccess(
               ts.createThis(),
-              ts.createIdentifier("props")
+              ts.createIdentifier(REACT_PROPS)
             )
           ),
           ts.createReturn(
