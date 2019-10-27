@@ -1,32 +1,35 @@
 import ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
-import { createTextDivBlock, emitSourceFileSync } from "./utils";
+import {
+  createTextDivBlock,
+  emitSourceFileSync,
+  createReactNamespaceImport,
+  createStatelessReactCompTypeNode,
+  createConstVariableStatement
+} from "./utils";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
 if (!fs.existsSync(buildFolder)) fs.mkdirSync(buildFolder);
 
-// 创建一个Jsx语法块的demo
-const block = createTextDivBlock("demo", "onClick");
-
 // 将语法块赋值给const变量component，并输出源代码到`build/demo.tsx`
 emitSourceFileSync({
   folder: "build",
-  filename: "demo.tsx",
+  filename: "stateless-component.tsx",
   statements: [
-    ts.createVariableStatement(
-      [],
-      ts.createVariableDeclarationList(
-        [
-          ts.createVariableDeclaration(
-            ts.createIdentifier("component"),
-            undefined,
-            block
-          )
-        ],
-        ts.NodeFlags.Const
-      )
+    // 创建React导入声明语句
+    createReactNamespaceImport(),
+    // 创建一个Jsx语法块的demo组件
+    createConstVariableStatement(
+      // 组件名称
+      "MyCompnent",
+      // named导出组件
+      true,
+      // 创建stateless组件类型node
+      createStatelessReactCompTypeNode(),
+      // 组件逻辑
+      createTextDivBlock("demo", "onButtonClick")
     )
   ]
 });

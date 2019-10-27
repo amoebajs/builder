@@ -33,6 +33,46 @@ export function createSourceFile(options: IFileCreateOptions) {
   return ts.updateSourceFileNode(sourceFile, options.statements);
 }
 
+export function createReactNamespaceImport() {
+  return ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(ts.createIdentifier("React"), undefined),
+    ts.createStringLiteral("react")
+  );
+}
+
+export function createStatelessReactCompTypeNode() {
+  return ts.createTypeReferenceNode(
+    ts.createQualifiedName(
+      ts.createIdentifier("React"),
+      ts.createIdentifier("StatelessComponent")
+    ),
+    [ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)]
+  );
+}
+
+export function createConstVariableStatement(
+  name: string,
+  isExport = false,
+  typeNode?: ts.TypeNode,
+  initializer?: ts.Expression
+) {
+  return ts.createVariableStatement(
+    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    ts.createVariableDeclarationList(
+      [
+        ts.createVariableDeclaration(
+          ts.createIdentifier(name),
+          typeNode,
+          initializer
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  );
+}
+
 interface IJsxAttrs {
   [key: string]: ts.JsxExpression | string;
 }
@@ -66,19 +106,35 @@ export function createJsxElement(
 }
 
 export function createTextDivBlock(text: string, onClickRefName: string) {
-  return ts.createParen(
-    createJsxElement("div", [], {}, [
-      createJsxElement("span", [], {}, [text]),
-      createJsxElement("br", [], {}),
-      createJsxElement("button", [], {
-        onClick: ts.createJsxExpression(
-          undefined,
-          ts.createPropertyAccess(
-            ts.createThis(),
-            ts.createIdentifier(onClickRefName)
+  return ts.createArrowFunction(
+    [],
+    [],
+    [
+      ts.createParameter(
+        [],
+        [],
+        undefined,
+        ts.createIdentifier("props"),
+        undefined,
+        ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+      )
+    ],
+    undefined,
+    ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+    ts.createParen(
+      createJsxElement("div", [], {}, [
+        createJsxElement("span", [], {}, [text]),
+        createJsxElement("br", [], {}),
+        createJsxElement("button", [], {
+          onClick: ts.createJsxExpression(
+            undefined,
+            ts.createPropertyAccess(
+              ts.createIdentifier("props"),
+              ts.createIdentifier(onClickRefName)
+            )
           )
-        )
-      })
-    ])
+        })
+      ])
+    )
   );
 }
