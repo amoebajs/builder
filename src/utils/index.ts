@@ -128,25 +128,32 @@ function createTextDivBlockParenExpression(
 }
 
 export function createTextDivBlockArrowFn(
+  name: string,
   text: string,
-  onClickRefName: string
+  onClickRefName: string,
+  isExport = false
 ) {
-  return ts.createArrowFunction(
-    [],
-    [],
-    [
-      ts.createParameter(
-        [],
-        [],
-        undefined,
-        ts.createIdentifier("props"),
-        undefined,
-        ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
-      )
-    ],
-    undefined,
-    ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-    createTextDivBlockParenExpression(text, onClickRefName)
+  return createConstVariableStatement(
+    name,
+    isExport,
+    createStatelessReactCompTypeNode(),
+    ts.createArrowFunction(
+      [],
+      [],
+      [
+        ts.createParameter(
+          [],
+          [],
+          undefined,
+          ts.createIdentifier("props"),
+          undefined,
+          ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+        )
+      ],
+      undefined,
+      ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      createTextDivBlockParenExpression(text, onClickRefName)
+    )
   );
 }
 

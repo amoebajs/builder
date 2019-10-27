@@ -21,15 +21,11 @@ emitSourceFileSync({
     // 创建React导入声明语句
     createReactNamespaceImport(),
     // 创建一个Jsx语法块的demo组件
-    createConstVariableStatement(
-      // 组件名称
-      "MyCompnent",
-      // named导出组件
-      true,
-      // 创建stateless组件类型node
-      createStatelessReactCompTypeNode(),
-      // 组件逻辑
-      createTextDivBlockArrowFn("stateless-demo", "onButtonClick")
+    createTextDivBlockArrowFn(
+      "MyArrowComponent",
+      "stateless-demo",
+      "onButtonClick",
+      true
     )
   ]
 });
