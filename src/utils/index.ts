@@ -1,84 +1,194 @@
-import * as fs from "fs";
-import * as path from "path";
 import ts from "typescript";
-import { PROJ_ROOT } from "./env";
-import { FolderError } from "../errors/folder";
+import { createJsxElement, createConstVariableStatement } from "./base";
+import { ICustomProvider } from "../providers";
 
-export interface IFileCreateOptions {
-  folder: string;
-  filename: string;
-  statements: ts.Statement[];
-}
+export * from "./base";
 
-export function emitSourceFileSync(options: IFileCreateOptions) {
-  const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
-  if (!fs.existsSync(dir))
-    throw new FolderError(`folder [${options.folder}] is not exist.`);
-  const printer = ts.createPrinter();
-  const sourceFile = createSourceFile(options);
-  fs.writeFileSync(sourceFile.fileName, printer.printFile(sourceFile), {
-    flag: "w+"
-  });
-}
+const REACT_NS = "React";
+const REACT_PROPS = "props";
 
-export function createSourceFile(options: IFileCreateOptions) {
-  const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
-  if (!fs.existsSync(dir))
-    throw new FolderError(`folder [${options.folder}] is not exist.`);
-  const sourceFile = ts.createSourceFile(
-    path.join(dir, options.filename),
-    "",
-    ts.ScriptTarget.ES2017
+export function createReactNamespaceImport() {
+  return ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(ts.createIdentifier(REACT_NS), undefined),
+    ts.createStringLiteral("react")
   );
-  return ts.updateSourceFileNode(sourceFile, options.statements);
 }
 
-interface IJsxAttrs {
-  [key: string]: ts.JsxExpression | string;
+export function createStatelessReactCompTypeNode() {
+  return ts.createTypeReferenceNode(
+    ts.createQualifiedName(
+      ts.createIdentifier(REACT_NS),
+      ts.createIdentifier("StatelessComponent")
+    ),
+    [ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)]
+  );
 }
 
-export function createJsxElement(
-  tagName: string,
-  types: ts.TypeNode[],
-  attrs: IJsxAttrs,
-  children?: (ts.JsxChild | string)[]
-) {
-  return ts.createJsxElement(
-    ts.createJsxOpeningElement(
-      ts.createIdentifier(tagName),
-      types,
-      ts.createJsxAttributes(
-        Object.keys(attrs).map(k =>
-          ts.createJsxAttribute(
-            ts.createIdentifier(k),
-            typeof attrs[k] === "string"
-              ? ts.createStringLiteral(<string>attrs[k])
-              : <ts.JsxExpression>attrs[k]
-          )
+function createTextDivBlock(
+  text: string,
+  onClickRefName: string
+): ts.Expression {
+  return createJsxElement("div", [], {}, [
+    createJsxElement("span", [], {}, [text]),
+    createJsxElement("br", [], {}),
+    createJsxElement("button", [], {
+      onClick: ts.createJsxExpression(
+        undefined,
+        ts.createPropertyAccess(
+          ts.createIdentifier(REACT_PROPS),
+          ts.createIdentifier(onClickRefName)
         )
       )
-    ),
-    (children || []).map(i =>
-      typeof i === "string" ? ts.createJsxText(i) : i
-    ),
-    ts.createJsxClosingElement(ts.createIdentifier(tagName))
+    })
+  ]);
+}
+
+function createTextDivBlockParenExpression(
+  text: string,
+  onClickRefName: string
+) {
+  return ts.createParen(createTextDivBlock(text, onClickRefName));
+}
+
+export function createTextDivBlockArrowFn(
+  name: string,
+  text: string,
+  onClickRefName: string,
+  isExport = false
+) {
+  return createConstVariableStatement(
+    name,
+    isExport,
+    createStatelessReactCompTypeNode(),
+    ts.createArrowFunction(
+      [],
+      [],
+      [
+        ts.createParameter(
+          [],
+          [],
+          undefined,
+          ts.createIdentifier(REACT_PROPS),
+          undefined,
+          ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+        )
+      ],
+      undefined,
+      ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      createTextDivBlockParenExpression(text, onClickRefName)
+    )
   );
 }
 
-export function createTextDivBlock(text: string, onClickRefName: string) {
-  return ts.createParen(
-    createJsxElement("div", [], {}, [
-      createJsxElement("span", [], {}, [text]),
-      createJsxElement("br", [], {}),
-      createJsxElement("button", [], {
-        onClick: ts.createJsxExpression(
-          undefined,
+export function createTextDivBlockClass(
+  name: string,
+  text: string,
+  onClickRefName: string,
+  isExport = false
+) {
+  const _ANY = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+  return ts.createClassDeclaration(
+    [],
+    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    ts.createIdentifier(name),
+    [],
+    [
+      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.createExpressionWithTypeArguments(
+          [_ANY, _ANY, _ANY],
           ts.createPropertyAccess(
-            ts.createThis(),
-            ts.createIdentifier(onClickRefName)
+            ts.createIdentifier(REACT_NS),
+            ts.createIdentifier("PureComponent")
           )
         )
-      })
-    ])
+      ])
+    ],
+    [
+      ts.createMethod(
+        [],
+        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+        undefined,
+        ts.createIdentifier("render"),
+        undefined,
+        [],
+        [],
+        undefined,
+        ts.createBlock([
+          createConstVariableStatement(
+            REACT_PROPS,
+            false,
+            undefined,
+            ts.createPropertyAccess(
+              ts.createThis(),
+              ts.createIdentifier(REACT_PROPS)
+            )
+          ),
+          ts.createReturn(
+            createTextDivBlockParenExpression(text, onClickRefName)
+          )
+        ])
+      )
+    ]
+  );
+}
+
+export function createCustomPureClass(
+  name: string,
+  providers: ICustomProvider[],
+  isExport = false
+) {
+  const _ANY = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+  const views: ts.JsxElement[] = [];
+  const methods: ts.MethodDeclaration[] = [];
+  for (const p of providers) {
+    const { view, method } = p();
+    views.push(view);
+    if (method) methods.push(method);
+  }
+  return ts.createClassDeclaration(
+    [],
+    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    ts.createIdentifier(name),
+    [],
+    [
+      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.createExpressionWithTypeArguments(
+          [_ANY, _ANY, _ANY],
+          ts.createPropertyAccess(
+            ts.createIdentifier(REACT_NS),
+            ts.createIdentifier("PureComponent")
+          )
+        )
+      ])
+    ],
+    [
+      ...methods,
+      ts.createMethod(
+        [],
+        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+        undefined,
+        ts.createIdentifier("render"),
+        undefined,
+        [],
+        [],
+        undefined,
+        ts.createBlock([
+          createConstVariableStatement(
+            REACT_PROPS,
+            false,
+            undefined,
+            ts.createPropertyAccess(
+              ts.createThis(),
+              ts.createIdentifier(REACT_PROPS)
+            )
+          ),
+          ts.createReturn(
+            ts.createParen(createJsxElement("React.Fragment", [], {}, views))
+          )
+        ])
+      )
+    ]
   );
 }
