@@ -6,9 +6,12 @@ import {
   emitSourceFileSync,
   createTextDivBlockClass,
   createCustomPureClass,
-  IMPORTS
+  createReactSourceFile,
+  useClassProcessors,
+  createSelectPage
 } from "./utils";
-import { RandomMathProvider } from "./providers";
+import { RandomMathProcessor } from "./providers";
+import { ExtensivePage, ForkSlotPage } from "./core";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -17,9 +20,7 @@ if (!fs.existsSync(buildFolder)) fs.mkdirSync(buildFolder);
 emitSourceFileSync({
   folder: "build",
   filename: "stateless-component.tsx",
-  statements: [
-    // 创建React导入声明语句
-    IMPORTS.React,
+  statements: createReactSourceFile([
     // 创建一个Jsx语法块的demo组件
     createTextDivBlockArrowFn(
       "MyArrowComponent",
@@ -27,39 +28,78 @@ emitSourceFileSync({
       "onButtonClick",
       true
     )
-  ]
+  ])
 });
 
 emitSourceFileSync({
   folder: "build",
   filename: "class-component.tsx",
-  statements: [
-    // 创建React导入声明语句
-    IMPORTS.React,
+  statements: createReactSourceFile([
     createTextDivBlockClass(
       "MyClassComponent",
       "class-demo",
       "onButtonClick",
       true
     )
-  ]
+  ])
 });
 
 emitSourceFileSync({
   folder: "build",
   filename: "custom-component.tsx",
-  statements: [
-    // 创建React导入声明语句
-    IMPORTS.React,
-    createCustomPureClass(
-      "MyCustomComponent",
-      [
-        RandomMathProvider,
-        RandomMathProvider,
-        RandomMathProvider,
-        RandomMathProvider
-      ],
-      true
-    )
-  ]
+  statements: useClassProcessors(
+    "MyCustomComponent",
+    createReactSourceFile([createCustomPureClass("MyCustomComponent", true)]),
+    [
+      RandomMathProcessor,
+      RandomMathProcessor,
+      RandomMathProcessor,
+      RandomMathProcessor
+    ]
+  )
+});
+
+emitSourceFileSync({
+  folder: "build",
+  filename: "allin-component.tsx",
+  statements: useClassProcessors(
+    "MyCustomComponent",
+    createReactSourceFile([
+      createTextDivBlockArrowFn(
+        "MyArrowComponent",
+        "stateless-demo",
+        "onButtonClick",
+        true
+      ),
+      createTextDivBlockClass(
+        "MyClassComponent",
+        "class-demo",
+        "onButtonClick",
+        true
+      ),
+      createCustomPureClass("MyCustomComponent", true)
+    ]),
+    [
+      RandomMathProcessor,
+      RandomMathProcessor,
+      RandomMathProcessor,
+      RandomMathProcessor
+    ]
+  )
+});
+
+emitSourceFileSync({
+  folder: "build",
+  filename: "extensive-component.tsx",
+  statements: createReactSourceFile([
+    createSelectPage("MyComponent", ExtensivePage, true)
+  ])
+});
+
+emitSourceFileSync({
+  folder: "build",
+  filename: "forkslot-component.tsx",
+  statements: createReactSourceFile([
+    createSelectPage("MyComponent", ForkSlotPage, true)
+  ])
 });

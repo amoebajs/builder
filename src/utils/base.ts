@@ -10,6 +10,88 @@ export interface IFileCreateOptions {
   statements: ts.Statement[];
 }
 
+export const REACT = {
+  NS: "React",
+  PackageName: "react",
+  Props: "props",
+  State: "state",
+  Component: "Component",
+  PureComponent: "PureComponent",
+  StatelessComponent: "StatelessComponent",
+  Fragment: "React.Fragment",
+  Render: "render"
+};
+
+const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+
+export const IMPORTS = {
+  React: ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+    ts.createStringLiteral(REACT.PackageName)
+  )
+};
+
+export const GenericGen = {
+  StatelessComponent(props?: ts.TypeNode) {
+    return ts.createTypeReferenceNode(
+      ts.createQualifiedName(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.StatelessComponent)
+      ),
+      [props || AnyType]
+    );
+  },
+  Component(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
+    return ts.createExpressionWithTypeArguments(
+      [props || AnyType, state || AnyType, ss || AnyType],
+      ts.createPropertyAccess(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.Component)
+      )
+    );
+  },
+  PureComponent(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
+    return ts.createExpressionWithTypeArguments(
+      [props || AnyType, state || AnyType, ss || AnyType],
+      ts.createPropertyAccess(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.PureComponent)
+      )
+    );
+  }
+};
+
+export const TYPES = {
+  Any: AnyType,
+  StatelessComponent: GenericGen.StatelessComponent(),
+  Component: GenericGen.Component(),
+  PureComponent: GenericGen.PureComponent()
+};
+
+export const THIS = {
+  Props: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.Props)
+  ),
+  State: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.State)
+  )
+};
+
+export const DOMS = {
+  Div: "div",
+  Span: "span",
+  Button: "button",
+  Br: "br"
+};
+
+export function createReactSourceFile(statements: ts.Statement[]) {
+  return (<ts.Statement[]>[IMPORTS.React]).concat(statements);
+}
+
 export function emitSourceFileSync(options: IFileCreateOptions) {
   const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
   if (!fs.existsSync(dir))
@@ -32,6 +114,10 @@ export function createSourceFile(options: IFileCreateOptions) {
     ts.ScriptTarget.ES2017
   );
   return ts.updateSourceFileNode(sourceFile, options.statements);
+}
+
+export function createExportModifier(isExport = false) {
+  return !!isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [];
 }
 
 export function createConstVariableStatement(

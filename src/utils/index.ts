@@ -1,66 +1,16 @@
 import ts from "typescript";
-import { createJsxElement, createConstVariableStatement } from "./base";
-import { ICustomProvider } from "../providers";
+import {
+  createJsxElement,
+  createConstVariableStatement,
+  DOMS,
+  REACT,
+  TYPES,
+  THIS,
+  createExportModifier
+} from "./base";
 
 export * from "./base";
-
-export const REACT = {
-  NS: "React",
-  PackageName: "react",
-  Props: "props",
-  State: "state",
-  PureComponent: "PureComponent",
-  StatelessComponent: "StatelessComponent",
-  Fragment: "React.Fragment",
-  Render: "render"
-};
-
-const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
-
-export const IMPORTS = {
-  React: ts.createImportDeclaration(
-    [],
-    [],
-    ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
-    ts.createStringLiteral(REACT.PackageName)
-  )
-};
-
-export const TYPES = {
-  Any: AnyType,
-  StatelessComponent: ts.createTypeReferenceNode(
-    ts.createQualifiedName(
-      ts.createIdentifier(REACT.NS),
-      ts.createIdentifier(REACT.StatelessComponent)
-    ),
-    [AnyType]
-  ),
-  PureComponent: ts.createExpressionWithTypeArguments(
-    [AnyType, AnyType, AnyType],
-    ts.createPropertyAccess(
-      ts.createIdentifier(REACT.NS),
-      ts.createIdentifier(REACT.PureComponent)
-    )
-  )
-};
-
-export const THIS = {
-  Props: ts.createPropertyAccess(
-    ts.createThis(),
-    ts.createIdentifier(REACT.Props)
-  ),
-  STATE: ts.createPropertyAccess(
-    ts.createThis(),
-    ts.createIdentifier(REACT.State)
-  )
-};
-
-export const DOMS = {
-  Div: "div",
-  Span: "span",
-  Button: "button",
-  Br: "br"
-};
+export * from "./container";
 
 function createTextDivBlock(
   text: string,
@@ -86,10 +36,6 @@ function createTextDivBlockParenExpression(
   onClickRefName: string
 ) {
   return ts.createParen(createTextDivBlock(text, onClickRefName));
-}
-
-function createExportModifier(isExport = false) {
-  return !!isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [];
 }
 
 export function createTextDivBlockArrowFn(
@@ -157,55 +103,6 @@ export function createTextDivBlockClass(
           ),
           ts.createReturn(
             createTextDivBlockParenExpression(text, onClickRefName)
-          )
-        ])
-      )
-    ]
-  );
-}
-
-export function createCustomPureClass(
-  name: string,
-  providers: ICustomProvider[],
-  isExport = false
-) {
-  const views: ts.JsxElement[] = [];
-  const methods: ts.MethodDeclaration[] = [];
-  for (const p of providers) {
-    const { view, method } = p();
-    views.push(view);
-    if (method) methods.push(method);
-  }
-  return ts.createClassDeclaration(
-    [],
-    createExportModifier(isExport),
-    ts.createIdentifier(name),
-    [],
-    [
-      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.PureComponent
-      ])
-    ],
-    [
-      ...methods,
-      ts.createMethod(
-        [],
-        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
-        undefined,
-        ts.createIdentifier(REACT.Render),
-        undefined,
-        [],
-        [],
-        undefined,
-        ts.createBlock([
-          createConstVariableStatement(
-            REACT.Props,
-            false,
-            undefined,
-            THIS.Props
-          ),
-          ts.createReturn(
-            ts.createParen(createJsxElement(REACT.Fragment, [], {}, views))
           )
         ])
       )
