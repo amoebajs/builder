@@ -4,40 +4,76 @@ import { ICustomProvider } from "../providers";
 
 export * from "./base";
 
-const REACT_NS = "React";
-const REACT_PROPS = "props";
+export const REACT = {
+  NS: "React",
+  PackageName: "react",
+  Props: "props",
+  State: "state",
+  PureComponent: "PureComponent",
+  StatelessComponent: "StatelessComponent",
+  Fragment: "React.Fragment",
+  Render: "render"
+};
 
-export function createReactNamespaceImport() {
-  return ts.createImportDeclaration(
+const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+
+export const IMPORTS = {
+  React: ts.createImportDeclaration(
     [],
     [],
-    ts.createImportClause(ts.createIdentifier(REACT_NS), undefined),
-    ts.createStringLiteral("react")
-  );
-}
+    ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+    ts.createStringLiteral(REACT.PackageName)
+  )
+};
 
-export function createStatelessReactCompTypeNode() {
-  return ts.createTypeReferenceNode(
+export const TYPES = {
+  Any: AnyType,
+  StatelessComponent: ts.createTypeReferenceNode(
     ts.createQualifiedName(
-      ts.createIdentifier(REACT_NS),
-      ts.createIdentifier("StatelessComponent")
+      ts.createIdentifier(REACT.NS),
+      ts.createIdentifier(REACT.StatelessComponent)
     ),
-    [ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)]
-  );
-}
+    [AnyType]
+  ),
+  PureComponent: ts.createExpressionWithTypeArguments(
+    [AnyType, AnyType, AnyType],
+    ts.createPropertyAccess(
+      ts.createIdentifier(REACT.NS),
+      ts.createIdentifier(REACT.PureComponent)
+    )
+  )
+};
+
+export const THIS = {
+  Props: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.Props)
+  ),
+  STATE: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.State)
+  )
+};
+
+export const DOMS = {
+  Div: "div",
+  Span: "span",
+  Button: "button",
+  Br: "br"
+};
 
 function createTextDivBlock(
   text: string,
   onClickRefName: string
 ): ts.Expression {
-  return createJsxElement("div", [], {}, [
-    createJsxElement("span", [], {}, [text]),
-    createJsxElement("br", [], {}),
-    createJsxElement("button", [], {
+  return createJsxElement(DOMS.Div, [], {}, [
+    createJsxElement(DOMS.Span, [], {}, [text]),
+    createJsxElement(DOMS.Br, [], {}),
+    createJsxElement(DOMS.Button, [], {
       onClick: ts.createJsxExpression(
         undefined,
         ts.createPropertyAccess(
-          ts.createIdentifier(REACT_PROPS),
+          ts.createIdentifier(REACT.Props),
           ts.createIdentifier(onClickRefName)
         )
       )
@@ -52,6 +88,10 @@ function createTextDivBlockParenExpression(
   return ts.createParen(createTextDivBlock(text, onClickRefName));
 }
 
+function createExportModifier(isExport = false) {
+  return !!isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [];
+}
+
 export function createTextDivBlockArrowFn(
   name: string,
   text: string,
@@ -61,7 +101,7 @@ export function createTextDivBlockArrowFn(
   return createConstVariableStatement(
     name,
     isExport,
-    createStatelessReactCompTypeNode(),
+    TYPES.StatelessComponent,
     ts.createArrowFunction(
       [],
       [],
@@ -70,9 +110,9 @@ export function createTextDivBlockArrowFn(
           [],
           [],
           undefined,
-          ts.createIdentifier(REACT_PROPS),
+          ts.createIdentifier(REACT.Props),
           undefined,
-          ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+          TYPES.Any
         )
       ],
       undefined,
@@ -88,21 +128,14 @@ export function createTextDivBlockClass(
   onClickRefName: string,
   isExport = false
 ) {
-  const _ANY = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
   return ts.createClassDeclaration(
     [],
-    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    createExportModifier(isExport),
     ts.createIdentifier(name),
     [],
     [
       ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        ts.createExpressionWithTypeArguments(
-          [_ANY, _ANY, _ANY],
-          ts.createPropertyAccess(
-            ts.createIdentifier(REACT_NS),
-            ts.createIdentifier("PureComponent")
-          )
-        )
+        TYPES.PureComponent
       ])
     ],
     [
@@ -110,20 +143,17 @@ export function createTextDivBlockClass(
         [],
         [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
         undefined,
-        ts.createIdentifier("render"),
+        ts.createIdentifier(REACT.Render),
         undefined,
         [],
         [],
         undefined,
         ts.createBlock([
           createConstVariableStatement(
-            REACT_PROPS,
+            REACT.Props,
             false,
             undefined,
-            ts.createPropertyAccess(
-              ts.createThis(),
-              ts.createIdentifier(REACT_PROPS)
-            )
+            THIS.Props
           ),
           ts.createReturn(
             createTextDivBlockParenExpression(text, onClickRefName)
@@ -139,7 +169,6 @@ export function createCustomPureClass(
   providers: ICustomProvider[],
   isExport = false
 ) {
-  const _ANY = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
   const views: ts.JsxElement[] = [];
   const methods: ts.MethodDeclaration[] = [];
   for (const p of providers) {
@@ -149,18 +178,12 @@ export function createCustomPureClass(
   }
   return ts.createClassDeclaration(
     [],
-    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    createExportModifier(isExport),
     ts.createIdentifier(name),
     [],
     [
       ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        ts.createExpressionWithTypeArguments(
-          [_ANY, _ANY, _ANY],
-          ts.createPropertyAccess(
-            ts.createIdentifier(REACT_NS),
-            ts.createIdentifier("PureComponent")
-          )
-        )
+        TYPES.PureComponent
       ])
     ],
     [
@@ -169,23 +192,20 @@ export function createCustomPureClass(
         [],
         [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
         undefined,
-        ts.createIdentifier("render"),
+        ts.createIdentifier(REACT.Render),
         undefined,
         [],
         [],
         undefined,
         ts.createBlock([
           createConstVariableStatement(
-            REACT_PROPS,
+            REACT.Props,
             false,
             undefined,
-            ts.createPropertyAccess(
-              ts.createThis(),
-              ts.createIdentifier(REACT_PROPS)
-            )
+            THIS.Props
           ),
           ts.createReturn(
-            ts.createParen(createJsxElement("React.Fragment", [], {}, views))
+            ts.createParen(createJsxElement(REACT.Fragment, [], {}, views))
           )
         ])
       )

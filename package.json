@@ -6,7 +6,9 @@
   "author": "bigmogician <bigmogician@outlook.com>",
   "license": "MIT",
   "scripts": {
-    "build": "npx ts-node src/index.ts"
+    "compile": "npx tsc",
+    "build": "npx ts-node src/index.ts",
+    "build:prod": "node dist/index.js"
   },
   "dependencies": {
     "@types/node": "^12.11.7",

@@ -4,9 +4,9 @@ import * as path from "path";
 import {
   createTextDivBlockArrowFn,
   emitSourceFileSync,
-  createReactNamespaceImport,
   createTextDivBlockClass,
-  createCustomPureClass
+  createCustomPureClass,
+  IMPORTS
 } from "./utils";
 import { RandomMathProvider } from "./providers";
 
@@ -19,7 +19,7 @@ emitSourceFileSync({
   filename: "stateless-component.tsx",
   statements: [
     // 创建React导入声明语句
-    createReactNamespaceImport(),
+    IMPORTS.React,
     // 创建一个Jsx语法块的demo组件
     createTextDivBlockArrowFn(
       "MyArrowComponent",
@@ -35,7 +35,7 @@ emitSourceFileSync({
   filename: "class-component.tsx",
   statements: [
     // 创建React导入声明语句
-    createReactNamespaceImport(),
+    IMPORTS.React,
     createTextDivBlockClass(
       "MyClassComponent",
       "class-demo",
@@ -50,7 +50,7 @@ emitSourceFileSync({
   filename: "custom-component.tsx",
   statements: [
     // 创建React导入声明语句
-    createReactNamespaceImport(),
+    IMPORTS.React,
     createCustomPureClass(
       "MyCustomComponent",
       [
