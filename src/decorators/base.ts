@@ -8,7 +8,7 @@ export interface IConstructor<T> {
   new (...args: any[]): T;
 }
 
-export type AbstractConstructor<T> = Function & { prototype: T }
+export type AbstractConstructor<T> = Function & { prototype: T };
 
 export type Constructor<T> = IConstructor<T> | AbstractConstructor<T>;
 
@@ -28,46 +28,78 @@ export interface IPageContract {
 export interface IPropertyContract {
   name: string | null;
   displayName: string | null;
-  type: any | null;
+  type: "object" | "string" | "number" | "boolean" | string[] | null;
 }
 
 export interface IInnerPropertyContract extends IPropertyContract {
   realName: string;
 }
 
-
-export function defineModule(target: Constructor<any>, metadata: IModuleContract) {
+export function defineModule(
+  target: Constructor<any>,
+  metadata: IModuleContract
+) {
   return Reflect.defineMetadata(MODULE_DEFINE, metadata, target);
 }
 
-export function resolveModule(target: Constructor<any>, defaults: Partial<IModuleContract> = {}) {
-  return <IModuleContract>Reflect.getMetadata(MODULE_DEFINE,target) ?? defaults;
+export function resolveModule(
+  target: Constructor<any>,
+  defaults: Partial<IModuleContract> = {}
+) {
+  return (
+    <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults
+  );
 }
 
 export function definePage(target: Constructor<any>, metadata: IPageContract) {
   return Reflect.defineMetadata(PAGE_DEFINE, metadata, target);
 }
 
-export function resolvePage(target: Constructor<any>, defaults: Partial<IPageContract> = {}) {
-  return <IPageContract>Reflect.getMetadata(PAGE_DEFINE,target) ?? defaults;
+export function resolvePage(
+  target: Constructor<any>,
+  defaults: Partial<IPageContract> = {}
+) {
+  return <IPageContract>Reflect.getMetadata(PAGE_DEFINE, target) || defaults;
 }
 
-export function defineProperty(target: Constructor<any>, metadata: IInnerPropertyContract) {
-  const typeRef = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
+export function defineProperty(
+  target: Constructor<any>,
+  metadata: IInnerPropertyContract
+) {
   const data: IInnerPropertyContract = { ...metadata };
-  if(typeRef && !data.type) data.type = typeRef;
-  if(!data.name) data.name = data.realName;
-  // console.log(data)
+  if (!data.name) data.name = data.realName;
+  if (!data.type) {
+    const typeRef = Reflect.getMetadata(
+      "design:type",
+      target.prototype,
+      metadata.realName
+    );
+    data.type =
+      typeRef === Number
+        ? "number"
+        : typeRef === String
+        ? "string"
+        : typeRef === Boolean
+        ? "boolean"
+        : "object";
+  }
   const props = resolveProperties(target);
   props[data.name] = data;
   return Reflect.defineMetadata(PROP_INPUT_DEFINE, props, target);
 }
 
-export function resolveProperty(target: Constructor<any>, name: string, defaults: Partial<IPropertyContract> = {}) {
-  return resolveProperties(target)[name] ?? defaults;
+export function resolveProperty(
+  target: Constructor<any>,
+  name: string,
+  defaults: Partial<IPropertyContract> = {}
+) {
+  return resolveProperties(target)[name] || defaults;
 }
 
 export function resolveProperties(target: Constructor<any>) {
-  return <{[prop: string]: IInnerPropertyContract}>Reflect.getMetadata(PROP_INPUT_DEFINE,target) ?? {};
+  return (
+    <{ [prop: string]: IInnerPropertyContract }>(
+      Reflect.getMetadata(PROP_INPUT_DEFINE, target)
+    ) || {}
+  );
 }
-

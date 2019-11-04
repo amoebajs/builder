@@ -131,6 +131,7 @@ export function createSelectPage<T extends typeof ExtensivePage>(
   const model: ExtensivePage = new (<any>template)(options);
   // init input params
   const props = resolveProperties(template);
+  // console.log(props);
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];

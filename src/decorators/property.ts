@@ -1,5 +1,5 @@
 import { IPropertyContract } from ".";
-import { Constructor, defineProperty } from "./base";
+import { defineProperty } from "./base";
 
 const defaults: IPropertyContract = {
   name: null,
