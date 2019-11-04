@@ -112,7 +112,8 @@ emitSourceFileSync({
   statements: createReactSourceFile([
     createPage("MyComponent", "ambjs_common_module@css_grid_page", {
       "grid-template-columns": 6,
-      "grid-auto-row-min-width": 200
+      "grid-auto-row-min-width": "200px",
+      "grid-auto-row-max-width": "400px"
     })
   ])
 });

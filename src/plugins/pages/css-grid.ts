@@ -12,7 +12,10 @@ export class CssGridPage extends ExtensivePage {
   public gridTemplateColumnsCount: number = 3;
 
   @Input({ name: "grid-auto-row-min-width", displayName: "Grid行最小宽度" })
-  public gridAutoRowMinWidth: number = 100;
+  public gridAutoRowMinWidth: string = "100px";
+
+  @Input({ name: "grid-auto-row-max-width", displayName: "Grid行最大宽度" })
+  public gridAutoRowMaxWidth: string = "auto";
 
   protected onInit() {
     this.state.rootElement.name = DOMS.Div;
@@ -21,7 +24,7 @@ export class CssGridPage extends ExtensivePage {
       createValueAttr({
         display: "grid",
         gridTemplateColumns: `repeat(${this.gridTemplateColumnsCount}, 1fr)`,
-        gridAutoRows: `minmax(${this.gridAutoRowMinWidth}px, auto)`
+        gridAutoRows: `minmax(${this.gridAutoRowMinWidth}, ${this.gridAutoRowMaxWidth})`
       })
     );
     this.state.rootChildren.push(
