@@ -105,3 +105,14 @@ emitSourceFileSync({
     createPage("MyComponent", "ambjs_common_module@fork_slot_page")
   ])
 });
+
+emitSourceFileSync({
+  folder: "build",
+  filename: "cssgrid-component.tsx",
+  statements: createReactSourceFile([
+    createPage("MyComponent", "ambjs_common_module@css_grid_page", {
+      "grid-template-columns": 6,
+      "grid-auto-row-min-width": 200
+    })
+  ])
+});

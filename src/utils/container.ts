@@ -9,6 +9,7 @@ import {
   createJsxElement
 } from "./base";
 import { ExtensivePage } from "../plugins/pages";
+import { resolveProperties } from "../decorators";
 
 export function createCustomPureClass(name: string, isExport = false) {
   return ts.createClassDeclaration(
@@ -124,10 +125,21 @@ export function useClassProcessors(
 export function createSelectPage<T extends typeof ExtensivePage>(
   name: string,
   template: T,
+  options: any = {},
   isExport = false
 ) {
-  const model: ExtensivePage = new (<any>template)();
-  model;
+  const model: ExtensivePage = new (<any>template)(options);
+  // init input params
+  const props = resolveProperties(template);
+  for (const key in props) {
+    if (props.hasOwnProperty(key)) {
+      const prop = props[key];
+      if (options[prop.name!]) {
+        (<any>model)[prop.realName] = options[prop.name!];
+      }
+    }
+  }
+  model["onInit"]();
   return ts.createClassDeclaration(
     [],
     createExportModifier(isExport),

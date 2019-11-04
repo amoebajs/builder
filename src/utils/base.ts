@@ -172,3 +172,24 @@ export function createJsxElement(
     ts.createJsxClosingElement(ts.createIdentifier(tagName))
   );
 }
+
+export function createValueAttr(value: { [prop: string]: number | string }) {
+  const kvs: [string, string | number][] = Object.keys(value).map(k => [
+    k,
+    value[k]
+  ]);
+  return ts.createObjectLiteral(
+    kvs.map(([n, v]) =>
+      typeof v === "number"
+        ? ts.createPropertyAssignment(
+            ts.createIdentifier(n),
+            ts.createNumericLiteral(v.toString())
+          )
+        : ts.createPropertyAssignment(
+            ts.createIdentifier(n),
+            ts.createStringLiteral(v)
+          )
+    ),
+    true
+  );
+}
