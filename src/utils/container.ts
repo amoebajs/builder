@@ -8,7 +8,7 @@ import {
   THIS,
   createJsxElement
 } from "./base";
-import { ExtensivePage } from "../core";
+import { ExtensivePage } from "../plugins/pages";
 
 export function createCustomPureClass(name: string, isExport = false) {
   return ts.createClassDeclaration(

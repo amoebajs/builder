@@ -7,11 +7,11 @@ import {
   createTextDivBlockClass,
   createCustomPureClass,
   createReactSourceFile,
-  useClassProcessors,
-  createSelectPage
+  useClassProcessors
 } from "./utils";
 import { RandomMathProcessor } from "./providers";
-import { ExtensivePage, ForkSlotPage } from "./core";
+import { CommonModule } from "./plugins";
+import { useModule, createPage } from "./core";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -88,11 +88,13 @@ emitSourceFileSync({
   )
 });
 
+useModule(CommonModule);
+
 emitSourceFileSync({
   folder: "build",
   filename: "extensive-component.tsx",
   statements: createReactSourceFile([
-    createSelectPage("MyComponent", ExtensivePage, true)
+    createPage("MyComponent", "ambjs_common_module@basic_extensive_page")
   ])
 });
 
@@ -100,6 +102,6 @@ emitSourceFileSync({
   folder: "build",
   filename: "forkslot-component.tsx",
   statements: createReactSourceFile([
-    createSelectPage("MyComponent", ForkSlotPage, true)
+    createPage("MyComponent", "ambjs_common_module@fork_slot_page")
   ])
 });
