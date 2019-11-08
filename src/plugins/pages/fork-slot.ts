@@ -17,7 +17,7 @@ export class ForkSlotPage extends ExtensivePage {
     );
   }
 
-  protected createRenderChildren() {
+  public createRenderChildren() {
     return [
       createJsxElement(
         "div",

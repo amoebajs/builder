@@ -28,7 +28,7 @@ export interface IExtensivePageContext {
   fields: ts.PropertyDeclaration[];
   properties: ts.PropertyDeclaration[];
   methods: ts.MethodDeclaration[];
-  render: ts.MethodDeclaration;
+  rootChildren: ts.JsxElement[];
 }
 
 export interface IExtensivePageContract {
@@ -37,7 +37,8 @@ export interface IExtensivePageContract {
   createFields(): ts.PropertyDeclaration[];
   createProperties(): ts.PropertyDeclaration[];
   createMethods(): ts.MethodDeclaration[];
-  createRender(): ts.MethodDeclaration;
+  createRenderChildren(): ts.JsxElement[];
+  createRender(context: IExtensivePageContext): ts.MethodDeclaration;
 }
 
 export type ImportStatementsUpdater = (
@@ -77,7 +78,7 @@ export abstract class ExtensivePage<T extends any = any>
     // DO NOTHING FOR OVERRIDE
   }
 
-  protected createRenderChildren() {
+  public createRenderChildren() {
     return this.state.rootChildren || [];
   }
 
@@ -103,7 +104,7 @@ export abstract class ExtensivePage<T extends any = any>
     return [];
   }
 
-  public createRender(): ts.MethodDeclaration {
+  public createRender(context: IExtensivePageContext): ts.MethodDeclaration {
     const { rootElement: root } = this.state;
     const children = this.createRenderChildren();
     return ts.createMethod(

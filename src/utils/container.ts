@@ -158,7 +158,7 @@ function createPageContext(
     fields: model.createFields(),
     properties: model.createProperties(),
     methods: model.createMethods(),
-    render: model.createRender()
+    rootChildren: model.createRenderChildren()
   };
   for (const processor of processors) {
     context = processor(context, options, onUpdate);
@@ -175,7 +175,7 @@ export function createSelectPage<T extends typeof ExtensivePage>(
   isExport = false
 ) {
   const model = createTemplateInstance(template, options);
-  const context = createPageContext(model, processors, options, onUpdate);
+  const context = createPageContext(model, processors, onUpdate, options);
   return ts.createClassDeclaration(
     [],
     createExportModifier(isExport),
@@ -186,7 +186,7 @@ export function createSelectPage<T extends typeof ExtensivePage>(
       ...context.fields,
       ...context.properties,
       ...context.methods,
-      context.render
+      model.createRender(context)
     ])
   );
 }

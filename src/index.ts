@@ -1,92 +1,14 @@
 import ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
-import {
-  createTextDivBlockArrowFn,
-  emitSourceFileSync,
-  createTextDivBlockClass,
-  createCustomPureClass,
-  createReactSourceFile,
-  useClassProcessors
-} from "./utils";
-import { RandomMathProcessor } from "./providers";
+import { emitSourceFileSync, createReactSourceFile } from "./utils";
 import { CommonModule } from "./plugins";
 import { useModule, createModuleStatements } from "./core";
+import { AddButton } from "./providers";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
 if (!fs.existsSync(buildFolder)) fs.mkdirSync(buildFolder);
-
-// emitSourceFileSync({
-//   folder: "build",
-//   filename: "stateless-component.tsx",
-//   statements: createReactSourceFile([
-//     // 创建一个Jsx语法块的demo组件
-//     createTextDivBlockArrowFn(
-//       "MyArrowComponent",
-//       "stateless-demo",
-//       "onButtonClick",
-//       true
-//     )
-//   ])
-// });
-
-// emitSourceFileSync({
-//   folder: "build",
-//   filename: "class-component.tsx",
-//   statements: createReactSourceFile([
-//     createTextDivBlockClass(
-//       "MyClassComponent",
-//       "class-demo",
-//       "onButtonClick",
-//       true
-//     )
-//   ])
-// });
-
-// emitSourceFileSync({
-//   folder: "build",
-//   filename: "custom-component.tsx",
-//   statements: useClassProcessors(
-//     "MyCustomComponent",
-//     createReactSourceFile([createCustomPureClass("MyCustomComponent", true)]),
-//     [
-//       RandomMathProcessor,
-//       RandomMathProcessor,
-//       RandomMathProcessor,
-//       RandomMathProcessor
-//     ]
-//   )
-// });
-
-// emitSourceFileSync({
-//   folder: "build",
-//   filename: "allin-component.tsx",
-//   statements: useClassProcessors(
-//     "MyCustomComponent",
-//     createReactSourceFile([
-//       createTextDivBlockArrowFn(
-//         "MyArrowComponent",
-//         "stateless-demo",
-//         "onButtonClick",
-//         true
-//       ),
-//       createTextDivBlockClass(
-//         "MyClassComponent",
-//         "class-demo",
-//         "onButtonClick",
-//         true
-//       ),
-//       createCustomPureClass("MyCustomComponent", true)
-//     ]),
-//     [
-//       RandomMathProcessor,
-//       RandomMathProcessor,
-//       RandomMathProcessor,
-//       RandomMathProcessor
-//     ]
-//   )
-// });
 
 useModule(CommonModule);
 
@@ -119,8 +41,13 @@ emitSourceFileSync({
     createModuleStatements({
       rootName: "MyComponent",
       rootPage: "ambjs_common_module@css_grid_page",
-      rootProcessors: [],
+      rootProcessors: [AddButton],
       rootOptions: {
+        // options of [AddButton]
+        buttonText: "balabala按钮",
+        buttonEventName: "onFuckingBtnClick",
+        buttonClickOutput: "woshinidie!",
+        // options of Page
         useComponentState: true,
         "grid-template-columns": 6,
         "grid-auto-row-min-width": "200px",

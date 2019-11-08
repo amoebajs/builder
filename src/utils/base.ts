@@ -204,6 +204,71 @@ export function createValueAttr(value: { [prop: string]: number | string }) {
   );
 }
 
+export function createNamedImport(moduleName: string, names: string[]) {
+  return ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(
+      undefined,
+      ts.createNamedImports(
+        names.map(n =>
+          ts.createImportSpecifier(undefined, ts.createIdentifier(n))
+        )
+      )
+    ),
+    ts.createStringLiteral(moduleName)
+  );
+}
+
+export function createDefaultImport(moduleName: string, name: string) {
+  return ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(ts.createIdentifier(name), undefined),
+    ts.createStringLiteral(moduleName)
+  );
+}
+
+export function createThisAccess(name: string): string | ts.JsxExpression {
+  return ts.createJsxExpression(
+    undefined,
+    ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(name))
+  );
+}
+
+export function createPublicArrow(
+  name: string,
+  params: ts.ParameterDeclaration[],
+  statements: ts.Statement[]
+): ts.PropertyDeclaration {
+  return ts.createProperty(
+    [],
+    [],
+    ts.createIdentifier(name),
+    undefined,
+    undefined,
+    ts.createArrowFunction(
+      [],
+      [],
+      params,
+      undefined,
+      ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+      ts.createBlock(statements)
+    )
+  );
+}
+
+export function createAnyParameter(name: string): ts.ParameterDeclaration {
+  return ts.createParameter(
+    [],
+    [],
+    undefined,
+    ts.createIdentifier(name),
+    undefined,
+    ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+  );
+}
+
 export function exists<T>(arr: T[]) {
   return arr.filter(i => !!i);
 }
