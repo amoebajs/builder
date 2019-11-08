@@ -22,12 +22,36 @@ export interface IExtensivePageState {
   [key: string]: any;
 }
 
+export interface IExtensivePageContext {
+  extendParent: ts.HeritageClause;
+  implementParents: ts.HeritageClause[];
+  fields: ts.PropertyDeclaration[];
+  properties: ts.PropertyDeclaration[];
+  methods: ts.MethodDeclaration[];
+  render: ts.MethodDeclaration;
+}
+
+export interface IExtensivePageContract {
+  createExtendParent(): ts.HeritageClause;
+  createImplementParents(): ts.HeritageClause[];
+  createFields(): ts.PropertyDeclaration[];
+  createProperties(): ts.PropertyDeclaration[];
+  createMethods(): ts.MethodDeclaration[];
+  createRender(): ts.MethodDeclaration;
+}
+
+export type ExtensivePageProcessor = (
+  context: IExtensivePageContext,
+  options: { [name: string]: any }
+) => IExtensivePageContext;
+
 @Page({
   name: "basic_extensive_page",
   displayName: "基础可扩展页面",
   abstract: true
 })
-export abstract class ExtensivePage<T extends any = any> {
+export abstract class ExtensivePage<T extends any = any>
+  implements IExtensivePageContract {
   protected readonly options: T = <any>{};
   protected readonly state: IExtensivePageState = {
     rootElement: {
@@ -74,7 +98,7 @@ export abstract class ExtensivePage<T extends any = any> {
     return [];
   }
 
-  public createRender() {
+  public createRender(): ts.MethodDeclaration {
     const { rootElement: root } = this.state;
     const children = this.createRenderChildren();
     return ts.createMethod(

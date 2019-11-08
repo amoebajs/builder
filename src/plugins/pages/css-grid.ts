@@ -8,7 +8,7 @@ import { ExtensivePage } from "./basic";
   displayName: "网格容器页面"
 })
 export class CssGridPage extends ExtensivePage {
-  @Input({ name: "use-comp-state", displayName: "是否使用组件状态" })
+  @Input({ displayName: "是否使用组件状态" })
   public useComponentState: boolean = false;
 
   @Input({ name: "grid-template-columns", displayName: "Grid列数量" })
@@ -30,28 +30,6 @@ export class CssGridPage extends ExtensivePage {
         gridAutoRows: `minmax(${this.gridAutoRowMinWidth}, ${this.gridAutoRowMaxWidth})`
       })
     );
-    this.state.rootChildren.push(
-      createJsxElement(DOMS.Span, [], { className: "bold-font" }, [
-        "inner-text"
-      ])
-    );
-  }
-
-  protected createRenderChildren() {
-    return [
-      createJsxElement(
-        "div",
-        [],
-        { className: "div-left" },
-        this.state.rootChildren
-      ),
-      createJsxElement(
-        "div",
-        [],
-        { className: "div-right" },
-        this.state.rootChildren
-      )
-    ];
   }
 
   public createExtendParent() {

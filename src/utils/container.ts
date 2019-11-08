@@ -9,7 +9,11 @@ import {
   createJsxElement,
   exists
 } from "./base";
-import { ExtensivePage } from "../plugins/pages";
+import {
+  ExtensivePage,
+  IExtensivePageContext,
+  ExtensivePageProcessor
+} from "../plugins/pages";
 import { resolveProperties } from "../decorators";
 
 export function createCustomPureClass(name: string, isExport = false) {
@@ -123,16 +127,12 @@ export function useClassProcessors(
   return states;
 }
 
-export function createSelectPage<T extends typeof ExtensivePage>(
-  name: string,
+function createTemplateInstance<T extends typeof ExtensivePage>(
   template: T,
-  options: any = {},
-  isExport = false
+  options: any
 ) {
   const model: ExtensivePage = new (<any>template)(options);
-  // init input params
   const props = resolveProperties(template);
-  // console.log(props);
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
@@ -142,17 +142,48 @@ export function createSelectPage<T extends typeof ExtensivePage>(
     }
   }
   model["onInit"]();
+  return model;
+}
+
+function createPageContext(
+  model: ExtensivePage<any>,
+  processors: ExtensivePageProcessor[],
+  options: any
+) {
+  let context: IExtensivePageContext = {
+    extendParent: model.createExtendParent(),
+    implementParents: model.createImplementParents(),
+    fields: model.createFields(),
+    properties: model.createProperties(),
+    methods: model.createMethods(),
+    render: model.createRender()
+  };
+  for (const processor of processors) {
+    context = processor(context, options);
+  }
+  return context;
+}
+
+export function createSelectPage<T extends typeof ExtensivePage>(
+  name: string,
+  template: T,
+  options: any = {},
+  processors: ExtensivePageProcessor[],
+  isExport = false
+) {
+  const model = createTemplateInstance(template, options);
+  const context = createPageContext(model, processors, options);
   return ts.createClassDeclaration(
     [],
     createExportModifier(isExport),
     ts.createIdentifier(name),
     [],
-    exists([model.createExtendParent(), ...model.createImplementParents()]),
+    exists([context.extendParent, ...context.implementParents]),
     exists([
-      ...model.createFields(),
-      ...model.createProperties(),
-      ...model.createMethods(),
-      model.createRender()
+      ...context.fields,
+      ...context.properties,
+      ...context.methods,
+      context.render
     ])
   );
 }

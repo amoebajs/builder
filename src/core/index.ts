@@ -1,5 +1,6 @@
 import { Constructor, resolveModule, resolvePage } from "../decorators";
 import { createSelectPage } from "../utils";
+import { ExtensivePageProcessor } from "../plugins/pages";
 
 interface IEntry<T = any> {
   moduleName?: string;
@@ -36,9 +37,20 @@ export function useModule(module: Constructor<any>) {
   // console.log(GlobalMaps);
 }
 
-export function createPage(name: string, page: string, options?: any) {
+export function createPage(
+  name: string,
+  page: string,
+  processors: ExtensivePageProcessor[] = [],
+  options?: any
+) {
   if (!GlobalMaps.pages[page]) {
     throw new Error("page template not found");
   }
-  return createSelectPage(name, GlobalMaps.pages[page].value, options, true);
+  return createSelectPage(
+    name,
+    GlobalMaps.pages[page].value,
+    options,
+    processors,
+    true
+  );
 }
