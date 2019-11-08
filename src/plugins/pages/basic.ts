@@ -4,7 +4,8 @@ import {
   REACT,
   createConstVariableStatement,
   THIS,
-  createJsxElement
+  createJsxElement,
+  TYPES
 } from "../../utils";
 
 export interface IJsxAttrs {
@@ -49,6 +50,28 @@ export abstract class ExtensivePage<T extends any = any> {
 
   protected createRenderChildren() {
     return this.state.rootChildren || [];
+  }
+
+  public createExtendParent(): ts.HeritageClause {
+    return ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+      TYPES.PureComponent
+    ]);
+  }
+
+  public createImplementParents(): ts.HeritageClause[] {
+    return [];
+  }
+
+  public createFields(): ts.PropertyDeclaration[] {
+    return [];
+  }
+
+  public createProperties(): ts.PropertyDeclaration[] {
+    return [];
+  }
+
+  public createMethods(): ts.MethodDeclaration[] {
+    return [];
   }
 
   public createRender() {

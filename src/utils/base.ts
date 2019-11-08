@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import ts from "typescript";
+import prettier from "prettier";
 import { PROJ_ROOT } from "./env";
 import { FolderError } from "../errors/folder";
 
@@ -8,6 +9,10 @@ export interface IFileCreateOptions {
   folder: string;
   filename: string;
   statements: ts.Statement[];
+}
+
+export interface IPrettierFileCreateOptions extends IFileCreateOptions {
+  prettier?: boolean;
 }
 
 export const REACT = {
@@ -92,15 +97,20 @@ export function createReactSourceFile(statements: ts.Statement[]) {
   return (<ts.Statement[]>[IMPORTS.React]).concat(statements);
 }
 
-export function emitSourceFileSync(options: IFileCreateOptions) {
+export function emitSourceFileSync(options: IPrettierFileCreateOptions) {
   const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
   if (!fs.existsSync(dir))
     throw new FolderError(`folder [${options.folder}] is not exist.`);
   const printer = ts.createPrinter();
   const sourceFile = createSourceFile(options);
-  fs.writeFileSync(sourceFile.fileName, printer.printFile(sourceFile), {
-    flag: "w+"
-  });
+  let sourceString = printer.printFile(sourceFile);
+  if (options.prettier !== false) {
+    sourceString = prettier.format(sourceString, {
+      printWidth: 120,
+      parser: "typescript"
+    });
+  }
+  fs.writeFileSync(sourceFile.fileName, sourceString, { flag: "w+" });
   console.log("emit --> " + sourceFile.fileName);
 }
 
@@ -192,4 +202,8 @@ export function createValueAttr(value: { [prop: string]: number | string }) {
     ),
     true
   );
+}
+
+export function exists<T>(arr: T[]) {
+  return arr.filter(i => !!i);
 }

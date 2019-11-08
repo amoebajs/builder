@@ -111,6 +111,7 @@ emitSourceFileSync({
   filename: "cssgrid-component.tsx",
   statements: createReactSourceFile([
     createPage("MyComponent", "ambjs_common_module@css_grid_page", {
+      "use-comp-state": true,
       "grid-template-columns": 6,
       "grid-auto-row-min-width": "200px",
       "grid-auto-row-max-width": "400px"

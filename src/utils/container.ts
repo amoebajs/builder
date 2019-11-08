@@ -6,7 +6,8 @@ import {
   createConstVariableStatement,
   REACT,
   THIS,
-  createJsxElement
+  createJsxElement,
+  exists
 } from "./base";
 import { ExtensivePage } from "../plugins/pages";
 import { resolveProperties } from "../decorators";
@@ -146,11 +147,12 @@ export function createSelectPage<T extends typeof ExtensivePage>(
     createExportModifier(isExport),
     ts.createIdentifier(name),
     [],
-    [
-      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.PureComponent
-      ])
-    ],
-    [model.createRender()]
+    exists([model.createExtendParent(), ...model.createImplementParents()]),
+    exists([
+      ...model.createFields(),
+      ...model.createProperties(),
+      ...model.createMethods(),
+      model.createRender()
+    ])
   );
 }

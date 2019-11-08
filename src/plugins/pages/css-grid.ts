@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { createJsxElement, DOMS, createValueAttr } from "../../utils";
+import { createJsxElement, DOMS, createValueAttr, TYPES } from "../../utils";
 import { Page, Input } from "../../decorators";
 import { ExtensivePage } from "./basic";
 
@@ -8,6 +8,9 @@ import { ExtensivePage } from "./basic";
   displayName: "网格容器页面"
 })
 export class CssGridPage extends ExtensivePage {
+  @Input({ name: "use-comp-state", displayName: "是否使用组件状态" })
+  public useComponentState: boolean = false;
+
   @Input({ name: "grid-template-columns", displayName: "Grid列数量" })
   public gridTemplateColumnsCount: number = 3;
 
@@ -49,5 +52,15 @@ export class CssGridPage extends ExtensivePage {
         this.state.rootChildren
       )
     ];
+  }
+
+  public createExtendParent() {
+    if (this.useComponentState) {
+      return ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        TYPES.Component
+      ]);
+    } else {
+      return super.createExtendParent();
+    }
   }
 }
