@@ -118,12 +118,15 @@ function updateImportDeclarations(
 }
 
 export function createModuleStatements(options: {
-  rootName: string;
-  rootPage: string;
-  rootProcessors?: ExtensivePageProcessor[];
-  rootOptions?: any;
+  name: string;
+  page: string;
+  options?: any;
+  post?: {
+    processors?: { [name: string]: ExtensivePageProcessor };
+    options?: any;
+  };
 }) {
-  const page = GlobalMaps.pages[options.rootPage];
+  const page = GlobalMaps.pages[options.page];
   if (!page) {
     throw new Error("page template not found");
   }
@@ -131,11 +134,13 @@ export function createModuleStatements(options: {
   function onUpdate(statements: ts.ImportDeclaration[]) {
     updateImportDeclarations(imports, statements);
   }
+  const { processors = {}, options: pos = {} } = options.post || {};
   const root = createRootComponent(
-    options.rootName,
+    options.name,
     page.value,
-    options.rootOptions || {},
-    options.rootProcessors || [],
+    options.options || {},
+    processors,
+    pos,
     onUpdate,
     true
   );
