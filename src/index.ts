@@ -11,7 +11,7 @@ import {
 } from "./utils";
 import { RandomMathProcessor } from "./providers";
 import { CommonModule } from "./plugins";
-import { useModule, createPage } from "./core";
+import { useModule, createModuleStatements } from "./core";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -93,28 +93,39 @@ useModule(CommonModule);
 emitSourceFileSync({
   folder: "build",
   filename: "extensive-component.tsx",
-  statements: createReactSourceFile([
-    createPage("MyComponent", "ambjs_common_module@basic_extensive_page")
-  ])
+  statements: createReactSourceFile(
+    createModuleStatements({
+      rootName: "MyComponent",
+      rootPage: "ambjs_common_module@basic_extensive_page"
+    })
+  )
 });
 
 emitSourceFileSync({
   folder: "build",
   filename: "forkslot-component.tsx",
-  statements: createReactSourceFile([
-    createPage("MyComponent", "ambjs_common_module@fork_slot_page")
-  ])
+  statements: createReactSourceFile(
+    createModuleStatements({
+      rootName: "MyComponent",
+      rootPage: "ambjs_common_module@fork_slot_page"
+    })
+  )
 });
 
 emitSourceFileSync({
   folder: "build",
   filename: "cssgrid-component.tsx",
-  statements: createReactSourceFile([
-    createPage("MyComponent", "ambjs_common_module@css_grid_page", [], {
-      useComponentState: true,
-      "grid-template-columns": 6,
-      "grid-auto-row-min-width": "200px",
-      "grid-auto-row-max-width": "400px"
+  statements: createReactSourceFile(
+    createModuleStatements({
+      rootName: "MyComponent",
+      rootPage: "ambjs_common_module@css_grid_page",
+      rootProcessors: [],
+      rootOptions: {
+        useComponentState: true,
+        "grid-template-columns": 6,
+        "grid-auto-row-min-width": "200px",
+        "grid-auto-row-max-width": "400px"
+      }
     })
-  ])
+  )
 });

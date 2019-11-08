@@ -1,6 +1,7 @@
 import { Constructor, resolveModule, resolvePage } from "../decorators";
-import { createSelectPage } from "../utils";
+import { createSelectPage as createRootComponent } from "../utils";
 import { ExtensivePageProcessor } from "../plugins/pages";
+import ts = require("typescript");
 
 interface IEntry<T = any> {
   moduleName?: string;
@@ -37,20 +38,106 @@ export function useModule(module: Constructor<any>) {
   // console.log(GlobalMaps);
 }
 
-export function createPage(
-  name: string,
-  page: string,
-  processors: ExtensivePageProcessor[] = [],
-  options?: any
+function updateImportDeclarations(
+  imports: ts.ImportDeclaration[],
+  statements: ts.ImportDeclaration[]
 ) {
-  if (!GlobalMaps.pages[page]) {
+  for (const statement of statements) {
+    if (ts.isImportDeclaration(statement)) {
+      const { importClause, moduleSpecifier } = statement;
+      if (!importClause) continue;
+      if (!ts.isStringLiteral(moduleSpecifier)) continue;
+      const existIndex = imports.findIndex(
+        i =>
+          i.importClause &&
+          i.moduleSpecifier &&
+          ts.isStringLiteral(i.moduleSpecifier) &&
+          i.moduleSpecifier.text === moduleSpecifier.text
+      );
+      if (existIndex < 0) {
+        imports.push(statement);
+      } else {
+        const sourceItem = imports[existIndex];
+        const { importClause: clause01 } = sourceItem;
+        const { importClause: clause02 } = statement;
+        if (clause01!.namedBindings) {
+          if (ts.isNamedImports(clause01!.namedBindings)) {
+            if (
+              clause02!.namedBindings &&
+              ts.isNamedImports(clause02!.namedBindings!)
+            ) {
+              const named01 = clause01!.namedBindings as ts.NamedImports;
+              const named02 = clause02!.namedBindings as ts.NamedImports;
+              const addto: ts.ImportSpecifier[] = [];
+              for (const element of named02.elements) {
+                const target = named01.elements.find(
+                  i => i.name.text === element.name.text
+                );
+                if (!target) {
+                  addto.push(element);
+                }
+              }
+              named01.elements = ts.createNodeArray(
+                [...named01.elements].concat(addto)
+              );
+            } else {
+              imports.push(statement);
+            }
+          } else if (ts.isNamespaceImport(clause01!.namedBindings!)) {
+            if (
+              clause02!.namedBindings &&
+              ts.isNamespaceImport(clause02!.namedBindings!) &&
+              clause02!.namedBindings!.name.text !==
+                clause02!.namedBindings!.name.text
+            ) {
+              throw new Error(
+                "import update failed: duplicate namespace import exist"
+              );
+            } else {
+              imports.push(statement);
+            }
+          }
+        } else {
+          // source is default import
+          if (
+            !clause02!.namedBindings &&
+            clause02!.name!.text !== clause02!.name!.text
+          ) {
+            throw new Error(
+              `import update failed: duplicate default import exist - [${
+                clause02!.name!.text
+              }]`
+            );
+          } else {
+            imports.push(statement);
+          }
+        }
+      }
+    }
+  }
+}
+
+export function createModuleStatements(options: {
+  rootName: string;
+  rootPage: string;
+  rootProcessors?: ExtensivePageProcessor[];
+  rootOptions?: any;
+}) {
+  const page = GlobalMaps.pages[options.rootPage];
+  if (!page) {
     throw new Error("page template not found");
   }
-  return createSelectPage(
-    name,
-    GlobalMaps.pages[page].value,
-    options,
-    processors,
+  const imports: ts.ImportDeclaration[] = [];
+  function onUpdate(statements: ts.ImportDeclaration[]) {
+    updateImportDeclarations(imports, statements);
+  }
+  const root = createRootComponent(
+    options.rootName,
+    page.value,
+    options.rootOptions || {},
+    options.rootProcessors || [],
+    onUpdate,
     true
   );
+  return [...imports, root];
 }

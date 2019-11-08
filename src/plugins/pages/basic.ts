@@ -40,9 +40,14 @@ export interface IExtensivePageContract {
   createRender(): ts.MethodDeclaration;
 }
 
+export type ImportStatementsUpdater = (
+  statements: ts.ImportDeclaration[]
+) => void;
+
 export type ExtensivePageProcessor = (
   context: IExtensivePageContext,
-  options: { [name: string]: any }
+  options: { [name: string]: any },
+  onImportsUpdate: ImportStatementsUpdater
 ) => IExtensivePageContext;
 
 @Page({

@@ -12,7 +12,8 @@ import {
 import {
   ExtensivePage,
   IExtensivePageContext,
-  ExtensivePageProcessor
+  ExtensivePageProcessor,
+  ImportStatementsUpdater
 } from "../plugins/pages";
 import { resolveProperties } from "../decorators";
 
@@ -148,6 +149,7 @@ function createTemplateInstance<T extends typeof ExtensivePage>(
 function createPageContext(
   model: ExtensivePage<any>,
   processors: ExtensivePageProcessor[],
+  onUpdate: ImportStatementsUpdater,
   options: any
 ) {
   let context: IExtensivePageContext = {
@@ -159,7 +161,7 @@ function createPageContext(
     render: model.createRender()
   };
   for (const processor of processors) {
-    context = processor(context, options);
+    context = processor(context, options, onUpdate);
   }
   return context;
 }
@@ -169,10 +171,11 @@ export function createSelectPage<T extends typeof ExtensivePage>(
   template: T,
   options: any = {},
   processors: ExtensivePageProcessor[],
+  onUpdate: ImportStatementsUpdater,
   isExport = false
 ) {
   const model = createTemplateInstance(template, options);
-  const context = createPageContext(model, processors, options);
+  const context = createPageContext(model, processors, options, onUpdate);
   return ts.createClassDeclaration(
     [],
     createExportModifier(isExport),
