@@ -75,10 +75,9 @@ function createTemplateInstance<T extends typeof ExtensivePage>(
 
 function createPageContext(
   model: ExtensivePage<any>,
-  processors: { [name: string]: ExtensivePageProcessor },
+  processors: any[],
   onUpdate: ImportStatementsUpdater,
-  options: any,
-  pOptions: any
+  options: any
 ) {
   let context: IExtensivePageContext = {
     extendParent: model.createExtendParent(),
@@ -89,7 +88,9 @@ function createPageContext(
     rootChildren: model.createRenderChildren()
   };
   for (const key in processors) {
-    context = processors[key](context, pOptions[key], onUpdate);
+    processors[key].onNodePatch(context, onUpdate, () => {});
+    processors[key].onInit();
+    context = processors[key].context;
   }
   return context;
 }
@@ -98,19 +99,12 @@ export function createSelectPage<T extends typeof ExtensivePage>(
   name: string,
   template: T,
   options: any = {},
-  processors: { [name: string]: ExtensivePageProcessor },
-  pOptions: any = {},
+  processors: Array<any>,
   onUpdate: ImportStatementsUpdater,
   isExport = false
 ) {
   const model = createTemplateInstance(template, options);
-  const context = createPageContext(
-    model,
-    processors,
-    onUpdate,
-    options,
-    pOptions
-  );
+  const context = createPageContext(model, processors, onUpdate, options);
   return ts.createClassDeclaration(
     [],
     createExportModifier(isExport),

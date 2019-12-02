@@ -9,12 +9,12 @@ import {
 import { CommonModule } from "./plugins";
 import { useModule, createModuleStatements } from "./core";
 import {
-  AddButton,
+  AddButtonPipe,
   IAddButtonProps,
   ButtonTextType,
   ButtonOnClickType,
   ButtonStyleType
-} from "./providers/add-button";
+} from "./pipes/add-button.pipe";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -62,39 +62,33 @@ emitSourceFileSync({
         gridTemplateRowsFrs: [1, 2]
       },
       // 后处理
-      post: {
-        processors: {
-          post01: AddButton,
-          post02: AddButton
-        },
-        options: {
-          post01: <IAddButtonProps>{
-            key: "78gbeisrbyveerverb",
-            buttonText: {
-              type: ButtonTextType.PlainText,
-              data: "按钮01"
-            },
-            buttonOnClick: {
-              type: ButtonOnClickType.ConsoleLog,
-              eventName: "onFuckingBtnClick",
-              data: "woshinidie!"
-            }
+      post: [
+        new AddButtonPipe({
+          key: "78gbeisrbyveerverb",
+          buttonText: {
+            type: ButtonTextType.PlainText,
+            data: "按钮01"
           },
-          post02: <IAddButtonProps>{
-            key: "vw4rbserbserbsefbrb",
-            buttonText: {
-              type: ButtonTextType.StateKey,
-              data: "btn01Text"
-            },
-            buttonType: ButtonStyleType.Danger,
-            buttonOnClick: {
-              type: ButtonOnClickType.NotifyMessage,
-              eventName: "onCustomBtnClick",
-              data: "通知。。。。。"
-            }
+          buttonOnClick: {
+            type: ButtonOnClickType.ConsoleLog,
+            eventName: "onFuckingBtnClick",
+            data: "woshinidie!"
           }
-        }
-      }
+        }),
+        new AddButtonPipe({
+          key: "vw4rbserbserbsefbrb",
+          buttonText: {
+            type: ButtonTextType.StateKey,
+            data: "btn01Text"
+          },
+          buttonType: ButtonStyleType.Danger,
+          buttonOnClick: {
+            type: ButtonOnClickType.NotifyMessage,
+            eventName: "onCustomBtnClick",
+            data: "通知。。。。。"
+          }
+        })
+      ]
     })
   )
 });

@@ -1,6 +1,6 @@
 import { Constructor, resolveModule, resolvePage } from "../decorators";
 import { createSelectPage as createRootComponent } from "../utils";
-import { ExtensivePageProcessor } from "../plugins/pages";
+import { CommonPipe, RenderPipe } from "../pipes/base";
 import ts = require("typescript");
 
 interface IEntry<T = any> {
@@ -117,15 +117,9 @@ function updateImportDeclarations(
   }
 }
 
-export function createModuleStatements(options: {
-  name: string;
-  page: string;
-  options?: any;
-  post?: {
-    processors?: { [name: string]: ExtensivePageProcessor };
-    options?: any;
-  };
-}) {
+export function createModuleStatements<
+  T extends CommonPipe | RenderPipe
+>(options: { name: string; page: string; options?: any; post?: Array<T> }) {
   const page = GlobalMaps.pages[options.page];
   if (!page) {
     throw new Error("page template not found");
@@ -134,13 +128,12 @@ export function createModuleStatements(options: {
   function onUpdate(statements: ts.ImportDeclaration[]) {
     updateImportDeclarations(imports, statements);
   }
-  const { processors = {}, options: pos = {} } = options.post || {};
+  const processors = options.post || [];
   const root = createRootComponent(
     options.name,
     page.value,
     options.options || {},
     processors,
-    pos,
     onUpdate,
     true
   );

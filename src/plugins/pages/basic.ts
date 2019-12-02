@@ -45,6 +45,11 @@ export type ImportStatementsUpdater = (
   statements: ts.ImportDeclaration[]
 ) => void;
 
+export type ViewChildNodeCheckInHandler = (
+  key: string,
+  node: ts.JsxElement
+) => void;
+
 export type ExtensivePageProcessor = (
   context: IExtensivePageContext,
   options: { key: string; [name: string]: any },
