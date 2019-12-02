@@ -50,12 +50,6 @@ export type ViewChildNodeCheckInHandler = (
   node: ts.JsxElement
 ) => void;
 
-export type ExtensivePageProcessor = (
-  context: IExtensivePageContext,
-  options: { key: string; [name: string]: any },
-  onImportsUpdate: ImportStatementsUpdater
-) => IExtensivePageContext;
-
 @Page({
   name: "basic_extensive_page",
   displayName: "基础可扩展页面",

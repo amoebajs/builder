@@ -1,6 +1,5 @@
 import ts from "typescript";
 import {
-  ExtensivePageProcessor,
   IExtensivePageContext,
   ImportStatementsUpdater,
   ViewChildNodeCheckInHandler

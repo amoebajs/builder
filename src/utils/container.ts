@@ -11,7 +11,6 @@ import {
 import {
   ExtensivePage,
   IExtensivePageContext,
-  ExtensivePageProcessor,
   ImportStatementsUpdater
 } from "../plugins/pages";
 import { resolveProperties } from "../decorators";
