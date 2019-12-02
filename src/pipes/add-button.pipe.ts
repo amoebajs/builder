@@ -8,6 +8,7 @@ import {
   createValueAttr,
   createThisAccess
 } from "../utils";
+import { DescribePipe } from "./base";
 
 export enum ButtonTextType {
   PlainText,
@@ -40,6 +41,13 @@ export interface IAddButtonProps {
   };
 }
 
+@DescribePipe<IAddButtonProps>({
+  key: "PipeKey",
+  buttonText: {
+    type: "ButtonType",
+    data: "Context"
+  }
+})
 export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
   onInit() {
     const {

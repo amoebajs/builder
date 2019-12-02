@@ -4,6 +4,7 @@ import {
   ImportStatementsUpdater,
   ViewChildNodeCheckInHandler
 } from "../plugins/pages";
+import { Pipe } from "../decorators";
 
 export interface ISimpleObject {
   [key: string]: any;
@@ -13,6 +14,7 @@ export abstract class BasicPipe<T extends ISimpleObject = {}> {
   private context!: IExtensivePageContext;
   protected updateImport!: ImportStatementsUpdater;
   private checkInViewNode!: ViewChildNodeCheckInHandler;
+
   constructor(protected params: T) {}
   private onNodePatch(
     context: IExtensivePageContext,
@@ -23,6 +25,13 @@ export abstract class BasicPipe<T extends ISimpleObject = {}> {
     this.updateImport = onImportsUpdate;
     this.checkInViewNode = onViewNodeCheckIn;
   }
+  protected abstract onInit(): void;
+}
+
+export function DescribePipe<T>(
+  params: T extends BasicPipe<infer B> ? B : any
+) {
+  return Pipe<any>(params);
 }
 
 export abstract class CommonPipe<
