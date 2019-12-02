@@ -14,7 +14,7 @@ import {
   ButtonTextType,
   ButtonOnClickType,
   ButtonStyleType
-} from "./providers";
+} from "./providers/add-button";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
