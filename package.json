@@ -7,20 +7,39 @@
   "license": "MIT",
   "scripts": {
     "compile": "npx tsc",
-    "build": "npx ts-node src/index.ts",
-    "build:prod": "node dist/index.js"
+    "webpack:build": "ENV_MODE=build node scripts/render.js",
+    "webpack:watch": "ENV_MODE=watch node scripts/render.js",
+    "build:only": "npx ts-node src/index.ts",
+    "build": "yarn build:only && yarn webpack:build",
+    "build:prod": "node dist/index.js && yarn webpack:build"
   },
   "dependencies": {
+    "@types/node": "^12.11.7",
     "@types/prettier": "^1.18.3",
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.4",
+    "babel-plugin-react-require": "^3.1.1",
+    "chalk": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.5",
+    "css-loader": "^3.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "nunjucks": "^3.2.0",
     "prettier": "^1.18.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
     "reflect-metadata": "^0.1.13",
+    "style-loader": "^1.0.1",
+    "ts-import-plugin": "^1.6.1",
+    "ts-loader": "^6.2.1",
     "ts-node": "^8.4.1",
-    "typescript": "3.7.1-rc"
+    "tslib": "^1.10.0",
+    "typescript": "3.7.1-rc",
+    "webpack": "^4.41.2",
+    "webpack-dev-server": "^3.9.0",
+    "zent": "^7.1.0"
   },
   "devDependencies": {
-    "@types/node": "^12.11.7",
-    "@types/react": "^16.9.11",
-    "tslint": "^5.20.0",
-    "zent": "^7.1.0"
+    "chokidar": "^3.3.0",
+    "tslint": "^5.20.0"
   }
 }

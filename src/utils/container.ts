@@ -137,7 +137,7 @@ function createTemplateInstance<T extends typeof ExtensivePage>(
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
-      if (options[prop.name!]) {
+      if (options.hasOwnProperty(prop.name!)) {
         (<any>model)[prop.realName] = options[prop.name!];
       }
     }
