@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import ts from "typescript";
+import chalk from "chalk";
 import prettier from "prettier";
 import { PROJ_ROOT } from "./env";
 import { FolderError } from "../errors/folder";
@@ -104,14 +105,20 @@ export function emitSourceFileSync(options: IPrettierFileCreateOptions) {
   const printer = ts.createPrinter();
   const sourceFile = createSourceFile(options);
   let sourceString = printer.printFile(sourceFile);
-  if (options.prettier !== false) {
-    sourceString = prettier.format(sourceString, {
-      printWidth: 120,
-      parser: "typescript"
-    });
+  try {
+    if (options.prettier !== false) {
+      sourceString = prettier.format(sourceString, {
+        printWidth: 120,
+        parser: "typescript"
+      });
+    }
+    fs.writeFileSync(sourceFile.fileName, sourceString, { flag: "w+" });
+    console.log("emit --> " + sourceFile.fileName);
+  } catch (error) {
+    console.log(sourceString);
+    console.log(chalk.red("format source file failed:"));
+    throw error;
   }
-  fs.writeFileSync(sourceFile.fileName, sourceString, { flag: "w+" });
-  console.log("emit --> " + sourceFile.fileName);
 }
 
 export function createSourceFile(options: IFileCreateOptions) {

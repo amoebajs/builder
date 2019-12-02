@@ -8,7 +8,13 @@ import {
 } from "./utils";
 import { CommonModule } from "./plugins";
 import { useModule, createModuleStatements } from "./core";
-import { AddButton } from "./providers";
+import {
+  AddButton,
+  IAddButtonProps,
+  ButtonTextType,
+  ButtonOnClickType,
+  ButtonStyleType
+} from "./providers";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -51,9 +57,9 @@ emitSourceFileSync({
       page: "ambjs_common_module@css_grid_page",
       options: {
         useComponentState: true,
-        // "use-grid-row-repeat": false,
-        // "use-grid-column-repeat": false,
-        "grid-template-rows-frs": [1, 2]
+        defaultComponentState: { btn01Text: "10002" },
+        gridTemplateColumnsCount: 2,
+        gridTemplateRowsFrs: [1, 2]
       },
       // 后处理
       post: {
@@ -62,14 +68,30 @@ emitSourceFileSync({
           post02: AddButton
         },
         options: {
-          post01: {
-            buttonText: "balabala2按钮",
-            buttonEventName: "onFuckingBtnClick",
-            buttonClickOutput: "woshinidie!"
+          post01: <IAddButtonProps>{
+            key: "78gbeisrbyveerverb",
+            buttonText: {
+              type: ButtonTextType.PlainText,
+              data: "按钮01"
+            },
+            buttonOnClick: {
+              type: ButtonOnClickType.ConsoleLog,
+              eventName: "onFuckingBtnClick",
+              data: "woshinidie!"
+            }
           },
-          post02: {
-            buttonText: "6666666666",
-            buttonClickOutput: "9999999999!"
+          post02: <IAddButtonProps>{
+            key: "vw4rbserbserbsefbrb",
+            buttonText: {
+              type: ButtonTextType.StateKey,
+              data: "btn01Text"
+            },
+            buttonType: ButtonStyleType.Danger,
+            buttonOnClick: {
+              type: ButtonOnClickType.NotifyMessage,
+              eventName: "onCustomBtnClick",
+              data: "通知。。。。。"
+            }
           }
         }
       }

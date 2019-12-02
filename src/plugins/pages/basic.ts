@@ -47,7 +47,7 @@ export type ImportStatementsUpdater = (
 
 export type ExtensivePageProcessor = (
   context: IExtensivePageContext,
-  options: { [name: string]: any },
+  options: { key: string; [name: string]: any },
   onImportsUpdate: ImportStatementsUpdater
 ) => IExtensivePageContext;
 

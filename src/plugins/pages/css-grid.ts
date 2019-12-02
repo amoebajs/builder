@@ -11,34 +11,37 @@ export class CssGridPage extends ExtensivePage {
   @Input({ displayName: "是否使用组件状态" })
   public useComponentState: boolean = false;
 
-  @Input({ name: "use-grid-row-repeat", displayName: "使用Grid行重复" })
+  @Input({ displayName: "组件默认状态" })
+  public defaultComponentState: any = {};
+
+  @Input({ name: "useGridRowRepeat", displayName: "使用Grid行重复" })
   public use_GridRowRepeat: boolean = true;
 
-  @Input({ name: "use-grid-column-repeat", displayName: "使用Grid列重复" })
+  @Input({ displayName: "使用Grid列重复" })
   public use_GridColumnRepeat: boolean = true;
 
-  @Input({ name: "grid-template-rows-count", displayName: "Grid行数量" })
+  @Input({ displayName: "Grid行数量" })
   public gridTemplateRowsCount: number = 1;
 
-  @Input({ name: "grid-template-columns-count", displayName: "Grid列数量" })
+  @Input({ displayName: "Grid列数量" })
   public gridTemplateColumnsCount: number = 1;
 
-  @Input({ name: "grid-template-rows-frs", displayName: "Grid行重复比例" })
+  @Input({ displayName: "Grid行重复比例" })
   public gridTemplateRowsFrs: number[] = [1];
 
-  @Input({ name: "grid-template-columns-frs", displayName: "Grid列重复比例" })
+  @Input({ displayName: "Grid列重复比例" })
   public gridTemplateColumnsFrs: number[] = [1];
 
-  @Input({ name: "grid-template-rows-sizes", displayName: "Grid行尺寸" })
+  @Input({ displayName: "Grid行尺寸" })
   public gridTemplateRowsSizes: (number | string)[] = ["50vh", "50vh"];
 
-  @Input({ name: "grid-template-columns-sizes", displayName: "Grid列尺寸" })
+  @Input({ displayName: "Grid列尺寸" })
   public gridTemplateColumnsSizes: (number | string)[] = ["50vw", "50vw"];
 
-  @Input({ name: "grid-row-gap", displayName: "Grid行间隔(px)" })
+  @Input({ displayName: "Grid行间隔(px)" })
   public gridRowGap: number = 0;
 
-  @Input({ name: "grid-column-gap", displayName: "Grid列间隔(px)" })
+  @Input({ displayName: "Grid列间隔(px)" })
   public gridColumnGap: number = 0;
 
   protected onInit() {
@@ -93,4 +96,44 @@ export class CssGridPage extends ExtensivePage {
       return super.createExtendParent();
     }
   }
+
+  public createFields() {
+    const fields = super.createFields();
+    if (
+      this.useComponentState &&
+      typeof this.defaultComponentState === "object"
+    ) {
+      const state = this.defaultComponentState || {};
+      fields.unshift(
+        ts.createProperty(
+          [],
+          [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+          ts.createIdentifier("state"),
+          undefined,
+          TYPES.Any,
+          ts.createObjectLiteral(
+            Object.keys(state).map(n =>
+              ts.createPropertyAssignment(
+                n,
+                typeof state[n] === "number"
+                  ? ts.createNumericLiteral(state[n])
+                  : state[n] === true
+                  ? ts.createTrue()
+                  : state[n] === false
+                  ? ts.createFalse()
+                  : typeof state[n] === "string"
+                  ? ts.createStringLiteral(state[n])
+                  : ts.createStringLiteral(state[n])
+              )
+            )
+          )
+        )
+      );
+    }
+    return fields;
+  }
+}
+
+class A {
+  a = { name: 4, b: false, c: "@342", d: Symbol("dfa") };
 }
