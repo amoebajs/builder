@@ -56,8 +56,10 @@ emitSourceFileSync({
       name: "MyComponent",
       page: "ambjs_common_module@css_grid_page",
       options: {
-        useComponentState: true,
-        defaultComponentState: { btn01Text: "10002" },
+        basic: {
+          useComponentState: true,
+          defaultComponentState: { btn01Text: "10002" }
+        },
         gridTemplateColumnsCount: 2,
         gridTemplateRowsFrs: [1, 2]
       },

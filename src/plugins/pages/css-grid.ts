@@ -8,10 +8,18 @@ import { ExtensivePage } from "./basic";
   displayName: "网格容器页面"
 })
 export class CssGridPage extends ExtensivePage {
-  @Input({ displayName: "是否使用组件状态" })
+  @Input({
+    group: "basic",
+    displayGroupName: "基础设置",
+    displayName: "是否使用组件状态"
+  })
   public useComponentState: boolean = false;
 
-  @Input({ displayName: "组件默认状态" })
+  @Input({
+    group: "basic",
+    displayGroupName: "基础设置",
+    displayName: "组件默认状态"
+  })
   public defaultComponentState: any = {};
 
   @Input({ name: "useGridRowRepeat", displayName: "使用Grid行重复" })

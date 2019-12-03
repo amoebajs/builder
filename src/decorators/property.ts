@@ -4,6 +4,8 @@ import { defineProperty } from "./base";
 const defaults: IPropertyContract = {
   name: null,
   displayName: null,
+  group: null,
+  displayGroupName: null,
   type: null
 };
 

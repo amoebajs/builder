@@ -2,6 +2,7 @@ import "reflect-metadata";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 export const PAGE_DEFINE = "ambjs::page_define";
+export const PIPE_DEFINE = "ambjs::pipe_define";
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 
 export interface IConstructor<T> {
@@ -28,6 +29,8 @@ export interface IPageContract {
 export interface IPropertyContract {
   name: string | null;
   displayName: string | null;
+  group: string | null;
+  displayGroupName: string | null;
   type: "object" | "string" | "number" | "boolean" | string[] | null;
 }
 
@@ -60,6 +63,10 @@ export function resolvePage(
   defaults: Partial<IPageContract> = {}
 ) {
   return <IPageContract>Reflect.getMetadata(PAGE_DEFINE, target) || defaults;
+}
+
+export function definePipe(target: Constructor<any>, metadata: IPageContract) {
+  return Reflect.defineMetadata(PAGE_DEFINE, metadata, target);
 }
 
 export function defineProperty(
