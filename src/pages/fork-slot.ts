@@ -1,5 +1,5 @@
-import { createJsxElement, DOMS } from "../../utils";
-import { Page } from "../../decorators";
+import { createJsxElement, DOMS } from "../utils";
+import { Page } from "../decorators";
 import { ExtensivePage } from "./basic";
 
 @Page({

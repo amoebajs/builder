@@ -4,7 +4,7 @@ import {
   IExtensivePageContext,
   ImportStatementsUpdater,
   ViewChildNodeCheckInHandler
-} from "../plugins/pages";
+} from "../pages/basic";
 
 export abstract class BasicPipe {
   protected pipeName!: string;

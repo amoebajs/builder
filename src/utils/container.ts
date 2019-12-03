@@ -12,7 +12,7 @@ import {
   ExtensivePage,
   IExtensivePageContext,
   ImportStatementsUpdater
-} from "../plugins/pages";
+} from "../pages/basic";
 import { resolveProperties, IConstructor, resolvePipe } from "../decorators";
 import { CommonPipe, RenderPipe, BasicPipe } from "../pipes/base";
 
@@ -88,16 +88,16 @@ function createPageContext(
     if (processor instanceof Array) {
       const [processorCtor, args = {}] = processor;
       instance = inputProperties<CommonPipe>(processorCtor, args);
-      instance["pipeName"] = resolvePipe(processorCtor).name;
+      instance["pipeName"] = resolvePipe(processorCtor).name || "unnamed";
     } else if ("prototype" in processor) {
       instance = inputProperties<CommonPipe>(processor, {});
-      instance["pipeName"] = resolvePipe(processor).name;
+      instance["pipeName"] = resolvePipe(processor).name || "unnamed";
     } else {
       const args = (<BasicPipe>processor)["params"] || {};
       instance = inputProperties(processor, args);
-      instance["pipeName"] = resolvePipe(
-        Object.getPrototypeOf(processor).constructor
-      ).name;
+      instance["pipeName"] =
+        resolvePipe(Object.getPrototypeOf(processor).constructor).name ||
+        "unnamed";
     }
     instance["onNodePatch"](context, onUpdate, (key, childNode) => {
       instance["childNodes"][key] = childNode;
@@ -119,10 +119,15 @@ function inputProperties<T = any>(template: any, options: any): T {
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
-      if (options.hasOwnProperty(prop.name!)) {
+      if (
+        prop.group &&
+        options.hasOwnProperty(prop.group) &&
+        options[prop.group] &&
+        options[prop.group].hasOwnProperty(prop.name!)
+      ) {
+        (<any>model)[prop.realName] = options[prop.group][prop.name!];
+      } else if (options.hasOwnProperty(prop.name!)) {
         (<any>model)[prop.realName] = options[prop.name!];
-      } else if (!!prop.group && options.hasOwnProperty(prop.group)) {
-        (<any>model)[prop.realName] = options[prop.group!][prop.name!];
       }
     }
   }

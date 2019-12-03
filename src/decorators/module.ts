@@ -3,7 +3,8 @@ import { Constructor, IModuleContract, defineModule } from "./base";
 const defaults: IModuleContract = {
   name: null,
   displayName: null,
-  pages: []
+  pages: [],
+  pipes: []
 };
 
 export function Module(define: Partial<IModuleContract> = {}) {

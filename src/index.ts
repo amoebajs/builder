@@ -6,7 +6,6 @@ import {
   createReactSourceFile,
   createJsxElement
 } from "./utils";
-import { CommonModule } from "./plugins";
 import { useModule, createModuleStatements } from "./core";
 import {
   AddButtonPipe,
@@ -14,6 +13,8 @@ import {
   ButtonOnClickType,
   ButtonStyleType
 } from "./pipes/add-button.pipe";
+import { CommonPipeModule } from "./pipes";
+import { CommonPageModule } from "./pages";
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -23,7 +24,8 @@ const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
 
 if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
-useModule(CommonModule);
+useModule(CommonPageModule);
+useModule(CommonPipeModule);
 
 // emitSourceFileSync({
 //   folder: "build/src",
@@ -31,7 +33,7 @@ useModule(CommonModule);
 //   statements: createReactSourceFile(
 //     createModuleStatements({
 //       name: "MyComponent",
-//       page: "ambjs_common_module@basic_extensive_page"
+//       page: "ambjs_common_page_module@basic_extensive_page"
 //     })
 //   )
 // });
@@ -42,7 +44,7 @@ useModule(CommonModule);
 //   statements: createReactSourceFile(
 //     createModuleStatements({
 //       name: "MyComponent",
-//       page: "ambjs_common_module@fork_slot_page"
+//       page: "ambjs_common_page_module@fork_slot_page"
 //     })
 //   )
 // });
@@ -53,7 +55,7 @@ emitSourceFileSync({
   statements: createReactSourceFile(
     createModuleStatements({
       name: "MyComponent",
-      page: "ambjs_common_module@css_grid_page",
+      page: "ambjs_common_page_module@css_grid_page",
       options: {
         basic: {
           useComponentState: true,
@@ -64,29 +66,35 @@ emitSourceFileSync({
       },
       // 后处理
       post: [
-        new AddButtonPipe({
-          buttonText: {
-            type: ButtonTextType.PlainText,
-            data: "按钮01"
-          },
-          buttonOnClick: {
-            type: ButtonOnClickType.ConsoleLog,
-            eventName: "onFuckingBtnClick",
-            data: "woshinidie!"
+        {
+          name: "ambjs_common_pipe_module@AddButtonPipe",
+          args: {
+            buttonText: {
+              type: ButtonTextType.PlainText,
+              data: "按钮01"
+            },
+            buttonOnClick: {
+              type: ButtonOnClickType.ConsoleLog,
+              eventName: "onFuckingBtnClick",
+              data: "woshinidie!"
+            }
           }
-        }),
-        new AddButtonPipe({
-          buttonText: {
-            type: ButtonTextType.StateKey,
-            data: "btn01Text"
-          },
-          buttonType: ButtonStyleType.Danger,
-          buttonOnClick: {
-            type: ButtonOnClickType.NotifyMessage,
-            eventName: "onCustomBtnClick",
-            data: "通知。。。。。"
+        },
+        {
+          name: "ambjs_common_pipe_module@AddButtonPipe",
+          args: {
+            buttonText: {
+              type: ButtonTextType.StateKey,
+              data: "btn01Text"
+            },
+            buttonType: ButtonStyleType.Danger,
+            buttonOnClick: {
+              type: ButtonOnClickType.NotifyMessage,
+              eventName: "onCustomBtnClick",
+              data: "通知。。。。。"
+            }
           }
-        })
+        }
       ]
     })
   )

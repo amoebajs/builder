@@ -1,12 +1,12 @@
 import ts from "typescript";
-import { Page } from "../../decorators";
+import { Page } from "../decorators";
 import {
   REACT,
   createConstVariableStatement,
   THIS,
   createJsxElement,
   TYPES
-} from "../../utils";
+} from "../utils";
 
 export interface IJsxAttrs {
   [key: string]: ts.JsxExpression | string;

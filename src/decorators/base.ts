@@ -17,6 +17,7 @@ export interface IModuleContract {
   name: string | null;
   displayName: string | null;
   pages: Constructor<any>[];
+  pipes: Constructor<any>[];
 }
 
 export interface IPageContract {
@@ -27,7 +28,9 @@ export interface IPageContract {
 }
 
 export interface IPipeContract {
-  name: string;
+  name: string | null;
+  displayName: string | null;
+  useProvider: "react";
 }
 
 export interface IPropertyContract {
@@ -111,7 +114,7 @@ export function defineProperty(
         : "object";
   }
   const props = resolveProperties(target);
-  props[data.name] = data;
+  props[data.group ? `${data.group}.${data.name}` : data.name] = data;
   return Reflect.defineMetadata(PROP_INPUT_DEFINE, props, target);
 }
 

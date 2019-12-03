@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { DOMS, createValueAttr, TYPES } from "../../utils";
-import { Page, Input } from "../../decorators";
+import { DOMS, createValueAttr, TYPES } from "../utils";
+import { Page, Input } from "../decorators";
 import { ExtensivePage } from "./basic";
 
 @Page({

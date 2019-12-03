@@ -1,9 +1,11 @@
 import ts from "typescript";
-import { Constructor, resolveModule, resolvePage } from "../decorators";
 import {
-  createSelectPage as createRootComponent,
-  ProcessorType
-} from "../utils";
+  Constructor,
+  resolveModule,
+  resolvePage,
+  resolvePipe
+} from "../decorators";
+import { createSelectPage as createRootComponent } from "../utils";
 
 interface IEntry<T = any> {
   moduleName?: string;
@@ -14,7 +16,8 @@ interface IEntry<T = any> {
 
 const GlobalMaps = {
   modules: <{ [key: string]: IEntry }>{},
-  pages: <{ [key: string]: IEntry }>{}
+  pages: <{ [key: string]: IEntry }>{},
+  pipes: <{ [key: string]: IEntry }>{}
 };
 
 export function useModule(module: Constructor<any>) {
@@ -32,6 +35,18 @@ export function useModule(module: Constructor<any>) {
       GlobalMaps.pages[`${moduleName}@${pageName}`] = {
         name: pageName,
         displayName: meta.displayName || pageName,
+        moduleName,
+        value: i
+      };
+    });
+  }
+  if (metadata.pipes) {
+    metadata.pipes.forEach(i => {
+      const meta = resolvePipe(i);
+      const pipeName = meta.name || "[unnamed]";
+      GlobalMaps.pipes[`${moduleName}@${pipeName}`] = {
+        name: pipeName,
+        displayName: meta.displayName || pipeName,
         moduleName,
         value: i
       };
@@ -126,12 +141,12 @@ export interface IModuleCreateOptions<T> {
   post?: Array<T>;
 }
 
-export function createModuleStatements<T extends ProcessorType>({
+export function createModuleStatements({
   page: PAGE,
   name: NAME,
   post: POST,
   options: OPTS
-}: IModuleCreateOptions<T>) {
+}: IModuleCreateOptions<{ name: string; args: any }>) {
   const page = GlobalMaps.pages[PAGE];
   if (!page) {
     throw new Error("page template not found");
@@ -140,7 +155,10 @@ export function createModuleStatements<T extends ProcessorType>({
   function onUpdate(statements: ts.ImportDeclaration[]) {
     updateImportDeclarations(imports, statements);
   }
-  const processors = POST || [];
+  const processors = (POST || []).map(({ name, args }) => [
+    GlobalMaps.pipes[name].value,
+    args
+  ]);
   const root = createRootComponent(
     NAME,
     page.value,
