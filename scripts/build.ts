@@ -7,7 +7,7 @@ import fn, { IOptions } from "../src/build/webpack.config";
 
 const ENV_MODE = process.env.ENV_MODE || "build";
 
-const configs: IOptions = { title: "测试" };
+const configs: IOptions = { template: { title: "测试" } };
 
 const output = path.resolve(__dirname, "..", "build", "output");
 

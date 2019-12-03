@@ -14,8 +14,11 @@ export interface IOptions {
     path: string;
     filename: string;
   }>;
+  template?: Partial<{
+    title: string;
+    path: string;
+  }>;
   mode?: "production" | "development";
-  title: string;
   minimize?: boolean;
   showProgress?: boolean;
 }
@@ -76,8 +79,10 @@ export default (options: IOptions) =>
 
     plugins: [
       new HtmlWebPackPlugin({
-        template: "./src/assets/index.html",
-        title: options.title
+        template:
+          options.template?.path ??
+          path.resolve(__dirname, "..", "assets", "index.html"),
+        title: options.template?.title ?? "Index"
       })
     ].concat(
       options.showProgress
