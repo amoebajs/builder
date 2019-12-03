@@ -1,7 +1,4 @@
 import ts from "typescript";
-import * as fs from "fs";
-import * as path from "path";
-import jsyaml from "js-yaml";
 import {
   emitSourceFileSync,
   createReactSourceFile,
@@ -11,18 +8,7 @@ import { useModule, createModuleStatements } from "./core";
 import { CommonPipeModule } from "./pipes";
 import { CommonPageModule } from "./pages";
 
-// import demo_conf = require("./assets/demo.json");
-const demo_conf = jsyaml.load(
-  fs.readFileSync("src/assets/demo.yaml").toString()
-);
-
-const buildFolder = path.resolve(process.cwd(), "build");
-
-if (!fs.existsSync(buildFolder)) fs.mkdirSync(buildFolder);
-
-const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
-
-if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
+export { buildSource } from "./build";
 
 useModule(CommonPageModule);
 useModule(CommonPipeModule);
@@ -40,7 +26,7 @@ export interface IPageCreateOptions {
   };
 }
 
-function createSource(
+export function createSource(
   outDir: string,
   fileName: string,
   configs: IPageCreateOptions
@@ -65,5 +51,3 @@ function createSource(
     statements: createReactMainFile(compName, fileName)
   });
 }
-
-createSource(path.join("build", "src"), "cssgrid-component", demo_conf);

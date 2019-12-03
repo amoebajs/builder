@@ -7,27 +7,31 @@
   "license": "MIT",
   "scripts": {
     "compile": "npx tsc",
-    "webpack:build": "ENV_MODE=build node scripts/render.js",
-    "webpack:watch": "ENV_MODE=watch node scripts/render.js",
-    "build:only": "npx ts-node src/index.ts",
+    "webpack:build": "ENV_MODE=build TS_PROJECT=tsconfig.scripts.json ts-node scripts/build.ts",
+    "webpack:watch": "ENV_MODE=watch TS_PROJECT=tsconfig.scripts.json ts-node scripts/build.ts",
+    "build:only": "TS_PROJECT=tsconfig.scripts.json npx ts-node scripts/compile.ts",
     "build": "yarn build:only && yarn webpack:build",
     "build:prod": "node dist/index.js && yarn webpack:build"
   },
   "dependencies": {
+    "@types/copy-webpack-plugin": "^5.0.0",
+    "@types/html-webpack-plugin": "^3.2.1",
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.11.7",
     "@types/prettier": "^1.18.3",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.4",
     "@types/uuid": "^3.4.6",
-    "babel-plugin-react-require": "^3.1.1",
+    "@types/webpack": "^4.41.0",
+    "@types/webpack-dev-server": "^3.9.0",
     "chalk": "^3.0.0",
+    "chokidar": "^3.3.0",
     "copy-webpack-plugin": "^5.0.5",
     "css-loader": "^3.2.0",
     "html-webpack-plugin": "^3.2.0",
     "js-yaml": "^3.13.1",
     "nunjucks": "^3.2.0",
-    "prettier": "^1.18.2",
+    "prettier": "^1.19.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "reflect-metadata": "^0.1.13",
@@ -36,14 +40,13 @@
     "ts-loader": "^6.2.1",
     "ts-node": "^8.4.1",
     "tslib": "^1.10.0",
-    "typescript": "3.7.1-rc",
+    "typescript": "^3.7.2",
     "uuid": "^3.3.3",
     "webpack": "^4.41.2",
     "webpack-dev-server": "^3.9.0",
     "zent": "^7.1.0"
   },
   "devDependencies": {
-    "chokidar": "^3.3.0",
     "tslint": "^5.20.0"
   }
 }
