@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import jsyaml from "js-yaml";
 import { createSource } from "../src";
+import chalk from "chalk";
 
 // import demo_conf = require("./assets/demo.json");
 const demo_conf = jsyaml.load(
@@ -17,4 +18,10 @@ const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
 
 if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
-createSource(path.join("build", "src"), "cssgrid-component", demo_conf);
+createSource(
+  path.resolve(process.cwd(), "build", "src"),
+  "cssgrid-component",
+  demo_conf
+).catch(error => {
+  console.log(chalk.red(error));
+});

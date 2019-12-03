@@ -1,9 +1,8 @@
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import * as path from "path";
 import ts from "typescript";
 import chalk from "chalk";
 import prettier from "prettier";
-import { PROJ_ROOT } from "./env";
 import { FolderError } from "../errors/folder";
 
 export interface IFileCreateOptions {
@@ -99,39 +98,65 @@ export function createReactSourceFile(statements: ts.Statement[]) {
   return (<ts.Statement[]>[IMPORTS.React]).concat(statements);
 }
 
-export function emitSourceFileSync(options: IPrettierFileCreateOptions) {
-  const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
-  if (!fs.existsSync(dir))
-    throw new FolderError(`folder [${options.folder}] is not exist.`);
-  const printer = ts.createPrinter();
-  const sourceFile = createSourceFile(options);
-  let sourceString = printer.printFile(sourceFile);
-  try {
-    if (options.prettier !== false) {
-      sourceString = prettier.format(sourceString, {
-        printWidth: 120,
-        parser: "typescript"
-      });
-    }
-    fs.writeFileSync(sourceFile.fileName, sourceString, { flag: "w+" });
-    console.log("emit --> " + sourceFile.fileName);
-  } catch (error) {
-    console.log(sourceString);
-    console.log(chalk.red("format source file failed:"));
-    throw error;
-  }
+export async function emitSourceFileSync(options: IPrettierFileCreateOptions) {
+  return new Promise<void>((resolve, reject) => {
+    fs.pathExists(options.folder).then(async exist => {
+      if (!exist) {
+        reject(new FolderError(`folder [${options.folder}] is not exist.`));
+      } else {
+        const printer = ts.createPrinter();
+        const sourceFile = await createSourceFile(options);
+        let sourceString = printer.printFile(sourceFile);
+        try {
+          if (options.prettier !== false) {
+            sourceString = prettier.format(sourceString, {
+              printWidth: 120,
+              parser: "typescript"
+            });
+          }
+          fs.writeFile(
+            sourceFile.fileName,
+            sourceString,
+            { flag: "w+" },
+            error => {
+              if (error) {
+                console.log(sourceString);
+                console.log(chalk.red("format source file failed"));
+                return reject(error);
+              }
+              console.log("emit --> " + sourceFile.fileName);
+              resolve();
+            }
+          );
+        } catch (error) {
+          console.log(sourceString);
+          console.log(chalk.red("format source file failed"));
+          reject(error);
+        }
+      }
+    });
+  });
 }
 
-export function createSourceFile(options: IFileCreateOptions) {
-  const dir = path.resolve(process.cwd(), PROJ_ROOT, options.folder);
-  if (!fs.existsSync(dir))
-    throw new FolderError(`folder [${options.folder}] is not exist.`);
-  const sourceFile = ts.createSourceFile(
-    path.join(dir, options.filename),
-    "",
-    ts.ScriptTarget.ES2017
-  );
-  return ts.updateSourceFileNode(sourceFile, options.statements);
+export async function createSourceFile(options: IFileCreateOptions) {
+  return new Promise<ts.SourceFile>((resolve, reject) => {
+    fs.pathExists(options.folder).then(async exist => {
+      if (!exist) {
+        reject(new FolderError(`folder [${options.folder}] is not exist.`));
+      } else {
+        try {
+          const sourceFile = ts.createSourceFile(
+            path.join(options.folder, options.filename),
+            "",
+            ts.ScriptTarget.ES2017
+          );
+          resolve(ts.updateSourceFileNode(sourceFile, options.statements));
+        } catch (error) {
+          reject(error);
+        }
+      }
+    });
+  });
 }
 
 export function createExportModifier(isExport = false) {

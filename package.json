@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.1",
+  "version": "0.0.1-beta.1575370335674",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@types/copy-webpack-plugin": "^5.0.0",
+    "@types/fs-extra": "^8.0.1",
     "@types/html-webpack-plugin": "^3.2.1",
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.11.7",
@@ -32,6 +33,7 @@
     "chokidar": "^3.3.0",
     "copy-webpack-plugin": "^5.0.5",
     "css-loader": "^3.2.0",
+    "fs-extra": "^8.1.0",
     "html-webpack-plugin": "^3.2.0",
     "js-yaml": "^3.13.1",
     "nunjucks": "^3.2.0",

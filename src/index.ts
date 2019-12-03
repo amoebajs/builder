@@ -27,13 +27,13 @@ export interface IPageCreateOptions {
   };
 }
 
-export function createSource(
+export async function createSource(
   outDir: string,
   fileName: string,
   configs: IPageCreateOptions
 ) {
   const compName = "App";
-  emitSourceFileSync({
+  await emitSourceFileSync({
     folder: outDir,
     filename: fileName + ".tsx",
     statements: createReactSourceFile(
@@ -46,7 +46,7 @@ export function createSource(
       })
     )
   });
-  emitSourceFileSync({
+  await emitSourceFileSync({
     folder: outDir,
     filename: "main.tsx",
     statements: createReactMainFile(compName, fileName)
