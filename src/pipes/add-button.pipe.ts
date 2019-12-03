@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { RenderPipe } from "./base";
+import { Pipe } from "../decorators";
 import {
   createNamedImport,
   createPublicArrow,
@@ -8,7 +8,7 @@ import {
   createValueAttr,
   createThisAccess
 } from "../utils";
-import { DescribePipe } from "./base";
+import { RenderPipe } from "./base";
 
 export enum ButtonTextType {
   PlainText,
@@ -41,11 +41,25 @@ export interface IAddButtonProps {
   };
 }
 
-@DescribePipe<IAddButtonProps>({
-  key: "PipeKey",
-  buttonText: {
-    type: "ButtonType",
-    data: "Context"
+@Pipe<IAddButtonProps>({
+  description: {
+    key: "the key of this pipe.",
+    buttonText: [
+      "the display of button.",
+      {
+        type: "the type of this button's text.",
+        data: "this info is decided by button's text type."
+      }
+    ],
+    buttonType: "the type of this button.",
+    buttonOnClick: [
+      "the logic of button's click.",
+      {
+        type: "the type of this button's click.",
+        eventName: "the name of this button's click handler.",
+        data: "this info is decided by button's click type."
+      }
+    ]
   }
 })
 export class AddButtonPipe extends RenderPipe<IAddButtonProps> {

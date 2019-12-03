@@ -28,12 +28,6 @@ export abstract class BasicPipe<T extends ISimpleObject = {}> {
   protected abstract onInit(): void;
 }
 
-export function DescribePipe<T>(
-  params: T extends BasicPipe<infer B> ? B : any
-) {
-  return Pipe<any>(params);
-}
-
 export abstract class CommonPipe<
   T extends ISimpleObject = {}
 > extends BasicPipe<T> {
