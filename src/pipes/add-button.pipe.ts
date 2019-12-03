@@ -11,15 +11,15 @@ import {
 import { RenderPipe } from "./base";
 
 export enum ButtonTextType {
-  PlainText,
-  ThisKey,
-  PropsKey,
-  StateKey
+  PlainText = 0,
+  ThisKey = 1,
+  PropsKey = 2,
+  StateKey = 3
 }
 
 export enum ButtonOnClickType {
-  ConsoleLog,
-  NotifyMessage
+  ConsoleLog = 0,
+  NotifyMessage = 1
 }
 
 export enum ButtonStyleType {

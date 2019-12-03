@@ -146,7 +146,7 @@ export function createModuleStatements({
   name: NAME,
   post: POST,
   options: OPTS
-}: IModuleCreateOptions<{ name: string; args: any }>) {
+}: IModuleCreateOptions<{ name: string; args?: any }>) {
   const page = GlobalMaps.pages[PAGE];
   if (!page) {
     throw new Error("page template not found");

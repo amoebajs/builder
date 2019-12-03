@@ -109,3 +109,54 @@ export function createTextDivBlockClass(
     ]
   );
 }
+
+export function createReactMainFile(
+  compName: string,
+  compModule: string
+): ts.Statement[] {
+  return [
+    ts.createImportDeclaration(
+      [],
+      [],
+      ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+      ts.createStringLiteral("react")
+    ),
+    ts.createImportDeclaration(
+      [],
+      [],
+      ts.createImportClause(ts.createIdentifier(REACT.DomNS), undefined),
+      ts.createStringLiteral("react-dom")
+    ),
+    ts.createImportDeclaration(
+      [],
+      [],
+      ts.createImportClause(
+        undefined,
+        ts.createNamedImports([
+          ts.createImportSpecifier(undefined, ts.createIdentifier(compName))
+        ])
+      ),
+      ts.createStringLiteral("./" + compModule)
+    ),
+    ts.createExpressionStatement(
+      ts.createCall(
+        ts.createPropertyAccess(
+          ts.createIdentifier(REACT.DomNS),
+          ts.createIdentifier("render")
+        ),
+        [],
+        [
+          createJsxElement(compName, [], {}),
+          ts.createCall(
+            ts.createPropertyAccess(
+              ts.createIdentifier("document"),
+              ts.createIdentifier("getElementById")
+            ),
+            [],
+            [ts.createStringLiteral("app")]
+          )
+        ]
+      )
+    )
+  ];
+}

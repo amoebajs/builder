@@ -18,6 +18,7 @@ export interface IPrettierFileCreateOptions extends IFileCreateOptions {
 
 export const REACT = {
   NS: "React",
+  DomNS: "ReactDOM",
   PackageName: "react",
   Props: "props",
   State: "state",
