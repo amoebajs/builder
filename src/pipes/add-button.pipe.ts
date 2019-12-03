@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Pipe } from "../decorators";
+import { Pipe, Input } from "../decorators";
 import {
   createNamedImport,
   createPublicArrow,
@@ -27,62 +27,55 @@ export enum ButtonStyleType {
   Danger = "danger"
 }
 
-export interface IAddButtonProps {
-  key: string;
-  buttonText?: {
-    type: ButtonTextType;
-    data: any;
-  };
-  buttonType?: ButtonStyleType;
-  buttonOnClick?: {
-    type: ButtonOnClickType;
-    eventName: string;
-    data: any;
-  };
-}
+@Pipe("AddButtonPipe")
+export class AddButtonPipe extends RenderPipe {
+  @Input({
+    name: "type",
+    group: "buttonText",
+    description: "the type of this button's text."
+  })
+  private buttonTextType: ButtonTextType = ButtonTextType.PlainText;
 
-@Pipe<IAddButtonProps>({
-  description: {
-    key: "the key of this pipe.",
-    buttonText: [
-      "the display of button.",
-      {
-        type: "the type of this button's text.",
-        data: "this info is decided by button's text type."
-      }
-    ],
-    buttonType: "the type of this button.",
-    buttonOnClick: [
-      "the logic of button's click.",
-      {
-        type: "the type of this button's click.",
-        eventName: "the name of this button's click handler.",
-        data: "this info is decided by button's click type."
-      }
-    ]
-  }
-})
-export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
+  @Input({
+    name: "data",
+    group: "buttonText",
+    description: "this info is decided by button's text type."
+  })
+  private buttonTextData: any = "确认";
+
+  @Input({ description: "the type of this button." })
+  private buttonType: ButtonStyleType = ButtonStyleType.Primary;
+
+  @Input({
+    name: "type",
+    group: "buttonOnClick",
+    description: "the type of this button's click."
+  })
+  private buttonOnClickType: ButtonOnClickType = ButtonOnClickType.ConsoleLog;
+
+  @Input({
+    name: "eventName",
+    group: "buttonOnClick",
+    description: "the name of this button's click handler."
+  })
+  private buttonOnClickEventName: string = "onButtonClick";
+
+  @Input({
+    name: "data",
+    group: "buttonOnClick",
+    description: "this info is decided by button's click type."
+  })
+  private buttonOnClickData: any = "btn is clicked";
+
   onInit() {
-    const {
-      key,
-      buttonType = ButtonStyleType.Primary,
-      buttonText = {
-        type: ButtonTextType.PlainText,
-        data: "确认"
-      },
-      buttonOnClick = {
-        type: ButtonOnClickType.ConsoleLog,
-        eventName: "onButtonClick",
-        data: "btn is clicked"
-      }
-    } = this.params;
-
     const eName = "e";
     const jsxButtonName = "Button";
-    const buttonName = resolveButtonName(buttonText);
+    const buttonName = resolveButtonName(
+      this.buttonTextType,
+      this.buttonTextData
+    );
     const statements: ts.Statement[] = [];
-    if (buttonOnClick.type === ButtonOnClickType.ConsoleLog) {
+    if (this.buttonOnClickType === ButtonOnClickType.ConsoleLog) {
       statements.push(
         ts.createExpressionStatement(
           ts.createCall(
@@ -91,12 +84,12 @@ export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
               ts.createIdentifier("log")
             ),
             [],
-            [ts.createStringLiteral(buttonOnClick.data)]
+            [ts.createStringLiteral(this.buttonOnClickData)]
           )
         )
       );
     }
-    if (buttonOnClick.type === ButtonOnClickType.NotifyMessage) {
+    if (this.buttonOnClickType === ButtonOnClickType.NotifyMessage) {
       this.updateImport([createNamedImport("zent", ["Notify"])]);
       statements.push(
         ts.createExpressionStatement(
@@ -106,7 +99,7 @@ export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
               ts.createIdentifier("success")
             ),
             [],
-            [ts.createStringLiteral(buttonOnClick.data)]
+            [ts.createStringLiteral(this.buttonOnClickData)]
           )
         )
       );
@@ -114,21 +107,20 @@ export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
     // import Button from zent package
     this.updateImport([createNamedImport("zent", [jsxButtonName])]);
     // create clicn event handler
-    if (this.existField(buttonOnClick.eventName)) {
+    if (this.existField(this.buttonOnClickEventName)) {
       throw new Error(
-        `event handler [${buttonOnClick.eventName}] is already exist.`
+        `event handler [${this.buttonOnClickEventName}] is already exist.`
       );
     }
     this.addField(
       createPublicArrow(
-        buttonOnClick.eventName,
+        this.buttonOnClickEventName,
         [createAnyParameter(eName)],
         statements
       )
     );
     // create Button jsx element in render with handler
     this.addChildNode(
-      key,
       createJsxElement(
         "div",
         [],
@@ -145,8 +137,8 @@ export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
             jsxButtonName,
             [],
             {
-              type: buttonType,
-              onClick: createThisAccess(buttonOnClick.eventName)
+              type: this.buttonType,
+              onClick: createThisAccess(this.buttonOnClickEventName)
             },
             [
               typeof buttonName === "string"
@@ -160,17 +152,14 @@ export class AddButtonPipe extends RenderPipe<IAddButtonProps> {
   }
 }
 
-function resolveButtonName(buttonText: IAddButtonProps["buttonText"]) {
-  if (typeof buttonText !== "string") {
-    const { type, data } = buttonText!;
-    if (type === ButtonTextType.PlainText) return data;
-    return ts.createPropertyAccess(
-      ts.createThis(),
-      ts.createIdentifier(
-        type === ButtonTextType.ThisKey
-          ? data
-          : (type === ButtonTextType.StateKey ? "state." : "props.") + data
-      )
-    );
-  }
+function resolveButtonName(type: ButtonTextType, data: any) {
+  if (type === ButtonTextType.PlainText) return data;
+  return ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(
+      type === ButtonTextType.ThisKey
+        ? data
+        : (type === ButtonTextType.StateKey ? "state." : "props.") + data
+    )
+  );
 }

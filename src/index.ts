@@ -10,7 +10,6 @@ import { CommonModule } from "./plugins";
 import { useModule, createModuleStatements } from "./core";
 import {
   AddButtonPipe,
-  IAddButtonProps,
   ButtonTextType,
   ButtonOnClickType,
   ButtonStyleType
@@ -66,7 +65,6 @@ emitSourceFileSync({
       // 后处理
       post: [
         new AddButtonPipe({
-          key: "78gbeisrbyveerverb",
           buttonText: {
             type: ButtonTextType.PlainText,
             data: "按钮01"
@@ -78,7 +76,6 @@ emitSourceFileSync({
           }
         }),
         new AddButtonPipe({
-          key: "vw4rbserbserbsefbrb",
           buttonText: {
             type: ButtonTextType.StateKey,
             data: "btn01Text"

@@ -26,12 +26,25 @@ export interface IPageContract {
   abstract: boolean;
 }
 
+export interface IPipeContract {
+  name: string;
+}
+
 export interface IPropertyContract {
   name: string | null;
   displayName: string | null;
   group: string | null;
   displayGroupName: string | null;
-  type: "object" | "string" | "number" | "boolean" | string[] | null;
+  type:
+    | "object"
+    | "string"
+    | "number"
+    | "boolean"
+    | (string | number)[]
+    | number[]
+    | string[]
+    | null;
+  description: string | null;
 }
 
 export interface IInnerPropertyContract extends IPropertyContract {
@@ -65,8 +78,15 @@ export function resolvePage(
   return <IPageContract>Reflect.getMetadata(PAGE_DEFINE, target) || defaults;
 }
 
-export function definePipe(target: Constructor<any>, metadata: IPageContract) {
-  return Reflect.defineMetadata(PAGE_DEFINE, metadata, target);
+export function definePipe(target: Constructor<any>, metadata: IPipeContract) {
+  return Reflect.defineMetadata(PIPE_DEFINE, metadata, target);
+}
+
+export function resolvePipe(
+  target: Constructor<any>,
+  defaults: Partial<IPipeContract> = {}
+) {
+  return <IPipeContract>Reflect.getMetadata(PIPE_DEFINE, target) || defaults;
 }
 
 export function defineProperty(

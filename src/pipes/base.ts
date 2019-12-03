@@ -1,21 +1,19 @@
 import ts from "typescript";
+import uuid from "uuid/v4";
 import {
   IExtensivePageContext,
   ImportStatementsUpdater,
   ViewChildNodeCheckInHandler
 } from "../plugins/pages";
-import { Pipe } from "../decorators";
 
-export interface ISimpleObject {
-  [key: string]: any;
-}
-
-export abstract class BasicPipe<T extends ISimpleObject = {}> {
+export abstract class BasicPipe {
+  protected pipeName!: string;
   private context!: IExtensivePageContext;
   protected updateImport!: ImportStatementsUpdater;
   private checkInViewNode!: ViewChildNodeCheckInHandler;
+  protected childNodes: { [key: string]: ts.JsxElement } = {};
 
-  constructor(protected params: T) {}
+  constructor(protected params?: any) {}
   private onNodePatch(
     context: IExtensivePageContext,
     onImportsUpdate: ImportStatementsUpdater,
@@ -28,9 +26,7 @@ export abstract class BasicPipe<T extends ISimpleObject = {}> {
   protected abstract onInit(): void;
 }
 
-export abstract class CommonPipe<
-  T extends ISimpleObject = {}
-> extends BasicPipe<T> {
+export abstract class CommonPipe extends BasicPipe {
   protected onInit() {}
 
   protected setParent(parent: ts.HeritageClause) {
@@ -113,15 +109,13 @@ export abstract class CommonPipe<
   }
 }
 
-export abstract class RenderPipe<
-  T extends ISimpleObject = {}
-> extends CommonPipe<T> {
+export abstract class RenderPipe extends CommonPipe {
   protected onInit() {}
 
-  protected addChildNode(key: string, node: ts.JsxElement) {
+  protected addChildNode(node: ts.JsxElement) {
     this["context"].rootChildren.push(node);
     if (this["checkInViewNode"]) {
-      this["checkInViewNode"](key, node);
+      this["checkInViewNode"](this.pipeName + "-" + uuid().slice(0, 8), node);
     }
   }
 }
