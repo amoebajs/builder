@@ -1,6 +1,7 @@
 import ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
+import jsyaml from "js-yaml";
 import {
   emitSourceFileSync,
   createReactSourceFile,
@@ -10,7 +11,10 @@ import { useModule, createModuleStatements } from "./core";
 import { CommonPipeModule } from "./pipes";
 import { CommonPageModule } from "./pages";
 
-import demo_conf = require("./assets/demo.json");
+// import demo_conf = require("./assets/demo.json");
+const demo_conf = jsyaml.load(
+  fs.readFileSync("src/assets/demo.yaml").toString()
+);
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
