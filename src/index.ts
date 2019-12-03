@@ -25,10 +25,11 @@ useModule(CommonPipeModule);
 
 export interface IPageCreateOptions {
   page: {
-    template: string;
+    module: string;
     name: string;
     options?: { [name: string]: any };
     post: Array<{
+      module: string;
       name: string;
       args?: { [name: string]: any };
     }>;
@@ -40,13 +41,15 @@ function createSource(
   fileName: string,
   configs: IPageCreateOptions
 ) {
+  const compName = "App";
   emitSourceFileSync({
     folder: outDir,
     filename: fileName + ".tsx",
     statements: createReactSourceFile(
       createModuleStatements({
+        module: configs.page.module,
         name: configs.page.name,
-        page: configs.page.template,
+        component: compName,
         options: configs.page.options || {},
         post: configs.page.post || []
       })
@@ -55,7 +58,7 @@ function createSource(
   emitSourceFileSync({
     folder: outDir,
     filename: "main.tsx",
-    statements: createReactMainFile(configs.page.name, fileName)
+    statements: createReactMainFile(compName, fileName)
   });
 }
 

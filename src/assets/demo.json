@@ -1,7 +1,7 @@
 {
   "page": {
-    "template": "ambjs_common_page_module@css_grid_page",
-    "name": "MyComponent",
+    "module": "ambjs_common_page_module",
+    "name": "css_grid_page",
     "options": {
       "basic": {
         "useComponentState": true,
@@ -14,7 +14,8 @@
     },
     "post": [
       {
-        "name": "ambjs_common_pipe_module@AddButtonPipe",
+        "module": "ambjs_common_pipe_module",
+        "name": "AddButtonPipe",
         "args": {
           "buttonText": {
             "type": 0,
@@ -28,7 +29,8 @@
         }
       },
       {
-        "name": "ambjs_common_pipe_module@AddButtonPipe",
+        "module": "ambjs_common_pipe_module",
+        "name": "AddButtonPipe",
         "args": {
           "buttonText": {
             "type": 3,

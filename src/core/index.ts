@@ -12,6 +12,8 @@ interface IEntry<T = any> {
   name: string;
   displayName: string;
   value: T;
+  pages: { [name: string]: any };
+  pipes: { [name: string]: any };
 }
 
 const GlobalMaps = {
@@ -23,16 +25,18 @@ const GlobalMaps = {
 export function useModule(module: Constructor<any>) {
   const metadata = resolveModule(module);
   const moduleName = metadata.name || "[unnamed]";
-  GlobalMaps.modules[moduleName] = {
+  const thisModule: IEntry<any> = (GlobalMaps.modules[moduleName] = {
     name: moduleName,
     displayName: metadata.displayName || moduleName,
-    value: module
-  };
+    value: module,
+    pages: {},
+    pipes: {}
+  });
   if (metadata.pages) {
     metadata.pages.forEach(i => {
       const meta = resolvePage(i);
       const pageName = meta.name || "[unnamed]";
-      GlobalMaps.pages[`${moduleName}@${pageName}`] = {
+      thisModule.pages[pageName] = {
         name: pageName,
         displayName: meta.displayName || pageName,
         moduleName,
@@ -44,7 +48,7 @@ export function useModule(module: Constructor<any>) {
     metadata.pipes.forEach(i => {
       const meta = resolvePipe(i);
       const pipeName = meta.name || "[unnamed]";
-      GlobalMaps.pipes[`${moduleName}@${pipeName}`] = {
+      thisModule.pipes[pipeName] = {
         name: pipeName,
         displayName: meta.displayName || pipeName,
         moduleName,
@@ -135,19 +139,21 @@ function updateImportDeclarations(
 }
 
 export interface IModuleCreateOptions<T> {
+  module: string;
   name: string;
-  page: string;
+  component: string;
   options?: any;
   post?: Array<T>;
 }
 
 export function createModuleStatements({
-  page: PAGE,
-  name: NAME,
+  module: MODULE,
+  name: PAGE,
+  component: NAME,
   post: POST,
   options: OPTS
-}: IModuleCreateOptions<{ name: string; args?: any }>) {
-  const page = GlobalMaps.pages[PAGE];
+}: IModuleCreateOptions<{ module: string; name: string; args?: any }>) {
+  const page = GlobalMaps.modules[MODULE].pages[PAGE];
   if (!page) {
     throw new Error("page template not found");
   }
@@ -155,8 +161,8 @@ export function createModuleStatements({
   function onUpdate(statements: ts.ImportDeclaration[]) {
     updateImportDeclarations(imports, statements);
   }
-  const processors = (POST || []).map(({ name, args }) => [
-    GlobalMaps.pipes[name].value,
+  const processors = (POST || []).map(({ module: md, name, args }) => [
+    GlobalMaps.modules[md].pipes[name].value,
     args
   ]);
   const root = createRootComponent(
