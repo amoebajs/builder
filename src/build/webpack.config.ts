@@ -20,6 +20,7 @@ export interface IOptions {
   }>;
   mode?: "production" | "development";
   minimize?: boolean;
+  tsconfig?: string;
   showProgress?: boolean;
 }
 
@@ -55,7 +56,7 @@ export default (options: IOptions) =>
               loader: "ts-loader",
               options: {
                 transpileOnly: true,
-                configFile: "tsconfig.jsx.json",
+                configFile: options.tsconfig ?? "tsconfig.jsx.json",
                 getCustomTransformers: () => ({
                   before: [
                     transformerFactory([
