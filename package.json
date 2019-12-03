@@ -1,17 +1,21 @@
 {
-  "name": "builder",
-  "version": "1.0.0",
+  "name": "@amoebajs/builder",
+  "version": "0.0.1",
   "main": "index.js",
+  "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
   "author": "bigmogician <bigmogician@outlook.com>",
   "license": "MIT",
   "scripts": {
+    "clear": "rm -rf dist",
     "compile": "npx tsc",
     "webpack:build": "ENV_MODE=build TS_PROJECT=tsconfig.scripts.json ts-node scripts/build.ts",
     "webpack:watch": "ENV_MODE=watch TS_PROJECT=tsconfig.scripts.json ts-node scripts/build.ts",
     "build:only": "TS_PROJECT=tsconfig.scripts.json npx ts-node scripts/compile.ts",
     "build": "yarn build:only && yarn webpack:build",
-    "build:prod": "node dist/index.js && yarn webpack:build"
+    "build:prod": "node dist/index.js && yarn webpack:build",
+    "pub": "yarn clear && yarn compile && node scripts/stable.publish.js",
+    "rc": "yarn clear && yarn compile && node scripts/rc.publish.js"
   },
   "dependencies": {
     "@types/copy-webpack-plugin": "^5.0.0",
@@ -47,6 +51,7 @@
     "zent": "^7.1.0"
   },
   "devDependencies": {
+    "@bigmogician/publisher": "^1.0.12",
     "tslint": "^5.20.0"
   }
 }

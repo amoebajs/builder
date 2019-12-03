@@ -9,6 +9,7 @@ import { CommonPipeModule } from "./pipes";
 import { CommonPageModule } from "./pages";
 
 export { buildSource } from "./build";
+export { IOptions as IBuildOptions } from "./build/webpack.config";
 
 useModule(CommonPageModule);
 useModule(CommonPipeModule);
