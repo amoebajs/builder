@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.1-beta.1575373999744",
+  "version": "0.0.1-beta.1575435909882",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
@@ -18,6 +18,7 @@
     "rc": "yarn clear && yarn compile && node scripts/rc.publish.js"
   },
   "dependencies": {
+    "@types/cheerio": "^0.22.15",
     "@types/copy-webpack-plugin": "^5.0.0",
     "@types/fs-extra": "^8.0.1",
     "@types/html-webpack-plugin": "^3.2.1",
@@ -30,6 +31,7 @@
     "@types/webpack": "^4.41.0",
     "@types/webpack-dev-server": "^3.9.0",
     "chalk": "^3.0.0",
+    "cheerio": "^0.22.0",
     "chokidar": "^3.3.0",
     "copy-webpack-plugin": "^5.0.5",
     "css-loader": "^3.2.0",
