@@ -8,8 +8,7 @@ import { useModule, createModuleStatements } from "./core";
 import { CommonPipeModule } from "./pipes";
 import { CommonPageModule } from "./pages";
 
-export { buildSource } from "./build";
-export { IOptions as IBuildOptions } from "./build/webpack.config";
+export * from "./build";
 
 useModule(CommonPageModule);
 useModule(CommonPipeModule);
