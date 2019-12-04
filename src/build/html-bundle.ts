@@ -3,7 +3,7 @@ import * as fs from "fs-extra";
 
 export interface IHtmlEleMatch {
   match: string | RegExp;
-  path: string;
+  path: string | ((pathname: string) => string);
 }
 
 export async function buildHtmlBundle(
@@ -24,11 +24,17 @@ export async function buildHtmlBundle(
           );
           if (target) {
             promises.push(
-              fs.readFile(target.path).then(data => {
-                $(`script[type="text/javascript"][src="${src}"]`).replaceWith(
-                  `<script type="text/javascript">${data.toString()}</script>`
-                );
-              })
+              fs
+                .readFile(
+                  typeof target.path === "string"
+                    ? target.path
+                    : target.path(src)
+                )
+                .then(data => {
+                  $(`script[type="text/javascript"][src="${src}"]`).replaceWith(
+                    `<script type="text/javascript">${data.toString()}</script>`
+                  );
+                })
             );
           }
         }
@@ -41,11 +47,17 @@ export async function buildHtmlBundle(
           );
           if (target) {
             promises.push(
-              fs.readFile(target.path).then(data => {
-                $(`link[rel="stylesheet"][href="${href}"]`).replaceWith(
-                  `<style>${data.toString()}</style>`
-                );
-              })
+              fs
+                .readFile(
+                  typeof target.path === "string"
+                    ? target.path
+                    : target.path(href)
+                )
+                .then(data => {
+                  $(`link[rel="stylesheet"][href="${href}"]`).replaceWith(
+                    `<style>${data.toString()}</style>`
+                  );
+                })
             );
           }
         }
