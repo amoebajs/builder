@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.1-beta.1575443517174",
+  "version": "0.0.1-beta.1575443793103",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
@@ -47,17 +47,14 @@
     "ts-import-plugin": "^1.6.1",
     "ts-loader": "^6.2.1",
     "tslib": "^1.10.0",
+    "typescript": "^3.7.2",
     "uuid": "^3.3.3",
     "webpack": "^4.41.2",
     "zent": "^7.1.0"
   },
-  "peerDependencies": {
-    "typescript": "^3.5.0"
-  },
   "devDependencies": {
     "@bigmogician/publisher": "^1.0.12",
     "ts-node": "^8.4.1",
-    "typescript": "^3.7.2",
     "tslint": "^5.20.0",
     "webpack-dev-server": "^3.9.0"
   }
