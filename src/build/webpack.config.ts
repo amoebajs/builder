@@ -47,12 +47,15 @@ export default (options: IOptions) =>
     },
     module: {
       rules: [
-        { test: /\.css/, use: ["style-loader", "css-loader"] },
+        {
+          test: /\.css/,
+          use: [require.resolve("style-loader"), require.resolve("css-loader")]
+        },
         {
           test: /\.tsx?$/,
           use: [
             {
-              loader: "ts-loader",
+              loader: require.resolve("ts-loader"),
               options: {
                 transpileOnly: true,
                 configFile: options.typescript?.tsconfig ?? "tsconfig.jsx.json",
