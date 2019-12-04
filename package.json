@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.1-beta.1575448486011",
+  "version": "0.0.1-beta.1575449267096",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",

@@ -6,13 +6,23 @@ export interface IHtmlEleMatch {
   path: string | ((pathname: string) => string);
 }
 
-export async function buildHtmlBundle(
-  path: string,
-  scripts: IHtmlEleMatch[] = [],
-  styles: IHtmlEleMatch[] = []
-) {
+export interface IBundleOptions {
+  path: string;
+  checkUnchange?: (match: string | RegExp, value: string) => boolean;
+  shouldBundle?: (promises: Promise<any>[]) => boolean;
+  scripts?: IHtmlEleMatch[];
+  styles?: IHtmlEleMatch[];
+}
+
+export async function buildHtmlBundle({
+  path: filepath,
+  scripts = [],
+  styles = [],
+  checkUnchange = () => false,
+  shouldBundle = () => true
+}: IBundleOptions) {
   return fs
-    .readFile(path)
+    .readFile(filepath)
     .then(async data => {
       const promises: Promise<any>[] = [];
       const $ = cheerio.load(data);
@@ -23,6 +33,9 @@ export async function buildHtmlBundle(
             typeof i.match === "string" ? i.match === src : i.match.test(src)
           );
           if (target) {
+            if (checkUnchange(target.match, src)) {
+              return;
+            }
             promises.push(
               fs
                 .readFile(
@@ -62,7 +75,13 @@ export async function buildHtmlBundle(
           }
         }
       });
-      return Promise.all(promises).then(() => fs.writeFile(path, $.html()));
+      if (!shouldBundle(promises)) {
+        return Promise.resolve(0);
+      }
+      return Promise.all(promises).then(() => {
+        fs.writeFile(filepath, $.html());
+        return Promise.resolve(promises.length);
+      });
     })
     .catch(error => Promise.reject(error));
 }
