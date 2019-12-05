@@ -1,12 +1,14 @@
+import cheerio from "cheerio";
 import { HtmlBundle } from "../contracts";
 import { BasicError } from "../errors";
 
 export class HtmlBundleProvider extends HtmlBundle {
-  public async buildHtmlBundle(
+  public async build(
     options: import("../contracts").IBundleOptions
   ): Promise<void> {
     const {
       path: filepath,
+      outPath,
       scripts = [],
       styles = [],
       checkUnchange = () => false,
@@ -74,7 +76,7 @@ export class HtmlBundleProvider extends HtmlBundle {
           return Promise.resolve();
         }
         return Promise.all(promises).then(async () => {
-          await this.fs.writeFile(filepath, $.html());
+          await this.fs.writeFile(outPath || filepath, $.html());
           return Promise.resolve();
         });
       })

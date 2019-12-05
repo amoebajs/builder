@@ -7,8 +7,10 @@ import {
   EntityConstructor
 } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
-import { IWebpackOptions } from "./webpack-config";
+import { IWebpackOptions, WebpackConfig } from "./webpack-config";
 import { Injector, InjectDIToken } from "@bonbons/di";
+import { WebpackPlugins } from "./webpack-plugins";
+import { HtmlBundle } from "./html-bundle";
 
 export interface IMapEntry<T = any> {
   moduleName?: string;
@@ -93,11 +95,15 @@ export interface IPageCreateOptions {
 @Injectable()
 export abstract class Builder {
   constructor(
-    protected injector: Injector,
-    protected path: Path,
-    protected globalMap: GlobalMap,
-    protected webpackBuild: WebpackBuild
+    protected readonly injector: Injector,
+    protected readonly path: Path,
+    protected readonly globalMap: GlobalMap,
+    public readonly webpackConfig: WebpackConfig,
+    public readonly webpackBuild: WebpackBuild,
+    public readonly webpackPlugins: WebpackPlugins,
+    public readonly htmlBundle: HtmlBundle
   ) {}
+
   public get<T>(contract: InjectDIToken<T>): T {
     return this.injector.get(contract);
   }
