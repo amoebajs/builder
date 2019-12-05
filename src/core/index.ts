@@ -1,18 +1,28 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import { EntityConstructor, resolveDepts } from "../decorators";
-import { Path, WebpackConfig, GlobalMap, Builder } from "../contracts";
+import {
+  Path,
+  WebpackConfig,
+  GlobalMap,
+  Builder,
+  WebpackBuild
+} from "../contracts";
 import {
   PathNodeProvider,
   WebpackConfigProvider,
-  BuilderProvider
+  BuilderProvider,
+  WebpackBuildProvider
 } from "../providers";
 import { CommonPageModule } from "../pages";
 import { CommonPipeModule } from "../pipes";
 
 export class BuilderFactory {
   private di = new DIContainer({ type: "native" });
-
   private map = new GlobalMap();
+
+  public get builder() {
+    return this.di.get(Builder);
+  }
 
   constructor() {
     this.initProviders();
@@ -24,6 +34,7 @@ export class BuilderFactory {
     this.useProvider(Path, PathNodeProvider);
     this.useProvider(GlobalMap, () => this.map);
     this.useProvider(WebpackConfig, WebpackConfigProvider);
+    this.useProvider(WebpackBuild, WebpackBuildProvider);
     this.useProvider(Builder, BuilderProvider);
   }
 
@@ -51,9 +62,12 @@ export class BuilderFactory {
     return this;
   }
 
-  public create(): Builder {
+  public get<T>(contract: InjectDIToken<T>): T {
+    return this.di.get(contract);
+  }
+
+  public create() {
     this.di.complete();
-    // console.log(this.di["sorted"]);
-    return this.di.get(Builder);
+    return this;
   }
 }

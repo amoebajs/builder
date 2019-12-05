@@ -18,10 +18,9 @@ const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
 
 if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
-const buiilder = new Factory().create();
-
-buiilder
-  .createSource(
+new Factory()
+  .create()
+  .builder.createSource(
     path.resolve(process.cwd(), "build", "src"),
     "cssgrid-component",
     demo_conf

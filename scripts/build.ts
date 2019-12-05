@@ -7,6 +7,7 @@ import {
   createProgressPlugin,
   buildHtmlBundle
 } from "../src/build";
+import { Factory, WebpackBuild } from "../src";
 import fn, { IOptions } from "../src/build/webpack.config";
 
 const ENV_MODE = process.env.ENV_MODE || "build";
@@ -16,6 +17,8 @@ const configs: IOptions = { template: { title: "测试" } };
 const output = path.resolve(__dirname, "..", "build", "output");
 
 async function build() {
+  const factory = new Factory().create();
+
   if (ENV_MODE === "watch") {
     const server = new WebpackDevServer(
       webpack(fn({ ...configs, minimize: false, mode: "development" })),
@@ -26,13 +29,16 @@ async function build() {
     );
     server.listen(9000, "localhost");
   } else {
-    await buildSource({
-      ...configs,
-      output: { path: output },
-      plugins: [createProgressPlugin()]
-    }).catch(({ type, error }) => {
-      console.log(chalk[type === "errror" ? "red" : "yellow"](error));
-    });
+    await factory
+      .get(WebpackBuild)
+      .buildSource({
+        ...configs,
+        output: { path: output },
+        plugins: [createProgressPlugin()]
+      })
+      .catch(({ type, error }) => {
+        console.log(chalk[type === "errror" ? "red" : "yellow"](error));
+      });
     await buildHtmlBundle({
       path: path.join(output, "index.html"),
       scripts: [
