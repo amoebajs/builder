@@ -9,6 +9,7 @@ import {
   createThisAccess
 } from "../utils";
 import { RenderPipe } from "./base";
+import { InvalidOperationError } from "../errors";
 
 export enum ButtonTextType {
   PlainText = 0,
@@ -108,7 +109,7 @@ export class AddButtonPipe extends RenderPipe {
     this.updateImport([createNamedImport("zent", [jsxButtonName])]);
     // create clicn event handler
     if (this.existField(this.buttonOnClickEventName)) {
-      throw new Error(
+      throw new InvalidOperationError(
         `event handler [${this.buttonOnClickEventName}] is already exist.`
       );
     }

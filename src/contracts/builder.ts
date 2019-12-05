@@ -6,6 +6,9 @@ import {
   resolvePipe,
   EntityConstructor
 } from "../decorators";
+import { WebpackBuild } from "./webpack-build";
+import { IWebpackOptions } from "./webpack-config";
+import { Injector, InjectDIToken } from "@bonbons/di";
 
 export interface IMapEntry<T = any> {
   moduleName?: string;
@@ -89,10 +92,20 @@ export interface IPageCreateOptions {
 
 @Injectable()
 export abstract class Builder {
-  constructor(protected path: Path, protected globalMap: GlobalMap) {}
+  constructor(
+    protected injector: Injector,
+    protected path: Path,
+    protected globalMap: GlobalMap,
+    protected webpackBuild: WebpackBuild
+  ) {}
+  public get<T>(contract: InjectDIToken<T>): T {
+    return this.injector.get(contract);
+  }
+
   public abstract async createSource(
     outDir: string,
     fileName: string,
     configs: IPageCreateOptions
   ): Promise<void>;
+  public abstract buildSource(options: IWebpackOptions): Promise<void>;
 }

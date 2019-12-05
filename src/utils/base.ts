@@ -3,7 +3,7 @@ import * as path from "path";
 import ts from "typescript";
 import chalk from "chalk";
 import prettier from "prettier";
-import { FolderError } from "../errors/folder";
+import { NotFoundError, BasicError } from "../errors";
 
 export interface IFileCreateOptions {
   folder: string;
@@ -102,7 +102,7 @@ export async function emitSourceFileSync(options: IPrettierFileCreateOptions) {
   return new Promise<void>((resolve, reject) => {
     fs.pathExists(options.folder).then(async exist => {
       if (!exist) {
-        reject(new FolderError(`folder [${options.folder}] is not exist.`));
+        reject(new NotFoundError(`folder [${options.folder}] is not exist.`));
       } else {
         const printer = ts.createPrinter();
         const sourceFile = await createSourceFile(options);
@@ -122,7 +122,7 @@ export async function emitSourceFileSync(options: IPrettierFileCreateOptions) {
               if (error) {
                 console.log(sourceString);
                 console.log(chalk.red("format source file failed"));
-                return reject(error);
+                return reject(new BasicError(error));
               }
               console.log("emit --> " + sourceFile.fileName);
               resolve();
@@ -131,7 +131,7 @@ export async function emitSourceFileSync(options: IPrettierFileCreateOptions) {
         } catch (error) {
           console.log(sourceString);
           console.log(chalk.red("format source file failed"));
-          reject(error);
+          reject(new BasicError(error));
         }
       }
     });
@@ -142,7 +142,7 @@ export async function createSourceFile(options: IFileCreateOptions) {
   return new Promise<ts.SourceFile>((resolve, reject) => {
     fs.pathExists(options.folder).then(async exist => {
       if (!exist) {
-        reject(new FolderError(`folder [${options.folder}] is not exist.`));
+        reject(new NotFoundError(`folder [${options.folder}] is not exist.`));
       } else {
         try {
           const sourceFile = ts.createSourceFile(
@@ -152,7 +152,7 @@ export async function createSourceFile(options: IFileCreateOptions) {
           );
           resolve(ts.updateSourceFileNode(sourceFile, options.statements));
         } catch (error) {
-          reject(error);
+          reject(new BasicError(error));
         }
       }
     });

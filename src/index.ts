@@ -1,7 +1,6 @@
-export { CommonPipeModule } from "./pipes";
-export { CommonPageModule } from "./pages";
-export { BuilderFactory as Factory } from "./core";
-// export * from "./build";
+export * from "./pipes";
+export * from "./pages";
+export * from "./core";
 export * from "./errors";
 export * from "./contracts";
 export * from "./providers";

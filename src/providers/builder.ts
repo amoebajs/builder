@@ -6,6 +6,7 @@ import {
   createReactMainFile,
   createSelectPage
 } from "../utils";
+import { NotFoundError, InvalidOperationError } from "../errors";
 
 export interface IModuleCreateOptions<T> {
   module: string;
@@ -25,7 +26,7 @@ export class BuilderProvider extends Builder {
   }: IModuleCreateOptions<{ module: string; name: string; args?: any }>) {
     const page = this.globalMap.getPage(MODULE, PAGE);
     if (!page) {
-      throw new Error("page template not found");
+      throw new NotFoundError("page template not found");
     }
     const imports: ts.ImportDeclaration[] = [];
     function onUpdate(statements: ts.ImportDeclaration[]) {
@@ -70,6 +71,12 @@ export class BuilderProvider extends Builder {
       filename: "main.tsx",
       statements: createReactMainFile(compName, fileName)
     });
+  }
+
+  public buildSource(
+    options: import("../contracts").IWebpackOptions
+  ): Promise<void> {
+    return this.webpackBuild.buildSource(options);
   }
 }
 
@@ -125,7 +132,7 @@ function updateImportDeclarations(
               clause02!.namedBindings!.name.text !==
                 clause02!.namedBindings!.name.text
             ) {
-              throw new Error(
+              throw new InvalidOperationError(
                 "import update failed: duplicate namespace import exist"
               );
             } else {
@@ -138,7 +145,7 @@ function updateImportDeclarations(
             !clause02!.namedBindings &&
             clause02!.name!.text !== clause02!.name!.text
           ) {
-            throw new Error(
+            throw new InvalidOperationError(
               `import update failed: duplicate default import exist - [${
                 clause02!.name!.text
               }]`
