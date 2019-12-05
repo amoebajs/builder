@@ -1,4 +1,4 @@
-import { Constructor, definePage, IPageContract } from "./base";
+import { EntityConstructor, definePage, IPageContract } from "./base";
 
 const defaults: IPageContract = {
   name: null,
@@ -8,7 +8,7 @@ const defaults: IPageContract = {
 };
 
 export function Page(define: Partial<IPageContract> = {}) {
-  return function page_factory(target: Constructor<any>) {
+  return function page_factory(target: EntityConstructor<any>) {
     definePage(target, { ...defaults, ...define });
     return <any>target;
   };

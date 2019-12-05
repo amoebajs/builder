@@ -33,10 +33,13 @@ async function build() {
     }).catch(({ type, error }) => {
       console.log(chalk[type === "errror" ? "red" : "yellow"](error));
     });
-    await buildHtmlBundle(path.join(output, "index.html"), [
-      { match: "app.js", path: path.join(output, "app.js") },
-      { match: "vendor.js", path: path.join(output, "vendor.js") }
-    ]);
+    await buildHtmlBundle({
+      path: path.join(output, "index.html"),
+      scripts: [
+        { match: "app.js", path: path.join(output, "app.js") },
+        { match: "vendor.js", path: path.join(output, "vendor.js") }
+      ]
+    });
   }
 }
 

@@ -18,9 +18,9 @@
     "rc": "yarn clear && yarn compile && node scripts/rc.publish.js"
   },
   "dependencies": {
+    "@bonbons/di": "2.0.0-beta.3",
     "@types/cheerio": "^0.22.15",
     "@types/copy-webpack-plugin": "^5.0.0",
-    "@types/fs-extra": "^8.0.1",
     "@types/html-webpack-plugin": "^3.2.1",
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.11.7",
@@ -29,16 +29,13 @@
     "@types/react-dom": "^16.9.4",
     "@types/uuid": "^3.4.6",
     "@types/webpack": "^4.41.0",
-    "@types/webpack-dev-server": "^3.9.0",
     "chalk": "^3.0.0",
     "cheerio": "^0.22.0",
     "chokidar": "^3.3.0",
     "copy-webpack-plugin": "^5.0.5",
     "css-loader": "^3.2.0",
-    "fs-extra": "^8.1.0",
     "html-webpack-plugin": "^3.2.0",
     "js-yaml": "^3.13.1",
-    "nunjucks": "^3.2.0",
     "prettier": "^1.19.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
@@ -52,8 +49,15 @@
     "webpack": "^4.41.2",
     "zent": "^7.1.0"
   },
+  "optionalDependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "fs-extra": "^8.1.0"
+  },
   "devDependencies": {
     "@bigmogician/publisher": "^1.0.12",
+    "@types/fs-extra": "^8.0.1",
+    "@types/webpack-dev-server": "^3.9.0",
+    "fs-extra": "^8.1.0",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.0",
     "webpack-dev-server": "^3.9.0"
