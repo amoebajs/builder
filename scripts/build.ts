@@ -39,7 +39,14 @@ async function build() {
         ...configs,
         output: { path: output },
         plugins: [plugins.createProgressPlugin()],
-        sandbox: { rootPath: path.resolve(__dirname, "..", "build") }
+        sandbox: {
+          rootPath: path.resolve(__dirname, "..", "build"),
+          dependencies: {
+            react: "^16.12.0",
+            zent: "^7.1.0",
+            "react-dom": "^16.12.0"
+          }
+        }
       });
 
       await bundle.build({

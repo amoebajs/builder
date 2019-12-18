@@ -8,23 +8,33 @@ export class WebpackBuildProvider extends WebpackBuild {
     let promise = Promise.resolve(0);
     if (options.sandbox) {
       const sandbox = options.sandbox;
-      promise = new Promise((resolve, reject) => {
-        spawn("yarn", {
-          env: { ...process.env },
-          cwd: sandbox.rootPath || process.cwd(),
-          stdio: ["pipe", process.stdout, process.stderr]
-        }).on("exit", (code, signal) => {
-          if (code === 0) {
-            resolve(code);
-          } else {
-            reject(
-              new Error(
-                `child process exit with code ${code} [${signal || "-"}]`
-              )
-            );
-          }
-        });
-      });
+      promise = this.fs
+        .writeFile(
+          this.path.join(sandbox.rootPath!, "package.json"),
+          JSON.stringify({
+            dependencies: sandbox.dependencies || {}
+          })
+        )
+        .then(
+          () =>
+            new Promise((resolve, reject) => {
+              spawn("yarn", {
+                env: { ...process.env },
+                cwd: sandbox.rootPath!,
+                stdio: ["pipe", process.stdout, process.stderr]
+              }).on("exit", (code, signal) => {
+                if (code === 0) {
+                  resolve(code);
+                } else {
+                  reject(
+                    new Error(
+                      `child process exit with code ${code} [${signal || "-"}]`
+                    )
+                  );
+                }
+              });
+            })
+        );
     }
     return promise.then(
       () =>

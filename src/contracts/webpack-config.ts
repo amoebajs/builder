@@ -24,6 +24,7 @@ export interface IWebpackOptions {
   plugins?: webpack.Plugin[];
   sandbox?: Partial<{
     rootPath: string;
+    dependencies: { [prop: string]: string };
   }>;
 }
 
