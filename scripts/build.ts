@@ -38,7 +38,8 @@ async function build() {
       await builder.buildSource({
         ...configs,
         output: { path: output },
-        plugins: [plugins.createProgressPlugin()]
+        plugins: [plugins.createProgressPlugin()],
+        sandbox: { rootPath: path.resolve(__dirname, "..", "build") }
       });
 
       await bundle.build({

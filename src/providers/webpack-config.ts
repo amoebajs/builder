@@ -17,7 +17,10 @@ export class WebpackConfigProvider extends WebpackConfig {
       },
       mode: options.mode ?? "production",
       resolve: {
-        extensions: [".ts", ".tsx", ".js", ".jsx", ".json"]
+        extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+        modules: options.sandbox
+          ? [this.path.resolve(options.sandbox.rootPath!, "node_modules")]
+          : undefined
       },
       optimization: {
         minimize: options.minimize ?? true

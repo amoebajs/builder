@@ -22,6 +22,9 @@ export interface IWebpackOptions {
   mode?: "production" | "development";
   minimize?: boolean;
   plugins?: webpack.Plugin[];
+  sandbox?: Partial<{
+    rootPath: string;
+  }>;
 }
 
 @Injectable()
