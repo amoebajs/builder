@@ -4,7 +4,8 @@ import {
   resolveModule,
   resolvePage,
   resolvePipe,
-  EntityConstructor
+  EntityConstructor,
+  resolveProperties
 } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
@@ -17,29 +18,32 @@ export interface IMapEntry<T = any> {
   name: string;
   displayName: string;
   value: T;
-  pages: { [name: string]: any };
-  pipes: { [name: string]: any };
+  metadata: { [name: string]: any };
+}
+
+export interface IModuleEntry<T = any> extends IMapEntry<T> {
+  pages: { [name: string]: IMapEntry<any> };
+  pipes: { [name: string]: IMapEntry<any> };
 }
 
 export interface IGlobalMap {
-  modules: { [key: string]: IMapEntry };
-  pages: { [key: string]: IMapEntry };
-  pipes: { [key: string]: IMapEntry };
+  modules: { [key: string]: IModuleEntry<any> };
 }
 
 @Injectable()
 export class GlobalMap {
-  public readonly maps: IGlobalMap = { modules: {}, pipes: {}, pages: {} };
+  public readonly maps: IGlobalMap = { modules: {} };
 
   public useModule(mdname: EntityConstructor<any>) {
     const metadata = resolveModule(mdname);
     const moduleName = metadata.name || "[unnamed]";
-    const thisModule: IMapEntry<any> = (this.maps.modules[moduleName] = {
+    const thisModule: IModuleEntry<any> = (this.maps.modules[moduleName] = {
       name: moduleName,
       displayName: metadata.displayName || moduleName,
       value: mdname,
       pages: {},
-      pipes: {}
+      pipes: {},
+      metadata: resolveProperties(mdname)
     });
     if (metadata.pages) {
       metadata.pages.forEach(i => {
@@ -49,7 +53,8 @@ export class GlobalMap {
           name: pageName,
           displayName: meta.displayName || pageName,
           moduleName,
-          value: i
+          value: i,
+          metadata: resolveProperties(i)
         };
       });
     }
@@ -61,22 +66,23 @@ export class GlobalMap {
           name: pipeName,
           displayName: meta.displayName || pipeName,
           moduleName,
-          value: i
+          value: i,
+          metadata: resolveProperties(i)
         };
       });
     }
     return this;
   }
 
-  public getModule(name: string): IMapEntry<any> {
+  public getModule(name: string): IModuleEntry<any> {
     return this.maps.modules[name];
   }
 
-  public getPage(module: string, name: string): any {
+  public getPage(module: string, name: string): IMapEntry<any> {
     return this.getModule(module).pages[name];
   }
 
-  public getPipe(module: string, name: string): any {
+  public getPipe(module: string, name: string): IMapEntry<any> {
     return this.getModule(module).pipes[name];
   }
 }
