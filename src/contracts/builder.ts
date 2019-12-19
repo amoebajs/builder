@@ -21,18 +21,20 @@ export interface IMapEntry<T = any> {
   pipes: { [name: string]: any };
 }
 
+export interface IGlobalMap {
+  modules: { [key: string]: IMapEntry };
+  pages: { [key: string]: IMapEntry };
+  pipes: { [key: string]: IMapEntry };
+}
+
 @Injectable()
 export class GlobalMap {
-  protected GlobalMaps: {
-    modules: { [key: string]: IMapEntry };
-    pages: { [key: string]: IMapEntry };
-    pipes: { [key: string]: IMapEntry };
-  } = { modules: {}, pipes: {}, pages: {} };
+  public readonly maps: IGlobalMap = { modules: {}, pipes: {}, pages: {} };
 
   public useModule(mdname: EntityConstructor<any>) {
     const metadata = resolveModule(mdname);
     const moduleName = metadata.name || "[unnamed]";
-    const thisModule: IMapEntry<any> = (this.GlobalMaps.modules[moduleName] = {
+    const thisModule: IMapEntry<any> = (this.maps.modules[moduleName] = {
       name: moduleName,
       displayName: metadata.displayName || moduleName,
       value: mdname,
@@ -67,7 +69,7 @@ export class GlobalMap {
   }
 
   public getModule(name: string): IMapEntry<any> {
-    return this.GlobalMaps.modules[name];
+    return this.maps.modules[name];
   }
 
   public getPage(module: string, name: string): any {
