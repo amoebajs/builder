@@ -5,7 +5,7 @@ import {
   IDescriptionMeta,
   IWeakDescriptionMeta,
   IPropertyGroupBase
-} from "../core/unit-base";
+} from "../core/base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 export const PAGE_DEFINE = "ambjs::page_define";
