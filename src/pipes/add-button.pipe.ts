@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Pipe, Input } from "../decorators";
+import { Pipe, Input, Group } from "../decorators";
 import {
   createNamedImport,
   createPublicArrow,
@@ -29,18 +29,16 @@ export enum ButtonStyleType {
 }
 
 @Pipe("AddButtonPipe")
+@Group({ name: "buttonText", displayName: "按钮文字" })
+@Group({ name: "buttonOnClick", displayName: "按钮点击事件" })
 export class AddButtonPipe extends RenderPipe {
   @Input({
     name: "type",
     displayName: "类型",
     group: "buttonText",
-    displayGroupName: "按钮文字",
     description: "按钮文字的类型",
     i18nName: {
       "en-US": "Type"
-    },
-    i18nGroup: {
-      "en-US": "ButtonText"
     },
     i18nDescription: {
       "en-US": "the type of this button's text."

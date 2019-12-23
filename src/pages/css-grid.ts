@@ -1,25 +1,15 @@
 import ts from "typescript";
 import { DOMS, createValueAttr, TYPES } from "../utils";
-import { Page, Input } from "../decorators";
+import { Page, Input, Group } from "../decorators";
 import { ExtensivePage } from "./basic";
 
-@Page({
-  name: "css_grid_page",
-  displayName: "网格容器页面"
-})
+@Page({ name: "css_grid_page", displayName: "网格容器页面" })
+@Group({ name: "basic", displayName: "基础设置" })
 export class CssGridPage extends ExtensivePage {
-  @Input({
-    group: "basic",
-    displayGroupName: "基础设置",
-    displayName: "是否使用组件状态"
-  })
+  @Input({ group: "basic", displayName: "是否使用组件状态" })
   public useComponentState: boolean = false;
 
-  @Input({
-    group: "basic",
-    displayGroupName: "基础设置",
-    displayName: "组件默认状态"
-  })
+  @Input({ group: "basic", displayName: "组件默认状态" })
   public defaultComponentState: any = {};
 
   @Input({ name: "useGridRowRepeat", displayName: "使用Grid行重复" })

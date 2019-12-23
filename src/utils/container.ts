@@ -119,7 +119,7 @@ function inputProperties<T = any>(template: any, options: any): T {
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
-      const group = prop.group && prop.group.value;
+      const group = prop.group;
       if (
         group &&
         options.hasOwnProperty(group) &&

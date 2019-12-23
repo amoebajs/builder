@@ -1,11 +1,17 @@
 import "reflect-metadata";
 import { InjectDIToken, getDependencies } from "@bonbons/di";
-import { IPropertyBase, IDescriptionMeta } from "../core/unit-base";
+import {
+  IPropertyBase,
+  IDescriptionMeta,
+  IWeakDescriptionMeta,
+  IPropertyGroupBase
+} from "../core/unit-base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 export const PAGE_DEFINE = "ambjs::page_define";
 export const PIPE_DEFINE = "ambjs::pipe_define";
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
+export const PROP_INPUT_GROUP_DEFINE = "ambjs::property_input_define_group";
 
 export interface IConstructor<T> {
   new (...args: any[]): T;
@@ -33,11 +39,8 @@ export interface IPipeContract {
   useProvider: "react";
 }
 
-export interface IPropertyOptions {
-  name: string | null;
-  displayName: string | null;
+export interface IPropertyContract extends IPropertyGroupContract {
   group: string | null;
-  displayGroupName: string | null;
   type:
     | "object"
     | "string"
@@ -47,26 +50,13 @@ export interface IPropertyOptions {
     | number[]
     | string[]
     | null;
-  description: string | null;
 }
 
-export interface IPropertyContract {
+export interface IPropertyGroupContract {
   name: string | null;
   displayName: string | null;
-  group: string | null;
-  displayGroupName: string | null;
-  type:
-    | "object"
-    | "string"
-    | "number"
-    | "boolean"
-    | (string | number)[]
-    | number[]
-    | string[]
-    | null;
   description: string | null;
   i18nName: { [prop: string]: string } | null;
-  i18nGroup: { [prop: string]: string } | null;
   i18nDescription: { [prop: string]: string } | null;
 }
 
@@ -133,17 +123,10 @@ export function defineProperty(
     displayValue: metadata.displayName || null,
     i18n: metadata.i18nName ?? {}
   };
-  const groupMeta = !!metadata.group
-    ? {
-        value: metadata.group,
-        displayValue: metadata.displayGroupName || null,
-        i18n: metadata.i18nGroup ?? {}
-      }
-    : null;
+  const groupMeta = metadata.group || null;
   const descMeta = !!metadata.description
     ? {
         value: metadata.description,
-        displayValue: metadata.description,
         i18n: metadata.i18nDescription ?? {}
       }
     : null;
@@ -157,9 +140,8 @@ export function defineProperty(
     description: descMeta,
     type: typeMeta
   };
-  setDescriptionMetaDisplayKey(data.name, "zh-CN");
-  setDescriptionMetaDisplayKey(data.group, "zh-CN");
-  setDescriptionMetaDisplayKey(data.description, "zh-CN");
+  setDisplayI18NMeta(data.name, "zh-CN");
+  setDisplayI18NMeta(data.description, "zh-CN", "value");
   return Reflect.defineMetadata(
     PROP_INPUT_DEFINE,
     { ...resolveProperties(target), [getGroupNameMeta(data)]: data },
@@ -175,6 +157,32 @@ export function resolveProperty(
   return resolveProperties(target)[name] || defaults;
 }
 
+export function definePropertyGroup(
+  target: EntityConstructor<any>,
+  metadata: IPropertyGroupContract
+) {
+  return Reflect.defineMetadata(
+    PROP_INPUT_GROUP_DEFINE,
+    {
+      ...resolvePropertyGroups(target),
+      [metadata.name!]: {
+        name: {
+          value: metadata.name!,
+          displayValue: metadata.displayName || null,
+          i18n: metadata.i18nName ?? {}
+        },
+        description: !metadata.description
+          ? {
+              value: metadata.description,
+              i18n: metadata.i18nDescription ?? {}
+            }
+          : null
+      }
+    },
+    target
+  );
+}
+
 export function resolveProperties(target: EntityConstructor<any>) {
   return (
     <{ [prop: string]: IPropertyBase }>(
@@ -183,20 +191,31 @@ export function resolveProperties(target: EntityConstructor<any>) {
   );
 }
 
-export function setDescriptionMetaDisplayKey(
-  target: IDescriptionMeta | undefined | null,
-  key: string
+export function resolvePropertyGroups(target: EntityConstructor<any>) {
+  return (
+    <{ [prop: string]: IPropertyGroupBase }>(
+      Reflect.getMetadata(PROP_INPUT_GROUP_DEFINE, target)
+    ) || {}
+  );
+}
+
+export function setDisplayI18NMeta(
+  target: IDescriptionMeta | IWeakDescriptionMeta | undefined | null,
+  key: string,
+  mode: "displayValue" | "value" = "displayValue"
 ) {
-  if (target && target.i18n[key] === void 0 && target.displayValue !== null) {
-    target.i18n[key] = target.displayValue;
+  if (
+    target &&
+    target.i18n[key] === void 0 &&
+    (<IDescriptionMeta>target)[mode] !== null
+  ) {
+    target.i18n[key] = (<IDescriptionMeta>target)[mode];
   }
   return target;
 }
 
 export function getGroupNameMeta(data: IPropertyBase) {
-  return data.group
-    ? `${data.group.value}.${data.name.value}`
-    : data.name.value;
+  return data.group ? `${data.group}.${data.name.value}` : data.name.value;
 }
 
 export function getTypeOfMeta(typeRef: any) {

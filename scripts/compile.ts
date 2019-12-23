@@ -18,10 +18,10 @@ const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
 
 if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
-new Factory().builder
-  // const builder = new Factory().builder;
-  // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
-  // builder
+// new Factory().builder
+const builder = new Factory().builder;
+// console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
+builder
   .createSource(
     path.resolve(process.cwd(), "build", "src"),
     "cssgrid-component",

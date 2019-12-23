@@ -5,7 +5,8 @@ import {
   resolvePage,
   resolvePipe,
   EntityConstructor,
-  resolveProperties
+  resolveProperties,
+  resolvePropertyGroups
 } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
@@ -18,7 +19,10 @@ export interface IMapEntry<T = any> {
   name: string;
   displayName: string;
   value: T;
-  metadata: { [name: string]: any };
+  metadata: {
+    props: { [name: string]: any };
+    groups: { [name: string]: any };
+  };
 }
 
 export interface IModuleEntry<T = any> extends IMapEntry<T> {
@@ -43,7 +47,10 @@ export class GlobalMap {
       value: mdname,
       pages: {},
       pipes: {},
-      metadata: resolveProperties(mdname)
+      metadata: {
+        groups: resolvePropertyGroups(mdname),
+        props: resolveProperties(mdname)
+      }
     });
     if (metadata.pages) {
       metadata.pages.forEach(i => {
@@ -54,7 +61,10 @@ export class GlobalMap {
           displayName: meta.displayName || pageName,
           moduleName,
           value: i,
-          metadata: resolveProperties(i)
+          metadata: {
+            groups: resolvePropertyGroups(i),
+            props: resolveProperties(i)
+          }
         };
       });
     }
@@ -67,7 +77,10 @@ export class GlobalMap {
           displayName: meta.displayName || pipeName,
           moduleName,
           value: i,
-          metadata: resolveProperties(i)
+          metadata: {
+            groups: resolvePropertyGroups(i),
+            props: resolveProperties(i)
+          }
         };
       });
     }
