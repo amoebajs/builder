@@ -32,8 +32,19 @@ export enum ButtonStyleType {
 export class AddButtonPipe extends RenderPipe {
   @Input({
     name: "type",
+    displayName: "类型",
     group: "buttonText",
-    description: "the type of this button's text."
+    displayGroupName: "按钮文字",
+    description: "按钮文字的类型",
+    i18nName: {
+      "en-US": "Type"
+    },
+    i18nGroup: {
+      "en-US": "ButtonText"
+    },
+    i18nDescription: {
+      "en-US": "the type of this button's text."
+    }
   })
   private buttonTextType: ButtonTextType = ButtonTextType.PlainText;
 
