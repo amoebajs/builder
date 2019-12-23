@@ -1,6 +1,4 @@
 import { Injectable } from "../decorators";
-import { Path } from "./path";
-import { Fs } from "./fs";
 
 export interface IHtmlEleMatch {
   match: string | RegExp;
@@ -18,6 +16,5 @@ export interface IBundleOptions {
 
 @Injectable()
 export abstract class HtmlBundle {
-  constructor(protected path: Path, protected fs: Fs) {}
   public abstract build(options: IBundleOptions): Promise<void>;
 }

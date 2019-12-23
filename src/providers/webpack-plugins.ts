@@ -1,8 +1,16 @@
 import chalk from "chalk";
 import { ProgressPlugin, Plugin } from "webpack";
-import { WebpackPlugins } from "../contracts";
+import { WebpackPlugins, WebpackConfig, Path, Fs } from "../contracts";
+import { Injectable } from "../decorators";
 
-export class WebpackPluginsProvider extends WebpackPlugins {
+@Injectable()
+export class WebpackPluginsProvider implements WebpackPlugins {
+  constructor(
+    protected path: Path,
+    protected fs: Fs,
+    protected config: WebpackConfig
+  ) {}
+
   public createProgressPlugin(): Plugin {
     const buildingStatus = {
       percent: "0",

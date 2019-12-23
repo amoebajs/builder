@@ -1,9 +1,23 @@
 import webpack from "webpack";
 import { spawn } from "child_process";
-import { WebpackBuild, IWebpackOptions } from "../contracts";
+import {
+  WebpackBuild,
+  IWebpackOptions,
+  Path,
+  Fs,
+  WebpackConfig
+} from "../contracts";
 import { BasicError } from "../errors";
+import { Injectable } from "../decorators";
 
-export class WebpackBuildProvider extends WebpackBuild {
+@Injectable()
+export class WebpackBuildProvider implements WebpackBuild {
+  constructor(
+    protected path: Path,
+    protected fs: Fs,
+    protected config: WebpackConfig
+  ) {}
+
   public async buildSource(options: IWebpackOptions): Promise<void> {
     let promise = Promise.resolve(0);
     if (options.sandbox) {

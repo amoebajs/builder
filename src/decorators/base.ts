@@ -1,7 +1,6 @@
 import "reflect-metadata";
-import { InjectDIToken } from "@bonbons/di";
+import { InjectDIToken, getDependencies } from "@bonbons/di";
 
-export const DEPTS_METADATA = "design:paramtypes";
 export const MODULE_DEFINE = "ambjs::module_define";
 export const PAGE_DEFINE = "ambjs::page_define";
 export const PIPE_DEFINE = "ambjs::pipe_define";
@@ -51,7 +50,7 @@ export interface IPropertyContract {
 }
 
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
-  return Reflect.getMetadata(DEPTS_METADATA, target) || [];
+  return getDependencies(target) || [];
 }
 
 export interface IInnerPropertyContract extends IPropertyContract {

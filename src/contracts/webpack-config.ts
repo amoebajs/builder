@@ -1,6 +1,5 @@
 import webpack from "webpack";
 import { Injectable } from "../decorators";
-import { Path } from "./path";
 
 export interface IWebpackOptions {
   entry?: Partial<{
@@ -30,6 +29,5 @@ export interface IWebpackOptions {
 
 @Injectable()
 export abstract class WebpackConfig {
-  constructor(protected path: Path) {}
   public abstract getConfigs(options: IWebpackOptions): webpack.Configuration;
 }

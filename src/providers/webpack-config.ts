@@ -1,8 +1,12 @@
-import { WebpackConfig, IWebpackOptions } from "../contracts";
+import { WebpackConfig, IWebpackOptions, Path } from "../contracts";
 import transformerFactory from "ts-import-plugin";
 import HtmlWebPackPlugin from "html-webpack-plugin";
+import { Injectable } from "../decorators";
 
-export class WebpackConfigProvider extends WebpackConfig {
+@Injectable()
+export class WebpackConfigProvider implements WebpackConfig {
+  constructor(protected path: Path) {}
+
   public getConfigs(options: IWebpackOptions) {
     return {
       entry: {

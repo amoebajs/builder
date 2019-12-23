@@ -66,7 +66,7 @@ export class Factory {
       this._di.register({
         token: contract,
         imp: imple,
-        depts: resolveDepts(contract),
+        depts: resolveDepts(imple),
         scope: InjectScope.Singleton
       });
     }

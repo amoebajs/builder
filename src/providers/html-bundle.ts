@@ -1,8 +1,12 @@
 import cheerio from "cheerio";
-import { HtmlBundle } from "../contracts";
+import { HtmlBundle, Path, Fs } from "../contracts";
 import { BasicError } from "../errors";
+import { Injectable } from "../decorators";
 
-export class HtmlBundleProvider extends HtmlBundle {
+@Injectable()
+export class HtmlBundleProvider implements HtmlBundle {
+  constructor(protected path: Path, protected fs: Fs) {}
+
   public async build(
     options: import("../contracts").IBundleOptions
   ): Promise<void> {

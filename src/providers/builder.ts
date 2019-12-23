@@ -7,6 +7,7 @@ import {
   createSelectPage
 } from "../utils";
 import { NotFoundError, InvalidOperationError } from "../errors";
+import { Injectable } from "../decorators";
 
 export interface IModuleCreateOptions<T> {
   module: string;
@@ -16,6 +17,7 @@ export interface IModuleCreateOptions<T> {
   post?: Array<T>;
 }
 
+@Injectable()
 export class BuilderProvider extends Builder {
   protected createModuleStatements({
     module: MODULE,
