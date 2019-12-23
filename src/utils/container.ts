@@ -119,18 +119,19 @@ function inputProperties<T = any>(template: any, options: any): T {
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
+      const group = prop.group && prop.group.value;
       if (
-        prop.group &&
-        options.hasOwnProperty(prop.group) &&
-        options[prop.group] &&
-        options[prop.group].hasOwnProperty(prop.name!)
+        group &&
+        options.hasOwnProperty(group) &&
+        options[group].hasOwnProperty(prop.name.value!)
       ) {
-        (<any>model)[prop.realName] = options[prop.group][prop.name!];
+        (<any>model)[prop.realName] = options[group][prop.name.value!];
       } else if (options.hasOwnProperty(prop.name!)) {
-        (<any>model)[prop.realName] = options[prop.name!];
+        (<any>model)[prop.realName] = options[prop.name.value!];
       }
     }
   }
+  // console.log(model);
   return model;
 }
 

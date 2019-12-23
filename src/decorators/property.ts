@@ -7,7 +7,10 @@ const defaults: IPropertyContract = {
   group: null,
   displayGroupName: null,
   type: null,
-  description: null
+  description: null,
+  i18nDescription: null,
+  i18nGroup: null,
+  i18nName: null
 };
 
 export function Input(params: Partial<IPropertyContract> = {}) {
