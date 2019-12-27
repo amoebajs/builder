@@ -28,13 +28,15 @@ export abstract class BasicComponent {
   private __children: BasicComponent[] = [];
   private __directives: BasicDirective[] = [];
   private __state: { [prop: string]: any } = {};
-  private __context: IBasicComponentContext = {
-    extendParent: null,
-    implementParents: [],
-    fields: [],
-    properties: [],
-    methods: []
-  };
+  // Will be injected before onInit hook invoked.
+  private __context!: IBasicComponentContext;
+  // private __context: IBasicComponentContext = {
+  //   extendParent: null,
+  //   implementParents: [],
+  //   fields: [],
+  //   properties: [],
+  //   methods: []
+  // };
 
   public isComponentRendered() {
     return this.__rendered;
