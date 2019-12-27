@@ -164,7 +164,7 @@ export abstract class BasicComponent {
   }
 }
 
-export class BasicReactComponent extends BasicComponent {
+export class BasicReactContainer extends BasicComponent {
   protected addRootChildren(
     args: ts.JsxElement[],
     type: IBasicComponentAppendType = "push"
