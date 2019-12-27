@@ -1,1 +1,3 @@
-export abstract class BasicComponent {}
+export abstract class BasicComponent {
+  abstract render(): void;
+}

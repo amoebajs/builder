@@ -13,7 +13,11 @@ import {
   IExtensivePageContext,
   ImportStatementsUpdater
 } from "../pages/basic";
-import { resolveProperties, IConstructor, resolvePipe } from "../decorators";
+import {
+  resolveInputProperties,
+  IConstructor,
+  resolvePipe
+} from "../decorators";
 import { CommonPipe, RenderPipe, BasicPipe } from "../pipes/base";
 
 export type ProcessorType =
@@ -115,7 +119,7 @@ function inputProperties<T = any>(template: any, options: any): T {
     "prototype" in template
       ? template
       : Object.getPrototypeOf(template).constructor;
-  const props = resolveProperties(ctor);
+  const props = resolveInputProperties(ctor);
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
