@@ -30,38 +30,44 @@ export abstract class BasicComponent {
   private __state: { [prop: string]: any } = {};
   // Will be injected before onInit hook invoked.
   private __context!: IBasicComponentContext;
-  // private __context: IBasicComponentContext = {
-  //   extendParent: null,
-  //   implementParents: [],
-  //   fields: [],
-  //   properties: [],
-  //   methods: []
-  // };
 
-  public isComponentRendered() {
+  public get rendered() {
     return this.__rendered;
   }
 
-  private __addChildElements<T extends any>(
-    target: keyof IBasicComponentContext,
-    args: T[],
-    type: IBasicComponentAppendType
-  ) {
-    if (target === "extendParent") {
-      this.__context[target] = args[0];
-      return;
-    }
-    if (type === "reset") {
-      (<unknown>this.__context[target]) = args;
-    } else {
-      this.__context[target][type](...(<any>args));
-    }
+  /** @override */
+  protected async onInit(): Promise<void> {
+    return Promise.resolve();
   }
 
-  private __getChildElements<T extends keyof IBasicComponentContext>(
-    target: T
-  ) {
-    return this.__context[target];
+  /** @override */
+  protected onChildrenStartRender(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /** @override */
+  protected onChildrenRendered(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /** @override */
+  protected onDirectivesStartAttach(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /** @override */
+  protected onDirectivesAttached(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /** @override */
+  protected onRenderStart(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /** @override */
+  protected onRendered(): Promise<void> {
+    return Promise.resolve();
   }
 
   protected setState<T>(key: string, value: T) {
@@ -124,43 +130,44 @@ export abstract class BasicComponent {
     return this.__getChildElements("extendParent");
   }
 
-  protected async onInit(): Promise<void> {
-    await this.onRenderStart();
-    await this.onChildrenStartRender();
+  private __addChildElements<T extends any>(
+    target: keyof IBasicComponentContext,
+    args: T[],
+    type: IBasicComponentAppendType
+  ) {
+    if (target === "extendParent") {
+      this.__context[target] = args[0];
+      return;
+    }
+    if (type === "reset") {
+      (<unknown>this.__context[target]) = args;
+    } else {
+      this.__context[target][type](...(<any>args));
+    }
+  }
+
+  private __getChildElements<T extends keyof IBasicComponentContext>(
+    target: T
+  ) {
+    return this.__context[target];
+  }
+
+  // 外部调用
+  private async __syncChildrenHook(
+    process: (childNode: BasicComponent) => Promise<void>
+  ) {
     for (const childNode of this.__children) {
-      await childNode.onInit();
+      await process(childNode);
     }
-    await this.onChildrenRendered();
-    await this.onDirectivesStartEmit();
+  }
+
+  // 外部调用
+  private async __syncDirectivesnHook(
+    process: (childNode: BasicDirective) => Promise<void>
+  ) {
     for (const childNode of this.__directives) {
-      await childNode["onInit"]();
+      await process(childNode);
     }
-    await this.onDirectivesEmitted();
-    await this.onRendered();
-  }
-
-  protected onChildrenStartRender(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  protected onChildrenRendered(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  protected onDirectivesStartEmit(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  protected onDirectivesEmitted(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  protected onRenderStart(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  protected onRendered(): Promise<void> {
-    return Promise.resolve();
   }
 }
 
@@ -236,8 +243,35 @@ export async function createTemplateInstance<T extends typeof BasicComponent>(
   options: any
 ) {
   const model = inputProperties<BasicComponent>(template, options);
-  await model["onInit"]();
+  await onInitInvoke(model);
+  await onRenderInvoke(model);
   return model;
+}
+
+async function onInitInvoke(model: BasicComponent) {
+  await model["onInit"]();
+  await model["__syncChildrenHook"](onInitInvoke);
+  await model["__syncDirectivesnHook"](onDirectiveInitInvoke);
+}
+
+async function onRenderInvoke(model: BasicComponent) {
+  await model["onRenderStart"]();
+  await model["onDirectivesStartAttach"]();
+  await model["__syncDirectivesnHook"](onDirectiveAttachInvoke);
+  await model["onDirectivesAttached"]();
+  await model["onChildrenStartRender"]();
+  await model["__syncChildrenHook"](onRenderInvoke);
+  await model["onChildrenRendered"]();
+  await model["onRendered"]();
+}
+
+async function onDirectiveInitInvoke(model: BasicDirective) {
+  await model["onInit"]();
+}
+
+async function onDirectiveAttachInvoke(model: BasicDirective) {
+  await model["onAttachStart"]();
+  await model["onAttached"]();
 }
 
 function inputProperties<T = any>(template: any, options: any): T {
