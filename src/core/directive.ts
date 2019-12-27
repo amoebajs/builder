@@ -1,3 +1,9 @@
 export abstract class BasicDirective {
-  abstract emit(): void;
+  protected onInit(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  protected onEmit(): Promise<void> {
+    return Promise.resolve();
+  }
 }
