@@ -8,7 +8,12 @@ import {
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_OUTPUT_DEFINE = "ambjs::property_output_define";
+export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
 export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
+
+type UnnamedPartial<T> = Partial<T> & { name: string };
+type ClassDecorator = (target: any) => any;
+type PropertyDecorator = (target: any, propertyKey: string) => void;
 
 export interface IOutputPropertyContract extends IPropertyGroupContract {
   group: string | null;
@@ -25,6 +30,8 @@ export interface IInputPropertyContract extends IOutputPropertyContract {
     | string[]
     | null;
 }
+
+export interface IAttachPropertyContract extends IPropertyGroupContract {}
 
 export interface IPropertyGroupContract {
   name: string | null;
@@ -47,12 +54,17 @@ const default_group: IPropertyGroupContract = {
   i18nName: null
 };
 
-export function Group(params: Partial<IPropertyGroupContract> = {}) {
+export function Group(name: string): ClassDecorator;
+export function Group(
+  params: UnnamedPartial<IPropertyGroupContract>
+): ClassDecorator;
+export function Group(params: any) {
+  const deco_params = resolveParams<IPropertyGroupContract>(params);
   if (!params.name) throw new Error("property group name can't be empty");
   return function prop_group_factory(target: any) {
     definePropertyGroup(target, {
       ...default_group,
-      ...params
+      ...deco_params
     });
   };
 }
@@ -67,11 +79,17 @@ const default_input: IInputPropertyContract = {
   i18nName: null
 };
 
-export function Input(params: Partial<IInputPropertyContract> = {}) {
+export function Input(): PropertyDecorator;
+export function Input(name: string): PropertyDecorator;
+export function Input(
+  params: UnnamedPartial<IInputPropertyContract>
+): PropertyDecorator;
+export function Input(params?: any) {
+  const deco_params = resolveParams<IInputPropertyContract>(params);
   return function prop_input_factory(target: any, propertyKey: string) {
-    defineInputProperty(target.constructor, {
+    defineBasicProperty(target.constructor, {
       ...default_input,
-      ...params,
+      ...deco_params,
       realName: propertyKey
     });
   };
@@ -87,13 +105,19 @@ const default_output: IInputPropertyContract = {
   i18nName: null
 };
 
-export function Output(params: Partial<IInputPropertyContract> = {}) {
+export function Output(): PropertyDecorator;
+export function Output(name: string): PropertyDecorator;
+export function Output(
+  params: UnnamedPartial<IOutputPropertyContract>
+): PropertyDecorator;
+export function Output(params?: any) {
+  const deco_params = resolveParams<IOutputPropertyContract>(params);
   return function prop_output_factory(target: any, propertyKey: string) {
-    defineInputProperty(
+    defineBasicProperty(
       target.constructor,
       {
         ...default_output,
-        ...params,
+        ...deco_params,
         realName: propertyKey
       },
       PROP_OUTPUT_DEFINE
@@ -101,7 +125,27 @@ export function Output(params: Partial<IInputPropertyContract> = {}) {
   };
 }
 
-export function defineInputProperty(
+export function Attach(): PropertyDecorator;
+export function Attach(name: string): PropertyDecorator;
+export function Attach(
+  params: UnnamedPartial<IAttachPropertyContract>
+): PropertyDecorator;
+export function Attach(params?: any) {
+  const deco_params = resolveParams<IAttachPropertyContract>(params);
+  return function prop_attach_factory(target: any, propertyKey: string) {
+    defineBasicProperty(
+      target.constructor,
+      {
+        ...default_output,
+        ...deco_params,
+        realName: propertyKey
+      },
+      PROP_ATTACH_DEFINE
+    );
+  };
+}
+
+export function defineBasicProperty(
   target: EntityConstructor<any>,
   metadata: REALNAME<IInputPropertyContract>,
   metakey = PROP_INPUT_DEFINE
@@ -188,12 +232,29 @@ export function resolveOutputProperties(target: EntityConstructor<any>) {
   );
 }
 
+export function resolveAttachProperties(target: EntityConstructor<any>) {
+  return (
+    <{ [prop: string]: IPropertyBase }>(
+      Reflect.getMetadata(PROP_ATTACH_DEFINE, target)
+    ) || {}
+  );
+}
+
 export function resolvePropertyGroups(target: EntityConstructor<any>) {
   return (
     <{ [prop: string]: IPropertyGroupBase }>(
       Reflect.getMetadata(PROP_GROUP_DEFINE, target)
     ) || {}
   );
+}
+
+function resolveParams<T extends IPropertyGroupContract>(
+  params: string | { [prop: string]: any }
+): Partial<T> {
+  let deco_params: Partial<T> = {};
+  if (typeof params === "string") deco_params.name = params;
+  if (typeof params === "object") deco_params = <any>{ ...params };
+  return deco_params;
 }
 
 function setDisplayI18NMeta(

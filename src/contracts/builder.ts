@@ -7,7 +7,8 @@ import {
   EntityConstructor,
   resolveInputProperties,
   resolvePropertyGroups,
-  resolveOutputProperties
+  resolveOutputProperties,
+  resolveAttachProperties
 } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
@@ -23,6 +24,7 @@ export interface IMapEntry<T = any> {
   metadata: {
     inputs: { [name: string]: any };
     outputs: { [name: string]: any };
+    attaches: { [name: string]: any };
     groups: { [name: string]: any };
   };
 }
@@ -49,11 +51,7 @@ export class GlobalMap {
       value: mdname,
       pages: {},
       pipes: {},
-      metadata: {
-        groups: resolvePropertyGroups(mdname),
-        inputs: resolveInputProperties(mdname),
-        outputs: resolveOutputProperties(mdname)
-      }
+      metadata: getMetadata(mdname)
     });
     if (metadata.pages) {
       metadata.pages.forEach(i => {
@@ -64,11 +62,7 @@ export class GlobalMap {
           displayName: meta.displayName || pageName,
           moduleName,
           value: i,
-          metadata: {
-            groups: resolvePropertyGroups(i),
-            inputs: resolveInputProperties(i),
-            outputs: resolveOutputProperties(i)
-          }
+          metadata: getMetadata(i)
         };
       });
     }
@@ -81,11 +75,7 @@ export class GlobalMap {
           displayName: meta.displayName || pipeName,
           moduleName,
           value: i,
-          metadata: {
-            groups: resolvePropertyGroups(i),
-            inputs: resolveInputProperties(i),
-            outputs: resolveOutputProperties(i)
-          }
+          metadata: getMetadata(i)
         };
       });
     }
@@ -103,6 +93,15 @@ export class GlobalMap {
   public getPipe(module: string, name: string): IMapEntry<any> {
     return this.getModule(module).pipes[name];
   }
+}
+
+function getMetadata(mdname: EntityConstructor<any>) {
+  return {
+    groups: resolvePropertyGroups(mdname),
+    inputs: resolveInputProperties(mdname),
+    outputs: resolveOutputProperties(mdname),
+    attaches: resolveAttachProperties(mdname)
+  };
 }
 
 export interface IPageCreateOptions {
