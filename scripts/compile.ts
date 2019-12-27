@@ -22,11 +22,13 @@ if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 const builder = new Factory().builder;
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
-  .createSource(
-    path.resolve(process.cwd(), "build", "src"),
-    "cssgrid-component",
-    demo_conf
-  )
+  .createSource({
+    outDir: path.resolve(process.cwd(), "build", "src"),
+    fileName: "cssgrid-component",
+    configs: demo_conf
+    // onEmit: fileString => console.log(fileString),
+    // configs: demo_conf
+  })
   .catch(error => {
     console.log(chalk.red(error));
   });

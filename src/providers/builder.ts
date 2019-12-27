@@ -1,5 +1,10 @@
 import ts from "typescript";
-import { Builder, IPageCreateOptions } from "../contracts";
+import {
+  Builder,
+  ISourceCreateOptions,
+  ISourceFileCreateOptions,
+  ISourceStringCreateOptions
+} from "../contracts";
 import {
   createReactSourceFile,
   emitSourceFileSync,
@@ -49,30 +54,52 @@ export class BuilderProvider extends Builder {
     return [...imports, root];
   }
 
-  public async createSource(
-    outDir: string,
-    fileName: string,
-    configs: IPageCreateOptions
-  ): Promise<void> {
+  public async createSource(options: ISourceCreateOptions): Promise<void> {
     const compName = "App";
-    await emitSourceFileSync({
-      folder: outDir,
-      filename: fileName + ".tsx",
-      statements: createReactSourceFile(
-        this.createModuleStatements({
-          module: configs.page.module,
-          name: configs.page.name,
-          component: compName,
-          options: configs.page.options || {},
-          post: configs.page.post || []
-        })
-      )
-    });
-    await emitSourceFileSync({
-      folder: outDir,
-      filename: "main.tsx",
-      statements: createReactMainFile(compName, fileName)
-    });
+    if ((<ISourceFileCreateOptions>options).fileName) {
+      const opt = <ISourceFileCreateOptions>options;
+      const { configs } = opt;
+      await emitSourceFileSync({
+        prettier: opt.prettier,
+        folder: opt.outDir,
+        filename: opt.fileName + ".tsx",
+        statements: createReactSourceFile(
+          this.createModuleStatements({
+            module: configs.page.module,
+            name: configs.page.name,
+            component: compName,
+            options: configs.page.options || {},
+            post: configs.page.post || []
+          })
+        )
+      });
+      await emitSourceFileSync({
+        folder: opt.outDir,
+        filename: "main.tsx",
+        statements: createReactMainFile(compName, opt.fileName)
+      });
+    } else {
+      const opt = <ISourceStringCreateOptions>options;
+      const { configs } = opt;
+      return new Promise((resolve, reject) => {
+        emitSourceFileSync({
+          prettier: opt.prettier,
+          emit: content => {
+            opt.onEmit(content);
+            resolve();
+          },
+          statements: createReactSourceFile(
+            this.createModuleStatements({
+              module: configs.page.module,
+              name: configs.page.name,
+              component: compName,
+              options: configs.page.options || {},
+              post: configs.page.post || []
+            })
+          )
+        }).catch(reject);
+      });
+    }
   }
 
   public buildSource(

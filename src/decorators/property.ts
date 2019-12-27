@@ -73,7 +73,7 @@ const default_input: IInputPropertyContract = {
 export function Input(): PropertyDecorator;
 export function Input(name: string): PropertyDecorator;
 export function Input(
-  params: UnnamedPartial<IInputPropertyContract>
+  params: Partial<IInputPropertyContract>
 ): PropertyDecorator;
 export function Input(params?: any) {
   const deco_params = resolveParams<IInputPropertyContract>(params);
@@ -99,7 +99,7 @@ const default_output: IInputPropertyContract = {
 export function Output(): PropertyDecorator;
 export function Output(name: string): PropertyDecorator;
 export function Output(
-  params: UnnamedPartial<IOutputPropertyContract>
+  params: Partial<IOutputPropertyContract>
 ): PropertyDecorator;
 export function Output(params?: any) {
   const deco_params = resolveParams<IOutputPropertyContract>(params);
@@ -119,7 +119,7 @@ export function Output(params?: any) {
 export function Attach(): PropertyDecorator;
 export function Attach(name: string): PropertyDecorator;
 export function Attach(
-  params: UnnamedPartial<IAttachPropertyContract>
+  params: Partial<IAttachPropertyContract>
 ): PropertyDecorator;
 export function Attach(params?: any) {
   const deco_params = resolveParams<IAttachPropertyContract>(params);

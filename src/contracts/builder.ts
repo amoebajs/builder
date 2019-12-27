@@ -117,6 +117,24 @@ export interface IPageCreateOptions {
   };
 }
 
+interface IBaseSourceCreateOptions {
+  prettier?: boolean;
+  configs: IPageCreateOptions;
+}
+
+export interface ISourceFileCreateOptions extends IBaseSourceCreateOptions {
+  outDir: string;
+  fileName: string;
+}
+
+export interface ISourceStringCreateOptions extends IBaseSourceCreateOptions {
+  onEmit: (output: string) => void;
+}
+
+export type ISourceCreateOptions =
+  | ISourceStringCreateOptions
+  | ISourceFileCreateOptions;
+
 @Injectable()
 export abstract class Builder {
   constructor(
@@ -134,9 +152,7 @@ export abstract class Builder {
   }
 
   public abstract async createSource(
-    outDir: string,
-    fileName: string,
-    configs: IPageCreateOptions
+    options: ISourceCreateOptions
   ): Promise<void>;
   public abstract buildSource(options: IWebpackOptions): Promise<void>;
 }
