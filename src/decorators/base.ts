@@ -1,11 +1,6 @@
 import "reflect-metadata";
 import { InjectDIToken, getDependencies } from "@bonbons/di";
-import {
-  IPropertyBase,
-  IDescriptionMeta,
-  IWeakDescriptionMeta,
-  IPropertyGroupBase
-} from "../core/base";
+import { IWeakDescriptionMeta, IDescriptionMeta } from "../core/base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 export const PAGE_DEFINE = "ambjs::page_define";
@@ -16,6 +11,8 @@ export interface IConstructor<T> {
 }
 
 export type EntityConstructor<T> = InjectDIToken<T>;
+
+export type UnnamedPartial<T> = Partial<T> & { name: string };
 
 export interface IModuleContract {
   name: string | null;
@@ -35,6 +32,14 @@ export interface IPipeContract {
   name: string | null;
   displayName: string | null;
   useProvider: "react";
+}
+
+export interface IBasicI18NContract {
+  name: string | null;
+  displayName: string | null;
+  description: string | null;
+  i18nName: { [prop: string]: string } | null;
+  i18nDescription: { [prop: string]: string } | null;
 }
 
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
@@ -83,4 +88,28 @@ export function resolvePipe(
   defaults: Partial<IPipeContract> = {}
 ) {
   return <IPipeContract>Reflect.getMetadata(PIPE_DEFINE, target) || defaults;
+}
+
+export function resolveParams<T extends IBasicI18NContract>(
+  params: string | { [prop: string]: any }
+): Partial<T> {
+  let deco_params: Partial<T> = {};
+  if (typeof params === "string") deco_params.name = params;
+  if (typeof params === "object") deco_params = <any>{ ...params };
+  return deco_params;
+}
+
+export function setDisplayI18NMeta(
+  target: IDescriptionMeta | IWeakDescriptionMeta | undefined | null,
+  key: string,
+  mode: "displayValue" | "value" = "displayValue"
+) {
+  if (
+    target &&
+    target.i18n[key] === void 0 &&
+    (<IDescriptionMeta>target)[mode] !== null
+  ) {
+    target.i18n[key] = (<IDescriptionMeta>target)[mode];
+  }
+  return target;
 }

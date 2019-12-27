@@ -1,19 +1,16 @@
-import { EntityConstructor } from "./base";
+import { IPropertyBase, IPropertyGroupBase } from "../core/base";
 import {
-  IDescriptionMeta,
-  IPropertyBase,
-  IWeakDescriptionMeta,
-  IPropertyGroupBase
-} from "../core/base";
+  EntityConstructor,
+  IBasicI18NContract,
+  resolveParams,
+  setDisplayI18NMeta,
+  UnnamedPartial
+} from "./base";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_OUTPUT_DEFINE = "ambjs::property_output_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
 export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
-
-type UnnamedPartial<T> = Partial<T> & { name: string };
-type ClassDecorator = (target: any) => any;
-type PropertyDecorator = (target: any, propertyKey: string) => void;
 
 export interface IOutputPropertyContract extends IPropertyGroupContract {
   group: string | null;
@@ -33,13 +30,7 @@ export interface IInputPropertyContract extends IOutputPropertyContract {
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
 
-export interface IPropertyGroupContract {
-  name: string | null;
-  displayName: string | null;
-  description: string | null;
-  i18nName: { [prop: string]: string } | null;
-  i18nDescription: { [prop: string]: string } | null;
-}
+export interface IPropertyGroupContract extends IBasicI18NContract {}
 
 type REALNAME<T> = T & {
   /** real field key in class scope */
@@ -246,30 +237,6 @@ export function resolvePropertyGroups(target: EntityConstructor<any>) {
       Reflect.getMetadata(PROP_GROUP_DEFINE, target)
     ) || {}
   );
-}
-
-function resolveParams<T extends IPropertyGroupContract>(
-  params: string | { [prop: string]: any }
-): Partial<T> {
-  let deco_params: Partial<T> = {};
-  if (typeof params === "string") deco_params.name = params;
-  if (typeof params === "object") deco_params = <any>{ ...params };
-  return deco_params;
-}
-
-function setDisplayI18NMeta(
-  target: IDescriptionMeta | IWeakDescriptionMeta | undefined | null,
-  key: string,
-  mode: "displayValue" | "value" = "displayValue"
-) {
-  if (
-    target &&
-    target.i18n[key] === void 0 &&
-    (<IDescriptionMeta>target)[mode] !== null
-  ) {
-    target.i18n[key] = (<IDescriptionMeta>target)[mode];
-  }
-  return target;
 }
 
 function getGroupNameMeta(data: IPropertyBase) {
