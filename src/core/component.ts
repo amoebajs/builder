@@ -1,7 +1,17 @@
 import ts from "typescript";
 import { BasicDirective } from "./directive";
 import { resolveInputProperties } from "../decorators/property";
-import { TYPES } from "../utils/base";
+import {
+  createJsxElement,
+  TYPES,
+  REACT,
+  createConstVariableStatement,
+  THIS
+} from "../utils/base";
+
+export interface IJsxAttrs {
+  [key: string]: ts.JsxExpression | string;
+}
 
 export interface IBasicComponentContext {
   extendParent: ts.HeritageClause | null;
@@ -9,14 +19,12 @@ export interface IBasicComponentContext {
   fields: ts.PropertyDeclaration[];
   properties: ts.PropertyDeclaration[];
   methods: ts.MethodDeclaration[];
-  rootChildren: ts.JsxElement[];
 }
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
 export abstract class BasicComponent {
   private __rendered: boolean = false;
-  private __source: ts.SourceFile | null = null;
   private __children: BasicComponent[] = [];
   private __directives: BasicDirective[] = [];
   private __state: { [prop: string]: any } = {};
@@ -25,16 +33,11 @@ export abstract class BasicComponent {
     implementParents: [],
     fields: [],
     properties: [],
-    methods: [],
-    rootChildren: []
+    methods: []
   };
 
   public isComponentRendered() {
     return this.__rendered;
-  }
-
-  public getRenderedSourceCode() {
-    return this.__source;
   }
 
   private __addChildElements<T extends any>(
@@ -65,17 +68,6 @@ export abstract class BasicComponent {
 
   protected getState<T>(key: string, defaultValue: any = null) {
     return this.__state[key] || defaultValue;
-  }
-
-  protected addRootChildren(
-    args: ts.JsxElement[],
-    type: IBasicComponentAppendType = "push"
-  ) {
-    return this.__addChildElements("rootChildren", args, type);
-  }
-
-  protected getRootChildren() {
-    return this.__getChildElements("rootChildren");
   }
 
   protected addMethods(
@@ -142,8 +134,6 @@ export abstract class BasicComponent {
       await childNode["onInit"]();
     }
     await this.onDirectivesEmitted();
-    // Generate Source Code here
-    this.__rendered = true;
     await this.onRendered();
   }
 
@@ -173,13 +163,69 @@ export abstract class BasicComponent {
 }
 
 export class BasicReactComponent extends BasicComponent {
+  protected addRootChildren(
+    args: ts.JsxElement[],
+    type: IBasicComponentAppendType = "push"
+  ) {
+    const rootChildren: ts.JsxElement[] = this.getState("rootChildren");
+    if (type === "reset") {
+      this.setState("rootChildren", args);
+    } else {
+      const newChildren = [...rootChildren][type](...args);
+      this.setState("rootChildren", newChildren);
+    }
+  }
+
+  protected getRootChildren(): ts.JsxElement[] {
+    return this.getState("rootChildren");
+  }
+
+  protected setRootElement(tagName: string, attrs: IJsxAttrs) {
+    this.setState("rootElement", {
+      name: tagName,
+      attrs,
+      types: []
+    });
+  }
+
+  protected async onInit() {
+    await super.onInit();
+    this.setState("rootChildren", []);
+  }
+
   protected async onRenderStart() {
+    await super.onRenderStart();
     this.setExtendParent(
       ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
         TYPES.PureComponent
       ])
     );
-    await super.onRenderStart();
+    this.setRootElement(REACT.Fragment, {});
+  }
+
+  protected async onRendered() {
+    await super.onRendered();
+    const root = this.getState("rootElement");
+    const children = this.getRootChildren();
+    const renderMethod = ts.createMethod(
+      [],
+      [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+      undefined,
+      ts.createIdentifier(REACT.Render),
+      undefined,
+      [],
+      [],
+      undefined,
+      ts.createBlock([
+        createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
+        ts.createReturn(
+          ts.createParen(
+            createJsxElement(root.name, root.types, root.attrs, children)
+          )
+        )
+      ])
+    );
+    this.addMethods([renderMethod]);
   }
 }
 
