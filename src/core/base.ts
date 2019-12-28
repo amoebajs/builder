@@ -1,4 +1,6 @@
 import ts from "typescript";
+import uuid from "uuid/v4";
+import { PropertyRef } from "../utils/directive";
 
 export interface IPureObject {
   [prop: string]: any;
@@ -61,8 +63,17 @@ export type IBasicCompilationContext = ScopeMap<IBasicCompilationFinalContext>;
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
+export function createEntityId() {
+  return (
+    "E" +
+    uuid()
+      .split("-")
+      .join("")
+  );
+}
+
 export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
-  private __scope = Symbol(new Date().getTime());
+  private __scope = createEntityId();
   private __state: T = <T>{};
   private __context!: IBasicCompilationContext;
 
@@ -81,6 +92,17 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     defaultValue: T[K] | null = null
   ): T[K] {
     return this.__state[key] || (defaultValue as any);
+  }
+
+  protected addImports(
+    args: ts.ImportDeclaration[],
+    type: IBasicComponentAppendType = "push"
+  ) {
+    return this.__addChildElements("imports", args, type);
+  }
+
+  protected getImports() {
+    return this.__getChildElements("imports") || [];
   }
 
   protected addMethods(
@@ -133,6 +155,19 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
 
   protected getExtendParent() {
     return this.__getChildElements("extendParent") || null;
+  }
+
+  protected getRef(name: string): PropertyRef | null {
+    return (<any>this)[name];
+  }
+
+  protected resolveRef(name: string): any {
+    const ref = this.getRef(name);
+    if (!ref) return null;
+    if (ref.type === "literal") {
+      return ref.expression;
+    }
+    return null;
   }
 
   //#endregion

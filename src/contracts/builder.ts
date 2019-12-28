@@ -2,7 +2,7 @@ import { Path } from "./path";
 import {
   Injectable,
   resolveModule,
-  resolvePipe,
+  resolveDirective,
   EntityConstructor,
   resolveInputProperties,
   resolvePropertyGroups,
@@ -70,7 +70,7 @@ export class GlobalMap {
     }
     if (metadata.directives) {
       metadata.directives.forEach(i => {
-        const meta = resolvePipe(i);
+        const meta = resolveDirective(i);
         const pipeName = meta.name || "[unnamed]";
         thisModule.directives[pipeName] = {
           name: pipeName,

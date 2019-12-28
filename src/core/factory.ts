@@ -19,7 +19,8 @@ import {
   HtmlBundleProvider,
   WebpackPluginsProvider
 } from "../providers";
-import { CommonComponentModule } from "../pages";
+import { CommonComponentModule } from "../pages/common.module";
+import { CommonDirectiveModule } from "../directives/common.module";
 
 export class Factory {
   private _completed = false;
@@ -54,6 +55,7 @@ export class Factory {
   /** @override can be overrided */
   protected initModules() {
     this.useModule(CommonComponentModule);
+    this.useModule(CommonDirectiveModule);
   }
 
   public useProvider(

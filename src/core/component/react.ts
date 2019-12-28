@@ -60,7 +60,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
   }
 
   protected async onRender() {
-    await super.onPostRender();
+    await super.onRender();
     const root = this.getState("rootElement");
     const children = this.getRootChildren();
     const renderMethod = ts.createMethod(

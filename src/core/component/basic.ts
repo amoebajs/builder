@@ -10,6 +10,7 @@ import {
 import { resolveInputProperties, IFrameworkDepts } from "../../decorators";
 import { REACT, createExportModifier, exists } from "../../utils/base";
 import { InvalidOperationError } from "../../errors";
+import { ReactVbRef, PropertyRef } from "../../utils/directive";
 
 export interface IJsxAttrs {
   [key: string]: ts.JsxExpression | string;
@@ -24,6 +25,10 @@ export abstract class BasicComponent<
 
   public get rendered() {
     return this.__rendered;
+  }
+
+  public get componentId() {
+    return "C" + this.entityId;
   }
 
   //#region hooks
@@ -82,48 +87,50 @@ export abstract class BasicComponent<
 
   /** @override */
   protected async onPreRender(): Promise<void> {
-    await this.onDirectivesPreAttach();
-    await this.onDirectivesAttach();
-    await this.onDirectivesPostAttach();
-  }
-
-  /** @override */
-  protected async onRender(): Promise<void> {
     await this.onChildrenPreRender();
     await this.onChildrenRender();
     await this.onChildrenPostRender();
   }
 
   /** @override */
-  protected async onPostRender(): Promise<void> {
+  protected async onRender(): Promise<void> {
     return Promise.resolve();
+  }
+
+  /** @override */
+  protected async onPostRender(): Promise<void> {
+    await this.onDirectivesPreAttach();
+    await this.onDirectivesAttach();
+    await this.onDirectivesPostAttach();
   }
 
   //#endregion
 
   //#region  pretected methods
 
+  protected getRef(name: string): ReactVbRef | null;
+  protected getRef(name: string): PropertyRef | null;
+  protected getRef(name: string) {
+    const ref = super.getRef(name);
+    if (ref instanceof ReactVbRef) {
+      return ref;
+    }
+    return null;
+  }
+
+  protected resolveRef(name: string): any {
+    const ref = this.getRef(name);
+    if (ref) {
+      if (ref.type === "props") {
+        return ts.createPropertyAccess(ts.createThis(), ref["expression"]);
+      }
+    }
+    return super.resolveRef(name);
+  }
+
   //#endregion
 
   //#region private methods
-
-  // 外部调用
-  private async __syncChildrenHook(
-    process: (childNode: BasicComponent) => Promise<void>
-  ) {
-    for (const childNode of this.__children) {
-      await process(childNode);
-    }
-  }
-
-  // 外部调用
-  private async __syncDirectivesnHook(
-    process: (childNode: BasicDirective) => Promise<void>
-  ) {
-    for (const childNode of this.__directives) {
-      await process(childNode);
-    }
-  }
 
   //#endregion
 }

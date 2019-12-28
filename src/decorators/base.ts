@@ -3,7 +3,6 @@ import { InjectDIToken, getDependencies } from "@bonbons/di";
 import { IWeakDescriptionMeta, IDescriptionMeta } from "../core/base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
-export const PIPE_DEFINE = "ambjs::pipe_define";
 
 export interface IConstructor<T> {
   new (...args: any[]): T;
@@ -20,12 +19,6 @@ export interface IModuleContract {
   directives: EntityConstructor<any>[];
 }
 
-export interface IPipeContract {
-  name: string | null;
-  displayName: string | null;
-  useProvider: "react";
-}
-
 export interface IBasicI18NContract {
   name: string | null;
   displayName: string | null;
@@ -33,6 +26,17 @@ export interface IBasicI18NContract {
   i18nName: { [prop: string]: string } | null;
   i18nDescription: { [prop: string]: string } | null;
 }
+
+export interface IFrameworkDepts {
+  react: { [name: string]: string };
+}
+
+export const default_framework_depts: IFrameworkDepts = {
+  react: {
+    react: "^16.12.0",
+    "react-dom": "^16.12.0"
+  }
+};
 
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
   return getDependencies(target) || [];
@@ -52,20 +56,6 @@ export function resolveModule(
   return (
     <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults
   );
-}
-
-export function definePipe(
-  target: EntityConstructor<any>,
-  metadata: IPipeContract
-) {
-  return Reflect.defineMetadata(PIPE_DEFINE, metadata, target);
-}
-
-export function resolvePipe(
-  target: EntityConstructor<any>,
-  defaults: Partial<IPipeContract> = {}
-) {
-  return <IPipeContract>Reflect.getMetadata(PIPE_DEFINE, target) || defaults;
 }
 
 export function resolveParams<T extends IBasicI18NContract>(
