@@ -128,7 +128,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   protected setExtendParent(arg: ts.HeritageClause) {
-    return this.__addChildElements("implementParents", [arg], "reset");
+    return this.__addChildElements("extendParent", [arg], "reset");
   }
 
   protected getExtendParent() {
@@ -151,7 +151,9 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
       host.set(this.__scope, args);
     } else {
       const oldValues = <unknown[]>host.get(this.__scope) || [];
-      host.set(this.__scope, [...oldValues][type](...args));
+      const newValues = [...oldValues];
+      newValues[type](...args);
+      host.set(this.__scope, newValues);
     }
   }
 

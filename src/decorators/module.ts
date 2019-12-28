@@ -3,8 +3,8 @@ import { EntityConstructor, IModuleContract, defineModule } from "./base";
 const defaults: IModuleContract = {
   name: null,
   displayName: null,
-  pages: [],
-  pipes: []
+  components: [],
+  directives: []
 };
 
 export function Module(define: Partial<IModuleContract> = {}) {

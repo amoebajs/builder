@@ -2,7 +2,6 @@ import { Path } from "./path";
 import {
   Injectable,
   resolveModule,
-  resolvePage,
   resolvePipe,
   EntityConstructor,
   resolveInputProperties,
@@ -15,12 +14,14 @@ import { IWebpackOptions, WebpackConfig } from "./webpack-config";
 import { Injector, InjectDIToken } from "@bonbons/di";
 import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
+import { resolveComponent } from "../decorators/component";
 
 export interface IMapEntry<T = any> {
   moduleName?: string;
   name: string;
   displayName: string;
   value: T;
+  provider?: string;
   metadata: {
     inputs: { [name: string]: any };
     outputs: { [name: string]: any };
@@ -30,8 +31,8 @@ export interface IMapEntry<T = any> {
 }
 
 export interface IModuleEntry<T = any> extends IMapEntry<T> {
-  pages: { [name: string]: IMapEntry<any> };
-  pipes: { [name: string]: IMapEntry<any> };
+  components: { [name: string]: IMapEntry<any> };
+  directives: { [name: string]: IMapEntry<any> };
 }
 
 export interface IGlobalMap {
@@ -49,28 +50,29 @@ export class GlobalMap {
       name: moduleName,
       displayName: metadata.displayName || moduleName,
       value: mdname,
-      pages: {},
-      pipes: {},
+      components: {},
+      directives: {},
       metadata: getMetadata(mdname)
     });
-    if (metadata.pages) {
-      metadata.pages.forEach(i => {
-        const meta = resolvePage(i);
+    if (metadata.components) {
+      metadata.components.forEach(i => {
+        const meta = resolveComponent(i);
         const pageName = meta.name || "[unnamed]";
-        thisModule.pages[pageName] = {
+        thisModule.components[pageName] = {
           name: pageName,
           displayName: meta.displayName || pageName,
           moduleName,
           value: i,
+          provider: meta.provider,
           metadata: getMetadata(i)
         };
       });
     }
-    if (metadata.pipes) {
-      metadata.pipes.forEach(i => {
+    if (metadata.directives) {
+      metadata.directives.forEach(i => {
         const meta = resolvePipe(i);
         const pipeName = meta.name || "[unnamed]";
-        thisModule.pipes[pipeName] = {
+        thisModule.directives[pipeName] = {
           name: pipeName,
           displayName: meta.displayName || pipeName,
           moduleName,
@@ -86,12 +88,12 @@ export class GlobalMap {
     return this.maps.modules[name];
   }
 
-  public getPage(module: string, name: string): IMapEntry<any> {
-    return this.getModule(module).pages[name];
+  public getComponent(module: string, name: string): IMapEntry<any> {
+    return this.getModule(module).components[name];
   }
 
-  public getPipe(module: string, name: string): IMapEntry<any> {
-    return this.getModule(module).pipes[name];
+  public getDirective(module: string, name: string): IMapEntry<any> {
+    return this.getModule(module).directives[name];
   }
 }
 

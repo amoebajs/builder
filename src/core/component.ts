@@ -1,6 +1,5 @@
 import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
-import { IConstructor } from "../decorators";
 import { BasicDirective } from "./directive";
 import {
   IBasicCompilationContext,
@@ -20,6 +19,7 @@ import {
   exists
 } from "../utils/base";
 import { InvalidOperationError } from "../errors";
+import { IFrameworkDepts } from "../decorators";
 
 export interface IJsxAttrs {
   [key: string]: ts.JsxExpression | string;
@@ -205,23 +205,21 @@ export class BasicReactContainer extends BasicComponent {
   }
 }
 
-export interface IComponentPluginOptions {
-  type: typeof BasicComponent;
-  options: { [prop: string]: any };
-  components: IComponentPluginOptions[];
-  directives: IDirectivePluginOptions[];
+export interface IComponentPluginOptions<T extends InjectDIToken<any>>
+  extends IDirectivePluginOptions<T> {
+  provider: keyof IFrameworkDepts;
+  components?: IComponentPluginOptions<any>[];
+  directives?: IDirectivePluginOptions<any>[];
 }
 
-export interface IDirectivePluginOptions {
-  type: typeof BasicDirective;
-  options: { [prop: string]: any };
-}
-
-export interface IInstanceCreateOptions<T extends InjectDIToken<any>> {
+export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
+  provider: keyof IFrameworkDepts;
   template: T;
   options?: { [prop: string]: any };
-  components?: IComponentPluginOptions[];
-  directives?: IDirectivePluginOptions[];
+}
+
+export interface IInstanceCreateOptions<T extends InjectDIToken<any>>
+  extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
 }
 
@@ -244,7 +242,8 @@ export function createTemplateInstance<T extends typeof BasicComponent>({
   for (const iterator of components) {
     model["__children"].push(
       createTemplateInstance({
-        template: iterator.type,
+        provider: iterator.provider,
+        template: iterator.template,
         options: iterator.options,
         components: iterator.components,
         directives: iterator.directives,
@@ -254,13 +253,18 @@ export function createTemplateInstance<T extends typeof BasicComponent>({
   }
   for (const iterator of directives) {
     model["__directives"].push(
-      initPropsContextIst(iterator.type, iterator.options, context)
+      initPropsContextIst(iterator.template, iterator.options || {}, context)
     );
   }
   return model;
 }
 
-export async function callCompilation(model: BasicComponent, unExport = false) {
+export async function callCompilation(
+  provider: keyof IFrameworkDepts,
+  model: BasicComponent,
+  name: string,
+  unExport = false
+) {
   await model["onInit"]();
   await model["onPreRender"]();
   await model["onRender"]();
@@ -292,6 +296,16 @@ export async function callCompilation(model: BasicComponent, unExport = false) {
   }
   // 合并imports
   const importSpecs: ts.ImportDeclaration[] = [];
+  if (provider === "react") {
+    importSpecs.unshift(
+      ts.createImportDeclaration(
+        [],
+        [],
+        ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+        ts.createStringLiteral("react")
+      )
+    );
+  }
   context.imports.forEach(importDec =>
     updateImportDeclarations(importSpecs, [importDec])
   );

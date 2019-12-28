@@ -8,8 +8,7 @@ import {
 import {
   createReactSourceFile,
   emitSourceFileSync,
-  createReactMainFile,
-  createSelectPage
+  createReactMainFile
 } from "../utils";
 import { NotFoundError, InvalidOperationError } from "../errors";
 import { Injectable } from "../decorators";
@@ -41,45 +40,14 @@ export interface IComponentCreateOptions extends IDirectiveCreateOptions {
 
 @Injectable()
 export class BuilderProvider extends Builder {
-  protected createModuleStatements({
-    module: MODULE,
-    name: PAGE,
-    component: NAME,
-    post: POST,
-    options: OPTS
-  }: IModuleCreateOptions<{ module: string; name: string; args?: any }>) {
-    const page = this.globalMap.getPage(MODULE, PAGE);
-    if (!page) {
-      throw new NotFoundError("page template not found");
-    }
-    const imports: ts.ImportDeclaration[] = [];
-    function onUpdate(statements: ts.ImportDeclaration[]) {
-      updateImportDeclarations(imports, statements);
-    }
-    const processors = (POST || []).map(({ module: md, name, args }) => [
-      this.globalMap.getPipe(md, name).value,
-      args
-    ]);
-    const root = createSelectPage(
-      NAME,
-      page.value,
-      OPTS || {},
-      processors,
-      onUpdate,
-      true
-    );
-    return [...imports, root];
-  }
-
   protected resolveType(
     moduleName: string,
     templateName: string,
     type: "component" | "directive"
   ) {
-    const target = this.globalMap[type === "component" ? "getPage" : "getPipe"](
-      moduleName,
-      templateName
-    );
+    const target = this.globalMap[
+      type === "component" ? "getComponent" : "getDirective"
+    ](moduleName, templateName);
     if (!target) {
       throw new NotFoundError(
         `${type} [${moduleName}.${templateName}] not found`
@@ -112,6 +80,7 @@ export class BuilderProvider extends Builder {
       );
     }
     return {
+      provider: <any>entity.provider!,
       template: entity.value,
       options: options.options,
       components: comps,
@@ -122,7 +91,7 @@ export class BuilderProvider extends Builder {
   protected async createComponentSource(options: IComponentCreateOptions) {
     const opts = this.resolveCreateOptions("component", options);
     const instance = createTemplateInstance(opts);
-    return callCompilation(instance);
+    return callCompilation(opts.provider, instance, options.componentName);
   }
 
   public async createSource(options: ISourceCreateOptions): Promise<void> {
@@ -151,22 +120,21 @@ export class BuilderProvider extends Builder {
     } else {
       const opt = <ISourceStringCreateOptions>options;
       const { configs } = opt;
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         emitSourceFileSync({
           prettier: opt.prettier,
           emit: content => {
             opt.onEmit(content);
             resolve();
           },
-          statements: createReactSourceFile(
-            this.createModuleStatements({
-              module: configs.page.module,
-              name: configs.page.name,
-              component: compName,
-              options: configs.page.options || {},
-              post: configs.page.post || []
+          statements: (
+            await this.createComponentSource({
+              moduleName: configs.page.module,
+              templateName: configs.page.name,
+              componentName: compName,
+              options: configs.page.options || {}
             })
-          )
+          ).statements
         }).catch(reject);
       });
     }

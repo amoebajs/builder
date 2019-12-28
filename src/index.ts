@@ -1,4 +1,3 @@
-export * from "./pipes";
 export * from "./pages";
 export * from "./errors";
 export * from "./contracts";
