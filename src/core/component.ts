@@ -1,9 +1,10 @@
 import ts from "typescript";
+import { InjectDIToken } from "@bonbons/di";
+import { IConstructor } from "../decorators";
 import { BasicDirective } from "./directive";
 import {
   IBasicCompilationContext,
   IPureObject,
-  MapValueType,
   BasicCompilationEntity,
   IBasicComponentAppendType
 } from "./base";
@@ -35,36 +36,68 @@ export abstract class BasicComponent<
 
   /** @override */
   protected async onInit(): Promise<void> {
+    for (const iterator of this.__children) {
+      await iterator["onInit"]();
+    }
+    for (const iterator of this.__directives) {
+      await iterator["onInit"]();
+    }
+  }
+
+  /** @override */
+  protected async onChildrenPreRender(): Promise<void> {
+    for (const iterator of this.__children) {
+      await iterator["onPreRender"]();
+    }
+  }
+
+  /** @override */
+  protected async onChildrenRender(): Promise<void> {
+    for (const iterator of this.__children) {
+      await iterator["onRender"]();
+    }
+  }
+
+  /** @override */
+  protected async onChildrenPostRender(): Promise<void> {
+    for (const iterator of this.__children) {
+      await iterator["onPostRender"]();
+    }
+  }
+
+  /** @override */
+  protected async onDirectivesPreAttach(): Promise<void> {
+    for (const iterator of this.__directives) {
+      await iterator["onPreAttach"]();
+    }
+  }
+
+  /** @override */
+  protected async onDirectivesAttach(): Promise<void> {
+    for (const iterator of this.__directives) {
+      await iterator["onAttach"]();
+    }
+  }
+
+  /** @override */
+  protected async onDirectivesPostAttach(): Promise<void> {
+    for (const iterator of this.__directives) {
+      await iterator["onPostAttach"]();
+    }
+  }
+
+  /** @override */
+  protected onPreRender(): Promise<void> {
     return Promise.resolve();
   }
 
   /** @override */
-  protected onChildrenStartRender(): Promise<void> {
+  protected onRender(): Promise<void> {
     return Promise.resolve();
   }
 
   /** @override */
-  protected onChildrenRendered(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onDirectivesStartAttach(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onDirectivesAttached(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onRenderStart(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onRendered(): Promise<void> {
+  protected onPostRender(): Promise<void> {
     return Promise.resolve();
   }
 
@@ -128,8 +161,8 @@ export class BasicReactContainer extends BasicComponent {
     this.setState("rootChildren", []);
   }
 
-  protected async onRenderStart() {
-    await super.onRenderStart();
+  protected async onPreRender() {
+    await super.onPreRender();
     this.setExtendParent(
       ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
         TYPES.PureComponent
@@ -138,8 +171,8 @@ export class BasicReactContainer extends BasicComponent {
     this.setRootElement(REACT.Fragment, {});
   }
 
-  protected async onRendered() {
-    await super.onRendered();
+  protected async onRender() {
+    await super.onPostRender();
     const root = this.getState("rootElement");
     const children = this.getRootChildren();
     const renderMethod = ts.createMethod(
@@ -164,49 +197,80 @@ export class BasicReactContainer extends BasicComponent {
   }
 }
 
-export async function createTemplateInstance<T extends typeof BasicComponent>(
-  template: T,
-  options: any
-) {
-  const model = inputProperties<BasicComponent>(template, options);
-  await onInitInvoke(model);
-  await onRenderInvoke(model);
+export interface IComponentPluginOptions {
+  type: typeof BasicComponent;
+  options: { [prop: string]: any };
+  components: IComponentPluginOptions[];
+  directives: IDirectivePluginOptions[];
+}
+
+export interface IDirectivePluginOptions {
+  type: typeof BasicDirective;
+  options: { [prop: string]: any };
+}
+
+export interface IInstanceCreateOptions<T extends InjectDIToken<any>> {
+  template: T;
+  options?: { [prop: string]: any };
+  components?: IComponentPluginOptions[];
+  directives?: IDirectivePluginOptions[];
+  passContext?: IBasicCompilationContext;
+}
+
+export function createTemplateInstance<T extends typeof BasicComponent>({
+  template,
+  options = {},
+  components = [],
+  directives = [],
+  passContext
+}: IInstanceCreateOptions<T>) {
+  const context: IBasicCompilationContext = passContext || {
+    extendParent: new Map(),
+    implementParents: new Map(),
+    fields: new Map(),
+    properties: new Map(),
+    methods: new Map()
+  };
+  const model = initPropsContextIst(template, options, context);
+  for (const iterator of components) {
+    model["__children"].push(
+      createTemplateInstance({
+        template: iterator.type,
+        options: iterator.options,
+        components: iterator.components,
+        directives: iterator.directives,
+        passContext: context
+      })
+    );
+  }
+  for (const iterator of directives) {
+    model["__directives"].push(
+      initPropsContextIst(iterator.type, iterator.options, context)
+    );
+  }
   return model;
 }
 
-async function onInitInvoke(model: BasicComponent) {
-  await model["onInit"]();
-  await model["__syncChildrenHook"](onInitInvoke);
-  await model["__syncDirectivesnHook"](onDirectiveInitInvoke);
+function initPropsContextIst<T extends BasicCompilationEntity>(
+  template: InjectDIToken<T>,
+  options: { [prop: string]: any },
+  context: IBasicCompilationContext
+): T {
+  const model = inputProperties(new (<any>template)(), options);
+  Object.defineProperty(model, "__context", {
+    enumerable: true,
+    configurable: false,
+    get() {
+      return context;
+    }
+  });
+  return model;
 }
 
-async function onRenderInvoke(model: BasicComponent) {
-  await model["onRenderStart"]();
-  await model["onDirectivesStartAttach"]();
-  await model["__syncDirectivesnHook"](onDirectiveAttachInvoke);
-  await model["onDirectivesAttached"]();
-  await model["onChildrenStartRender"]();
-  await model["__syncChildrenHook"](onRenderInvoke);
-  await model["onChildrenRendered"]();
-  await model["onRendered"]();
-}
-
-async function onDirectiveInitInvoke(model: BasicDirective) {
-  await model["onInit"]();
-}
-
-async function onDirectiveAttachInvoke(model: BasicDirective) {
-  await model["onAttachStart"]();
-  await model["onAttached"]();
-}
-
-function inputProperties<T = any>(template: any, options: any): T {
-  const model = "prototype" in template ? new (<any>template)() : template;
-  const ctor =
-    "prototype" in template
-      ? template
-      : Object.getPrototypeOf(template).constructor;
-  const props = resolveInputProperties(ctor);
+function inputProperties<T extends any>(model: T, options: any): T {
+  const props = resolveInputProperties(
+    Object.getPrototypeOf(model).constructor
+  );
   for (const key in props) {
     if (props.hasOwnProperty(key)) {
       const prop = props[key];
