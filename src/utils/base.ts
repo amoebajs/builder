@@ -9,7 +9,7 @@ export interface IFileCreateOptions {
   folder?: string;
   filename?: string;
   emit?: (str: string) => void;
-  statements: ts.Statement[];
+  statements: ts.Statement[] | ts.NodeArray<ts.Statement>;
 }
 
 export interface IPrettierFileCreateOptions extends IFileCreateOptions {

@@ -12,7 +12,7 @@ import { CssGridContainer } from "./css-grid2";
 export class CommonPageModule {}
 
 @Module({
-  name: "ambjs_common_component_module",
+  name: "ambjs-common-component-module",
   displayName: "基础组件模块",
   pages: [CssGridContainer]
 })

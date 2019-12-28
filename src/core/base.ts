@@ -40,13 +40,24 @@ export interface IPropertyBase extends IUnitBase {
   type: PropertyType | null;
 }
 
-export interface IBasicCompilationContext {
-  extendParent: Map<string | symbol, ts.HeritageClause>;
-  implementParents: Map<string | symbol, ts.HeritageClause[]>;
-  fields: Map<string | symbol, ts.PropertyDeclaration[]>;
-  properties: Map<string | symbol, ts.PropertyDeclaration[]>;
-  methods: Map<string | symbol, ts.MethodDeclaration[]>;
+export type ImportStatementsUpdater = (
+  statements: ts.ImportDeclaration[]
+) => void;
+
+export interface IBasicCompilationFinalContext {
+  imports: ts.ImportDeclaration[];
+  extendParent: ts.HeritageClause | null;
+  implementParents: ts.HeritageClause[];
+  fields: ts.PropertyDeclaration[];
+  properties: ts.PropertyDeclaration[];
+  methods: ts.MethodDeclaration[];
 }
+
+type ScopeMap<T> = {
+  [key in keyof T]: Map<string | symbol, T[key]>;
+};
+
+export type IBasicCompilationContext = ScopeMap<IBasicCompilationFinalContext>;
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 

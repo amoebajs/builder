@@ -19,8 +19,7 @@ import {
   HtmlBundleProvider,
   WebpackPluginsProvider
 } from "../providers";
-import { CommonPageModule } from "../pages";
-import { CommonPipeModule } from "../pipes";
+import { CommonComponentModule } from "../pages";
 
 export class Factory {
   private _completed = false;
@@ -54,8 +53,7 @@ export class Factory {
 
   /** @override can be overrided */
   protected initModules() {
-    this.useModule(CommonPageModule);
-    this.useModule(CommonPipeModule);
+    this.useModule(CommonComponentModule);
   }
 
   public useProvider(

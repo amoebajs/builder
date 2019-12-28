@@ -13,6 +13,11 @@ import {
 } from "../utils";
 import { NotFoundError, InvalidOperationError } from "../errors";
 import { Injectable } from "../decorators";
+import {
+  IInstanceCreateOptions,
+  createTemplateInstance,
+  callCompilation
+} from "../core/component";
 
 export interface IModuleCreateOptions<T> {
   module: string;
@@ -20,6 +25,18 @@ export interface IModuleCreateOptions<T> {
   component: string;
   options?: any;
   post?: Array<T>;
+}
+
+export interface IDirectiveCreateOptions {
+  moduleName: string;
+  templateName: string;
+  componentName: string;
+  options?: any;
+}
+
+export interface IComponentCreateOptions extends IDirectiveCreateOptions {
+  components?: Array<IComponentCreateOptions>;
+  directives?: Array<IDirectiveCreateOptions>;
 }
 
 @Injectable()
@@ -54,6 +71,60 @@ export class BuilderProvider extends Builder {
     return [...imports, root];
   }
 
+  protected resolveType(
+    moduleName: string,
+    templateName: string,
+    type: "component" | "directive"
+  ) {
+    const target = this.globalMap[type === "component" ? "getPage" : "getPipe"](
+      moduleName,
+      templateName
+    );
+    if (!target) {
+      throw new NotFoundError(
+        `${type} [${moduleName}.${templateName}] not found`
+      );
+    }
+    return target;
+  }
+
+  protected resolveCreateOptions(
+    type: "component" | "directive",
+    options: IComponentCreateOptions | IDirectiveCreateOptions
+  ): IInstanceCreateOptions<any> {
+    const entity = this.resolveType(
+      options.moduleName,
+      options.templateName,
+      type
+    );
+    const comps: any[] = [];
+    const direcs: any[] = [];
+    if (type === "component") {
+      comps.push(
+        ...((<IComponentCreateOptions>options).components || []).map(i =>
+          this.resolveCreateOptions("component", i)
+        )
+      );
+      direcs.push(
+        ...((<IComponentCreateOptions>options).directives || []).map(i =>
+          this.resolveCreateOptions("directive", i)
+        )
+      );
+    }
+    return {
+      template: entity.value,
+      options: options.options,
+      components: comps,
+      directives: direcs
+    };
+  }
+
+  protected async createComponentSource(options: IComponentCreateOptions) {
+    const opts = this.resolveCreateOptions("component", options);
+    const instance = createTemplateInstance(opts);
+    return callCompilation(instance);
+  }
+
   public async createSource(options: ISourceCreateOptions): Promise<void> {
     const compName = "App";
     if ((<ISourceFileCreateOptions>options).fileName) {
@@ -63,15 +134,14 @@ export class BuilderProvider extends Builder {
         prettier: opt.prettier,
         folder: opt.outDir,
         filename: opt.fileName + ".tsx",
-        statements: createReactSourceFile(
-          this.createModuleStatements({
-            module: configs.page.module,
-            name: configs.page.name,
-            component: compName,
-            options: configs.page.options || {},
-            post: configs.page.post || []
+        statements: (
+          await this.createComponentSource({
+            moduleName: configs.page.module,
+            templateName: configs.page.name,
+            componentName: compName,
+            options: configs.page.options || {}
           })
-        )
+        ).statements
       });
       await emitSourceFileSync({
         folder: opt.outDir,
