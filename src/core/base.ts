@@ -79,8 +79,8 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   protected getState<K extends keyof T>(
     key: K,
     defaultValue: T[K] | null = null
-  ): T[K] | null {
-    return this.__state[key] || defaultValue;
+  ): T[K] {
+    return this.__state[key] || (defaultValue as any);
   }
 
   protected addMethods(

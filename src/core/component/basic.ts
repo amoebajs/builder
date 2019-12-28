@@ -1,25 +1,15 @@
 import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
-import { BasicDirective } from "./directive";
+import { BasicDirective } from "../directive";
 import {
   IBasicCompilationContext,
   IPureObject,
   BasicCompilationEntity,
-  IBasicComponentAppendType,
   IBasicCompilationFinalContext
-} from "./base";
-import { resolveInputProperties } from "../decorators/property";
-import {
-  createJsxElement,
-  createConstVariableStatement,
-  TYPES,
-  REACT,
-  THIS,
-  createExportModifier,
-  exists
-} from "../utils/base";
-import { InvalidOperationError } from "../errors";
-import { IFrameworkDepts } from "../decorators";
+} from "../base";
+import { resolveInputProperties, IFrameworkDepts } from "../../decorators";
+import { REACT, createExportModifier, exists } from "../../utils/base";
+import { InvalidOperationError } from "../../errors";
 
 export interface IJsxAttrs {
   [key: string]: ts.JsxExpression | string;
@@ -136,73 +126,6 @@ export abstract class BasicComponent<
   }
 
   //#endregion
-}
-
-export class BasicReactContainer extends BasicComponent {
-  protected addRootChildren(
-    args: ts.JsxElement[],
-    type: IBasicComponentAppendType = "push"
-  ) {
-    const rootChildren: ts.JsxElement[] = this.getState("rootChildren");
-    if (type === "reset") {
-      this.setState("rootChildren", args);
-    } else {
-      const newChildren = [...rootChildren][type](...args);
-      this.setState("rootChildren", newChildren);
-    }
-  }
-
-  protected getRootChildren(): ts.JsxElement[] {
-    return this.getState("rootChildren");
-  }
-
-  protected setRootElement(tagName: string, attrs: IJsxAttrs) {
-    this.setState("rootElement", {
-      name: tagName,
-      attrs,
-      types: []
-    });
-  }
-
-  protected async onInit() {
-    await super.onInit();
-    this.setState("rootChildren", []);
-  }
-
-  protected async onPreRender() {
-    await super.onPreRender();
-    this.setExtendParent(
-      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.PureComponent
-      ])
-    );
-    this.setRootElement(REACT.Fragment, {});
-  }
-
-  protected async onRender() {
-    await super.onPostRender();
-    const root = this.getState("rootElement");
-    const children = this.getRootChildren();
-    const renderMethod = ts.createMethod(
-      [],
-      [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
-      undefined,
-      ts.createIdentifier(REACT.Render),
-      undefined,
-      [],
-      [],
-      undefined,
-      ts.createBlock([
-        createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
-        ts.createReturn(
-          ts.createParen(
-            createJsxElement(root.name, root.types, root.attrs, children)
-          )
-        )
-      ])
-    );
-    this.addMethods([renderMethod]);
-  }
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>>

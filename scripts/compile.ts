@@ -30,5 +30,6 @@ builder
     // configs: demo_conf
   })
   .catch(error => {
+    console.log(error);
     console.log(chalk.red(error));
   });
