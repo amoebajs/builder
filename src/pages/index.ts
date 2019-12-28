@@ -1,5 +1,5 @@
 import { Module } from "../decorators";
-import { CssGridContainer } from "./css-grid2";
+import { CssGridContainer } from "./css-grid";
 
 @Module({
   name: "ambjs-common-component-module",

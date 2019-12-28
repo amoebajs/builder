@@ -1,11 +1,11 @@
 import ts from "typescript";
+import { BasicReactContainer } from "../core/component";
+import { Group, Component, Input } from "../decorators";
 import { DOMS, createValueAttr, TYPES } from "../utils";
-import { Page, Input, Group } from "../decorators";
-import { ExtensivePage } from "./basic";
 
-@Page({ name: "css_grid_page", displayName: "网格容器页面" })
+@Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })
-export class CssGridPage extends ExtensivePage {
+export class CssGridContainer extends BasicReactContainer {
   @Input({ group: "basic", displayName: "是否使用组件状态" })
   public useComponentState: boolean = false;
 
@@ -42,9 +42,11 @@ export class CssGridPage extends ExtensivePage {
   @Input({ displayName: "Grid列间隔(px)" })
   public gridColumnGap: number = 0;
 
-  protected onInit() {
-    this.state.rootElement.name = DOMS.Div;
-    this.state.rootElement.attrs["style"] = ts.createJsxExpression(
+  protected async onInit() {
+    await super.onInit();
+    const rootElement = this.getState("rootElement");
+    rootElement.name = DOMS.Div;
+    rootElement.attrs["style"] = ts.createJsxExpression(
       undefined,
       createValueAttr({
         height: "100vh",
@@ -59,6 +61,42 @@ export class CssGridPage extends ExtensivePage {
         gridColumnGap: `${this.gridColumnGap}px`
       })
     );
+    this.setState("rootElement", rootElement);
+    this.initState();
+    this.initExtends();
+  }
+
+  private initState() {
+    if (
+      this.useComponentState &&
+      typeof this.defaultComponentState === "object"
+    ) {
+      const state = this.defaultComponentState || {};
+      const field = ts.createProperty(
+        [],
+        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
+        ts.createIdentifier("state"),
+        undefined,
+        TYPES.Any,
+        ts.createObjectLiteral(
+          Object.keys(state).map(n =>
+            ts.createPropertyAssignment(
+              n,
+              typeof state[n] === "number"
+                ? ts.createNumericLiteral(state[n])
+                : state[n] === true
+                ? ts.createTrue()
+                : state[n] === false
+                ? ts.createFalse()
+                : typeof state[n] === "string"
+                ? ts.createStringLiteral(state[n])
+                : ts.createStringLiteral(state[n])
+            )
+          )
+        )
+      );
+      this.addFields([field], "unshift");
+    }
   }
 
   private calcColumnsSize(): string | number {
@@ -85,53 +123,11 @@ export class CssGridPage extends ExtensivePage {
     }, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
   }
 
-  public createExtendParent() {
+  public initExtends() {
     if (this.useComponentState) {
-      return ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.Component
-      ]);
-    } else {
-      return super.createExtendParent();
-    }
-  }
-
-  public createFields() {
-    const fields = super.createFields();
-    if (
-      this.useComponentState &&
-      typeof this.defaultComponentState === "object"
-    ) {
-      const state = this.defaultComponentState || {};
-      fields.unshift(
-        ts.createProperty(
-          [],
-          [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
-          ts.createIdentifier("state"),
-          undefined,
-          TYPES.Any,
-          ts.createObjectLiteral(
-            Object.keys(state).map(n =>
-              ts.createPropertyAssignment(
-                n,
-                typeof state[n] === "number"
-                  ? ts.createNumericLiteral(state[n])
-                  : state[n] === true
-                  ? ts.createTrue()
-                  : state[n] === false
-                  ? ts.createFalse()
-                  : typeof state[n] === "string"
-                  ? ts.createStringLiteral(state[n])
-                  : ts.createStringLiteral(state[n])
-              )
-            )
-          )
-        )
+      this.setExtendParent(
+        ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component])
       );
     }
-    return fields;
   }
-}
-
-class A {
-  a = { name: 4, b: false, c: "@342", d: Symbol("dfa") };
 }
