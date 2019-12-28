@@ -1,3 +1,11 @@
+import ts from "typescript";
+
+export interface IPureObject {
+  [prop: string]: any;
+}
+
+export type MapValueType<T> = T extends Map<any, infer V> ? V : never;
+
 export interface IUnitBase {
   name: IDescriptionMeta;
   description: IWeakDescriptionMeta | null;
@@ -30,4 +38,12 @@ export interface IPropertyBase extends IUnitBase {
   realName: string;
   group: string | null;
   type: PropertyType | null;
+}
+
+export interface IBasicCompilationContext {
+  extendParent: Map<string | symbol, ts.HeritageClause>;
+  implementParents: Map<string | symbol, ts.HeritageClause[]>;
+  fields: Map<string | symbol, ts.PropertyDeclaration[]>;
+  properties: Map<string | symbol, ts.PropertyDeclaration[]>;
+  methods: Map<string | symbol, ts.MethodDeclaration[]>;
 }
