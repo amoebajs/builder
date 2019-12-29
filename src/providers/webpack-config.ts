@@ -8,6 +8,9 @@ export class WebpackConfigProvider implements WebpackConfig {
   constructor(protected path: Path) {}
 
   public getConfigs(options: IWebpackOptions) {
+    const node_modules = options.sandbox
+      ? [this.path.resolve(options.sandbox.rootPath!, "node_modules")]
+      : undefined;
     return {
       entry: {
         app: "./build/src/main.tsx",
@@ -22,9 +25,7 @@ export class WebpackConfigProvider implements WebpackConfig {
       mode: options.mode ?? "production",
       resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-        modules: options.sandbox
-          ? [this.path.resolve(options.sandbox.rootPath!, "node_modules")]
-          : undefined
+        modules: node_modules
       },
       optimization: {
         minimize: options.minimize ?? true
@@ -55,6 +56,7 @@ export class WebpackConfigProvider implements WebpackConfig {
                           {
                             libraryName: "zent",
                             libraryDirectory: "es",
+                            resolveContext: node_modules,
                             style: n =>
                               n.replace("zent/es", "zent/css") + ".css"
                           }
