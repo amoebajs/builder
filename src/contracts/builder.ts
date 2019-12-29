@@ -7,16 +7,29 @@ import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
 
+export interface IDirectiveDefine {
+  module: string;
+  name: string;
+  id: string;
+  options?: { [name: string]: any };
+}
+
+export interface IChildDefine {
+  ref: string;
+  id: string;
+  options?: { [name: string]: any };
+}
+
 export interface IPageCreateOptions {
   page: {
     module: string;
     name: string;
+    id: string;
     options?: { [name: string]: any };
-    post: Array<{
-      module: string;
-      name: string;
-      args?: { [name: string]: any };
-    }>;
+    attach?: { [name: string]: any };
+    components?: IDirectiveDefine[];
+    directives?: IDirectiveDefine[];
+    children?: IChildDefine[];
   };
 }
 

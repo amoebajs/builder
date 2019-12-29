@@ -1,19 +1,25 @@
 import { BasicDirective } from "../directive";
 import { IPureObject, BasicCompilationEntity } from "../base";
+import { BasicChildRef } from "../childref";
 
 export abstract class BasicComponent<
   T extends IPureObject = IPureObject
 > extends BasicCompilationEntity<T> {
   private __rendered: boolean = false;
-  private __children: BasicComponent[] = [];
+  private __children: BasicChildRef[] = [];
+  private __components: BasicComponent[] = [];
   private __directives: BasicDirective[] = [];
 
   public get rendered() {
     return this.__rendered;
   }
 
-  public get componentId() {
-    return "C" + this.entityId;
+  protected getChildren() {
+    return this.__children.map(i => ({
+      component: i.componentRef,
+      id: i.entityId,
+      options: i["__refOptions"]
+    }));
   }
 
   constructor() {
@@ -25,32 +31,63 @@ export abstract class BasicComponent<
 
   /** @override */
   protected async onInit(): Promise<void> {
-    for (const iterator of this.__children) {
+    for (const iterator of this.__components) {
       await iterator["onInit"]();
     }
     for (const iterator of this.__directives) {
       await iterator["onInit"]();
+    }
+    for (const iterator of this.__children) {
+      await iterator["onInit"]();
+    }
+  }
+
+  /** @override */
+  protected async onComponentsEmitted() {
+    await this.onComponentsPreRender();
+    await this.onComponentsRender();
+    await this.onComponentsPostRender();
+  }
+
+  /** @override */
+  protected async onComponentsPreRender(): Promise<void> {
+    for (const iterator of this.__components) {
+      await iterator["onPreRender"]();
+    }
+  }
+
+  /** @override */
+  protected async onComponentsRender(): Promise<void> {
+    for (const iterator of this.__components) {
+      await iterator["onRender"]();
+    }
+  }
+
+  /** @override */
+  protected async onComponentsPostRender(): Promise<void> {
+    for (const iterator of this.__components) {
+      await iterator["onPostRender"]();
     }
   }
 
   /** @override */
   protected async onChildrenPreRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onPreRender"]();
+      await iterator["onPreEmit"]();
     }
   }
 
   /** @override */
   protected async onChildrenRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onRender"]();
+      await iterator["onEmit"]();
     }
   }
 
   /** @override */
   protected async onChildrenPostRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onPostRender"]();
+      await iterator["onPostEmit"]();
     }
   }
 
@@ -92,6 +129,7 @@ export abstract class BasicComponent<
     await this.onDirectivesPreAttach();
     await this.onDirectivesAttach();
     await this.onDirectivesPostAttach();
+    this.__rendered = true;
   }
 
   //#endregion

@@ -2,6 +2,7 @@ import ts from "typescript";
 import uuid from "uuid/v4";
 import { MapValueType, IPureObject } from "./common";
 import { PropertyRef } from "./directive";
+import { BasicError } from "../../errors";
 
 export type ImportStatementsUpdater = (
   statements: ts.ImportDeclaration[]
@@ -17,7 +18,7 @@ export interface IBasicCompilationFinalContext {
   classes: ts.ClassDeclaration[];
 }
 
-type EntityType = "directive" | "component" | "entity";
+type EntityType = "directive" | "component" | "childref" | "entity";
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
@@ -50,6 +51,13 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
 
   public get entityId() {
     return this["__scope"];
+  }
+
+  public setEntityId(id: string): this {
+    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id))
+      throw new BasicError("entity id is invalid.");
+    this["__scope"] = id;
+    return this;
   }
 
   //#region  pretected methods

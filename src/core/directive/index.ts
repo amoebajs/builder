@@ -1,12 +1,8 @@
-import { BasicCompilationEntity, IPureObject } from "./base";
+import { BasicCompilationEntity, IPureObject } from "../base";
 
 export abstract class BasicDirective<
   T extends IPureObject = IPureObject
 > extends BasicCompilationEntity<T> {
-  public get directiveId() {
-    return "D" + this.entityId;
-  }
-
   constructor() {
     super();
     this["__etype"] = "directive";

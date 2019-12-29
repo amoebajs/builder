@@ -1,4 +1,4 @@
-import ts, { symbolName } from "typescript";
+import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
 import {
   IBasicCompilationContext,
@@ -10,25 +10,25 @@ import { IFrameworkDepts, EntityConstructor } from "../../decorators/base";
 import { InvalidOperationError } from "../../errors";
 import { exists, createExportModifier } from "../../utils";
 import { BasicComponent } from "./basic";
+import { BasicChildRef } from "../childref";
+import { BasicDirective } from "../directive";
 
-const defaults: IBasicCompilationFinalContext = {
-  extendParent: null,
-  implementParents: [],
-  fields: [],
-  properties: [],
-  methods: [],
-  imports: [],
-  classes: []
-};
+export interface IChildRefPluginOptions {
+  refComponent: string;
+  childName: string;
+  options: { [prop: string]: any };
+}
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>>
   extends IDirectivePluginOptions<T> {
   provider: keyof IFrameworkDepts;
   components?: IComponentPluginOptions<any>[];
   directives?: IDirectivePluginOptions<any>[];
+  children?: IChildRefPluginOptions[];
 }
 
 export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
+  id: string;
   provider: keyof IFrameworkDepts;
   template: T;
   options?: { [prop: string]: any };
@@ -45,6 +45,8 @@ export class BasicEntityProvider {
     options = {},
     components = [],
     directives = [],
+    children = [],
+    id,
     passContext
   }: IInstanceCreateOptions<T>) {
     const context: IBasicCompilationContext = passContext || {
@@ -56,10 +58,15 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map()
     };
-    const model = this._initPropsContextInstance(template, options, context);
+    const model = this._initPropsContextInstance(
+      template,
+      options,
+      context
+    ).setEntityId(id);
     for (const iterator of components) {
-      model["__children"].push(
+      model["__components"].push(
         this.createInstance({
+          id: iterator.id,
           provider: iterator.provider,
           template: iterator.template,
           options: iterator.options,
@@ -69,13 +76,21 @@ export class BasicEntityProvider {
         })
       );
     }
+    for (const iterator of children) {
+      model["__children"].push(
+        this._initPropsContextInstance(BasicChildRef, {}, context)
+          .setEntityId(iterator.childName)
+          .setRefComponentId(iterator.refComponent)
+          .setRefOptions(iterator.options || {})
+      );
+    }
     for (const iterator of directives) {
       model["__directives"].push(
-        this._initPropsContextInstance(
+        this._initPropsContextInstance<BasicDirective>(
           iterator.template,
           iterator.options || {},
           context
-        )
+        ).setEntityId(iterator.id)
       );
     }
     return model;
@@ -88,6 +103,7 @@ export class BasicEntityProvider {
     unExport = false
   ) {
     await model["onInit"]();
+    await model["onComponentsEmitted"]();
     await model["onPreRender"]();
     await model["onRender"]();
     await model["onPostRender"]();
@@ -127,7 +143,16 @@ export class BasicEntityProvider {
     model: BasicComponent,
     _context: IBasicCompilationContext
   ) {
-    const context: IBasicCompilationFinalContext = { ...defaults };
+    console.log(_context);
+    const context: IBasicCompilationFinalContext = {
+      extendParent: null,
+      implementParents: [],
+      fields: [],
+      properties: [],
+      methods: [],
+      imports: [],
+      classes: []
+    };
     const classPreList: Array<[
       string | symbol,
       Partial<IBasicCompilationFinalContext>
@@ -168,11 +193,20 @@ export class BasicEntityProvider {
             }
           }
         }
-        context.classes = classPreList.map(([scope, ctx]) =>
-          createClass(false, "C" + scope.toString(), { ...defaults, ...ctx })
-        );
       }
     }
+    context.classes = classPreList.map(([scope, ctx]) =>
+      createClass(true, scope.toString(), {
+        extendParent: null,
+        implementParents: [],
+        fields: [],
+        properties: [],
+        methods: [],
+        imports: [],
+        classes: [],
+        ...ctx
+      })
+    );
     return context;
   }
 

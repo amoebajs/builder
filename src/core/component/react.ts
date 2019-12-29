@@ -1,6 +1,10 @@
 import ts from "typescript";
 import { BasicComponent } from "./basic";
-import { IBasicComponentAppendType, IPureObject } from "../base";
+import {
+  IBasicComponentAppendType,
+  IPureObject,
+  resolveSyntaxInsert
+} from "../base";
 import {
   TYPES,
   REACT,
@@ -19,7 +23,7 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
     attrs: IJsxAttrs;
     types: any[];
   };
-  rootChildren: ts.JsxElement[];
+  rootChildren: (ts.JsxChild | string)[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -30,7 +34,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
     args: ts.JsxElement[],
     type: IBasicComponentAppendType = "push"
   ) {
-    const rootChildren: ts.JsxElement[] = this.getRootChildren();
+    const rootChildren = this.getRootChildren();
     if (type === "reset") {
       this.setState("rootChildren", args);
     } else {
@@ -40,7 +44,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
     }
   }
 
-  protected getRootChildren(): ts.JsxElement[] {
+  protected getRootChildren() {
     return this.getState("rootChildren") || [];
   }
 
@@ -95,6 +99,51 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
         TYPES.PureComponent
       ])
     );
+  }
+
+  protected async onPreRender() {
+    await super.onPreRender();
+    const children = this.getChildren();
+    const rootChildren = this.getState("rootChildren");
+    for (const iterator of children) {
+      const options = iterator.options || {};
+      const attrs: IJsxAttrs = {};
+      for (const key in options) {
+        if (options.hasOwnProperty(key)) {
+          const element = options[key];
+          switch (element.type) {
+            case "state":
+              attrs[key] = ts.createPropertyAccess(
+                ts.createThis(),
+                "state." + element.expression.toString()
+              );
+              break;
+            case "props":
+              attrs[key] = ts.createPropertyAccess(
+                ts.createIdentifier("props"),
+                element.expression.toString()
+              );
+              break;
+            case "literal":
+              attrs[key] = resolveSyntaxInsert(
+                element.syntaxType,
+                element.expression,
+                (_, v) => v.toString()
+              );
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      rootChildren.push(
+        createJsxElement(iterator.component, [], {
+          ...attrs,
+          key: iterator.id
+        })
+      );
+    }
+    this.setState("rootChildren", rootChildren);
   }
 
   protected async onRender() {

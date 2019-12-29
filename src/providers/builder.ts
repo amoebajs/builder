@@ -3,76 +3,70 @@ import {
   Builder,
   ISourceCreateOptions,
   ISourceFileCreateOptions,
-  ISourceStringCreateOptions
+  ISourceStringCreateOptions,
+  IPageCreateOptions
 } from "../contracts";
 import { emitSourceFileSync, createReactMainFile } from "../utils";
-import { NotFoundError, InvalidOperationError } from "../errors";
+import { NotFoundError } from "../errors";
 import { Injectable } from "../decorators";
-import { IInstanceCreateOptions } from "../core/component";
-
-export interface IModuleCreateOptions<T> {
-  module: string;
-  name: string;
-  component: string;
-  options?: any;
-  post?: Array<T>;
-}
+import {
+  IInstanceCreateOptions,
+  IChildRefPluginOptions
+} from "../core/component";
 
 export interface IDirectiveCreateOptions {
   moduleName: string;
   templateName: string;
   componentName: string;
-  options?: any;
+  options: { [prop: string]: any };
 }
 
-export interface IComponentCreateOptions extends IDirectiveCreateOptions {
-  components?: Array<IComponentCreateOptions>;
-  directives?: Array<IDirectiveCreateOptions>;
+export interface IChildCreateOptions extends IChildRefPluginOptions {}
+
+export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
+  components?: IDirectiveCreateOptions[];
+  directives?: IDirectiveCreateOptions[];
+  children?: IChildCreateOptions[];
 }
 
 @Injectable()
 export class BuilderProvider extends Builder {
   public async createSource(options: ISourceCreateOptions): Promise<void> {
-    const compName = "App";
+    const { configs } = options;
+    const compName = configs.page.id || "App";
+    const sourceFile = await this._createComponentSource({
+      moduleName: configs.page.module,
+      templateName: configs.page.name,
+      componentName: compName,
+      options: configs.page.options || {},
+      components: mapComp(configs),
+      directives: mapDire(configs),
+      children: mapChild(configs)
+    });
     if ((<ISourceFileCreateOptions>options).fileName) {
       const opt = <ISourceFileCreateOptions>options;
-      const { configs } = opt;
       await emitSourceFileSync({
+        statements: sourceFile.statements,
         prettier: opt.prettier,
         folder: opt.outDir,
-        filename: opt.fileName + ".tsx",
-        statements: (
-          await this._createComponentSource({
-            moduleName: configs.page.module,
-            templateName: configs.page.name,
-            componentName: compName,
-            options: configs.page.options || {}
-          })
-        ).statements
+        filename: opt.fileName + ".tsx"
       });
       await emitSourceFileSync({
+        statements: createReactMainFile(compName, opt.fileName),
+        prettier: opt.prettier,
         folder: opt.outDir,
-        filename: "main.tsx",
-        statements: createReactMainFile(compName, opt.fileName)
+        filename: "main.tsx"
       });
     } else {
       const opt = <ISourceStringCreateOptions>options;
-      const { configs } = opt;
       return new Promise(async (resolve, reject) => {
         emitSourceFileSync({
+          statements: sourceFile.statements,
           prettier: opt.prettier,
           emit: content => {
             opt.onEmit(content);
             resolve();
-          },
-          statements: (
-            await this._createComponentSource({
-              moduleName: configs.page.module,
-              templateName: configs.page.name,
-              componentName: compName,
-              options: configs.page.options || {}
-            })
-          ).statements
+          }
         }).catch(reject);
       });
     }
@@ -87,10 +81,10 @@ export class BuilderProvider extends Builder {
   private _resolveType(
     moduleName: string,
     templateName: string,
-    type: "component" | "directive"
+    type: "component" | "directive" | "root"
   ) {
     const target = this.globalMap[
-      type === "component" ? "getComponent" : "getDirective"
+      type === "component" || type === "root" ? "getComponent" : "getDirective"
     ](moduleName, templateName);
     if (!target) {
       throw new NotFoundError(
@@ -101,8 +95,8 @@ export class BuilderProvider extends Builder {
   }
 
   private _resolveCreateOptions(
-    type: "component" | "directive",
-    options: IComponentCreateOptions | IDirectiveCreateOptions
+    type: "component" | "directive" | "root",
+    options: IRootComponentCreateOptions | IDirectiveCreateOptions
   ): IInstanceCreateOptions<any> {
     const entity = this._resolveType(
       options.moduleName,
@@ -111,29 +105,33 @@ export class BuilderProvider extends Builder {
     );
     const comps: any[] = [];
     const direcs: any[] = [];
-    if (type === "component") {
+    const childs: any[] = [];
+    if (type === "root") {
       comps.push(
-        ...((<IComponentCreateOptions>options).components || []).map(i =>
+        ...((<IRootComponentCreateOptions>options).components || []).map(i =>
           this._resolveCreateOptions("component", i)
         )
       );
       direcs.push(
-        ...((<IComponentCreateOptions>options).directives || []).map(i =>
+        ...((<IRootComponentCreateOptions>options).directives || []).map(i =>
           this._resolveCreateOptions("directive", i)
         )
       );
+      childs.push(...((<IRootComponentCreateOptions>options).children || []));
     }
     return {
+      id: options.componentName,
       provider: <any>entity.provider!,
       template: entity.value,
       options: options.options,
       components: comps,
-      directives: direcs
+      directives: direcs,
+      children: childs
     };
   }
 
-  private async _createComponentSource(options: IComponentCreateOptions) {
-    const opts = this._resolveCreateOptions("component", options);
+  private async _createComponentSource(options: IRootComponentCreateOptions) {
+    const opts = this._resolveCreateOptions("root", options);
     const provider = new (this.globalMap.getProvider(opts.provider))();
     const instance = provider.createInstance(opts);
     return provider.callCompilation(
@@ -144,81 +142,28 @@ export class BuilderProvider extends Builder {
   }
 }
 
-function updateImportDeclarations(
-  imports: ts.ImportDeclaration[],
-  statements: ts.ImportDeclaration[]
-) {
-  for (const statement of statements) {
-    if (ts.isImportDeclaration(statement)) {
-      const { importClause, moduleSpecifier } = statement;
-      if (!importClause) continue;
-      if (!ts.isStringLiteral(moduleSpecifier)) continue;
-      const existIndex = imports.findIndex(
-        i =>
-          i.importClause &&
-          i.moduleSpecifier &&
-          ts.isStringLiteral(i.moduleSpecifier) &&
-          i.moduleSpecifier.text === moduleSpecifier.text
-      );
-      if (existIndex < 0) {
-        imports.push(statement);
-      } else {
-        const sourceItem = imports[existIndex];
-        const { importClause: clause01 } = sourceItem;
-        const { importClause: clause02 } = statement;
-        if (clause01!.namedBindings) {
-          if (ts.isNamedImports(clause01!.namedBindings)) {
-            if (
-              clause02!.namedBindings &&
-              ts.isNamedImports(clause02!.namedBindings!)
-            ) {
-              const named01 = clause01!.namedBindings as ts.NamedImports;
-              const named02 = clause02!.namedBindings as ts.NamedImports;
-              const addto: ts.ImportSpecifier[] = [];
-              for (const element of named02.elements) {
-                const target = named01.elements.find(
-                  i => i.name.text === element.name.text
-                );
-                if (!target) {
-                  addto.push(element);
-                }
-              }
-              named01.elements = ts.createNodeArray(
-                [...named01.elements].concat(addto)
-              );
-            } else {
-              imports.push(statement);
-            }
-          } else if (ts.isNamespaceImport(clause01!.namedBindings!)) {
-            if (
-              clause02!.namedBindings &&
-              ts.isNamespaceImport(clause02!.namedBindings!) &&
-              clause02!.namedBindings!.name.text !==
-                clause02!.namedBindings!.name.text
-            ) {
-              throw new InvalidOperationError(
-                "import update failed: duplicate namespace import exist"
-              );
-            } else {
-              imports.push(statement);
-            }
-          }
-        } else {
-          // source is default import
-          if (
-            !clause02!.namedBindings &&
-            clause02!.name!.text !== clause02!.name!.text
-          ) {
-            throw new InvalidOperationError(
-              `import update failed: duplicate default import exist - [${
-                clause02!.name!.text
-              }]`
-            );
-          } else {
-            imports.push(statement);
-          }
-        }
-      }
-    }
-  }
+function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
+  return (configs.page.children || []).map(i => ({
+    childName: i.id,
+    refComponent: i.ref,
+    options: i.options || {}
+  }));
+}
+
+function mapComp(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
+  return (configs.page.components || []).map(i => ({
+    moduleName: i.module,
+    templateName: i.name,
+    componentName: i.id,
+    options: i.options || {}
+  }));
+}
+
+function mapDire(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
+  return (configs.page.directives || []).map(i => ({
+    moduleName: i.module,
+    templateName: i.name,
+    componentName: i.id,
+    options: i.options || {}
+  }));
 }
