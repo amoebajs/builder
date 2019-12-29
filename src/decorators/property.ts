@@ -32,7 +32,7 @@ export interface IAttachPropertyContract extends IPropertyGroupContract {}
 
 export interface IPropertyGroupContract extends IBasicI18NContract {}
 
-type REALNAME<T> = T & {
+export type REALNAME<T> = T & {
   /** real field key in class scope */
   realName: string;
 };

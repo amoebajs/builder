@@ -31,6 +31,10 @@ export interface IFrameworkDepts {
   react: { [name: string]: string };
 }
 
+export type IFrameworkStructure<T> = {
+  [key in keyof IFrameworkDepts]: T;
+};
+
 export const default_framework_depts: IFrameworkDepts = {
   react: {
     react: "^16.12.0",

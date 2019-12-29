@@ -1,11 +1,11 @@
 import ts from "typescript";
-import { Component, Input } from "../decorators";
+import { Component, Input, ReactProp } from "../decorators";
 import { ReactVbRef } from "../core/base";
 import { BasicReactContainer } from "../core/component";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
 export class ZentButtonComponent extends BasicReactContainer {
-  @Input({ name: "loading" })
+  @ReactProp({ name: "loading" })
   zenBtnLoading: ReactVbRef = ReactVbRef.UseProps("loading");
 
   @Input({ name: "disabled" })

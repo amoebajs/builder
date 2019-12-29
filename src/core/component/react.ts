@@ -10,6 +10,8 @@ import {
   IJsxAttrs
 } from "../../utils";
 import { PropertyRef, ReactVbRef } from "../base";
+import { BasicEntityProvider } from "./create";
+import { EntityConstructor, resolveReactProps } from "../../decorators";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -74,7 +76,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
     [name: string]: string | ts.Expression | null;
   }): IJsxAttrs {
     return Object.keys(attrs)
-      .filter(i => !!attrs[i])
+      .filter(i => attrs.hasOwnProperty(i))
       .map(k => ({
         [k]:
           typeof attrs[k] === "string"
@@ -118,5 +120,26 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       ])
     );
     this.addMethods([renderMethod]);
+  }
+}
+
+export class ReactEntityProvider extends BasicEntityProvider {
+  protected onImportsUpdate(imports: ts.ImportDeclaration[]) {
+    return super.onImportsUpdate(imports, [
+      ts.createImportDeclaration(
+        [],
+        [],
+        ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+        ts.createStringLiteral("react")
+      )
+    ]);
+  }
+
+  public resolveExtensionsMetadata(
+    target: EntityConstructor<any>
+  ): { [name: string]: any } {
+    return {
+      props: resolveReactProps(target)
+    };
   }
 }

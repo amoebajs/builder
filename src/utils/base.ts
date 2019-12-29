@@ -252,7 +252,7 @@ export function createJsxElement(
       types,
       ts.createJsxAttributes(
         Object.keys(attrs)
-          .filter(k => !!attrs[k])
+          .filter(k => attrs.hasOwnProperty(k))
           .map(k =>
             ts.createJsxAttribute(
               ts.createIdentifier(k),

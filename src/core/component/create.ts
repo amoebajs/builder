@@ -1,14 +1,15 @@
 import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
-import { IFrameworkDepts, resolveInputProperties } from "../../decorators";
 import {
   IBasicCompilationContext,
-  IBasicCompilationFinalContext,
-  BasicCompilationEntity
+  BasicCompilationEntity,
+  IBasicCompilationFinalContext
 } from "../base";
-import { BasicComponent } from "./basic";
-import { REACT, createExportModifier, exists } from "../../utils";
+import { resolveInputProperties } from "../../decorators/property";
+import { IFrameworkDepts, EntityConstructor } from "../../decorators/base";
 import { InvalidOperationError } from "../../errors";
+import { exists, createExportModifier } from "../../utils";
+import { BasicComponent } from "./basic";
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>>
   extends IDirectivePluginOptions<T> {
@@ -28,154 +29,171 @@ export interface IInstanceCreateOptions<T extends InjectDIToken<any>>
   passContext?: IBasicCompilationContext;
 }
 
-export function createTemplateInstance<T extends typeof BasicComponent>({
-  template,
-  options = {},
-  components = [],
-  directives = [],
-  passContext
-}: IInstanceCreateOptions<T>) {
-  const context: IBasicCompilationContext = passContext || {
-    extendParent: new Map(),
-    implementParents: new Map(),
-    fields: new Map(),
-    properties: new Map(),
-    methods: new Map(),
-    imports: new Map()
-  };
-  const model = initPropsContextIst(template, options, context);
-  for (const iterator of components) {
-    model["__children"].push(
-      createTemplateInstance({
-        provider: iterator.provider,
-        template: iterator.template,
-        options: iterator.options,
-        components: iterator.components,
-        directives: iterator.directives,
-        passContext: context
-      })
-    );
-  }
-  for (const iterator of directives) {
-    model["__directives"].push(
-      initPropsContextIst(iterator.template, iterator.options || {}, context)
-    );
-  }
-  return model;
-}
-
-export async function callCompilation(
-  provider: keyof IFrameworkDepts,
-  model: BasicComponent,
-  name: string,
-  unExport = false
-) {
-  await model["onInit"]();
-  await model["onPreRender"]();
-  await model["onRender"]();
-  await model["onPostRender"]();
-  const _context = model["__context"];
-  const context: IBasicCompilationFinalContext = {
-    extendParent: null,
-    implementParents: [],
-    fields: [],
-    properties: [],
-    methods: [],
-    imports: []
-  };
-  for (const key in _context) {
-    if (_context.hasOwnProperty(key)) {
-      const item = _context[<keyof typeof _context>key];
-      const scopesArr = Array.from(
-        <IterableIterator<string | symbol>>item.keys()
+export class BasicEntityProvider {
+  public createInstance<T extends typeof BasicComponent>({
+    template,
+    options = {},
+    components = [],
+    directives = [],
+    passContext
+  }: IInstanceCreateOptions<T>) {
+    const context: IBasicCompilationContext = passContext || {
+      extendParent: new Map(),
+      implementParents: new Map(),
+      fields: new Map(),
+      properties: new Map(),
+      methods: new Map(),
+      imports: new Map()
+    };
+    const model = this._initPropsContextInstance(template, options, context);
+    for (const iterator of components) {
+      model["__children"].push(
+        this.createInstance({
+          provider: iterator.provider,
+          template: iterator.template,
+          options: iterator.options,
+          components: iterator.components,
+          directives: iterator.directives,
+          passContext: context
+        })
       );
-      for (const scope of scopesArr) {
-        const value = item.get(scope);
-        if (key === "extendParent") {
-          context[key] = <any>value;
-        } else {
-          (<any>context)[key].push(...(<any[]>value));
+    }
+    for (const iterator of directives) {
+      model["__directives"].push(
+        this._initPropsContextInstance(
+          iterator.template,
+          iterator.options || {},
+          context
+        )
+      );
+    }
+    return model;
+  }
+
+  public async callCompilation(
+    provider: keyof IFrameworkDepts,
+    model: BasicComponent,
+    name: string,
+    unExport = false
+  ) {
+    await model["onInit"]();
+    await model["onPreRender"]();
+    await model["onRender"]();
+    await model["onPostRender"]();
+    const context = this.onCompilationCall(model["__context"]);
+    const importSpecs = this.onImportsUpdate(context.imports);
+    const classDec = ts.createClassDeclaration(
+      [],
+      createExportModifier(!unExport),
+      ts.createIdentifier(name),
+      [],
+      exists([context.extendParent!, ...context.implementParents]),
+      exists([...context.fields, ...context.properties, ...context.methods])
+    );
+    const sourceFile = ts.createSourceFile(
+      "temp.tsx",
+      "",
+      ts.ScriptTarget.ES2017,
+      undefined,
+      ts.ScriptKind.TSX
+    );
+    return ts.updateSourceFileNode(
+      sourceFile,
+      [...importSpecs, classDec],
+      sourceFile.isDeclarationFile,
+      sourceFile.referencedFiles,
+      sourceFile.typeReferenceDirectives,
+      sourceFile.hasNoDefaultLib,
+      sourceFile.libReferenceDirectives
+    );
+  }
+
+  /** @override */
+  public resolveExtensionsMetadata(
+    target: EntityConstructor<any>
+  ): { [name: string]: any } {
+    return {};
+  }
+
+  /** @override */
+  protected onPropertiesInit<T extends any>(model: T) {}
+
+  /** @override */
+  protected onCompilationCall(_context: IBasicCompilationContext) {
+    const context: IBasicCompilationFinalContext = {
+      extendParent: null,
+      implementParents: [],
+      fields: [],
+      properties: [],
+      methods: [],
+      imports: []
+    };
+    for (const key in _context) {
+      if (_context.hasOwnProperty(key)) {
+        const item = _context[<keyof typeof _context>key];
+        const scopesArr = Array.from(
+          <IterableIterator<string | symbol>>item.keys()
+        );
+        for (const scope of scopesArr) {
+          const value = item.get(scope);
+          if (key === "extendParent") {
+            context[key] = <any>value;
+          } else {
+            (<any>context)[key].push(...(<any[]>value));
+          }
         }
       }
     }
+    return context;
   }
-  // 合并imports
-  const importSpecs: ts.ImportDeclaration[] = [];
-  if (provider === "react") {
-    importSpecs.unshift(
-      ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
-        ts.createStringLiteral("react")
-      )
+
+  /** @override */
+  protected onImportsUpdate(
+    imports: ts.ImportDeclaration[],
+    init: ts.ImportDeclaration[] = []
+  ) {
+    imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
+    return init;
+  }
+
+  private _initPropsContextInstance<T extends BasicCompilationEntity>(
+    template: InjectDIToken<T>,
+    options: { [prop: string]: any },
+    context: IBasicCompilationContext
+  ): T {
+    const model = this._inputProperties(new (<any>template)(), options);
+    Object.defineProperty(model, "__context", {
+      enumerable: true,
+      configurable: false,
+      get() {
+        return context;
+      }
+    });
+    return model;
+  }
+
+  private _inputProperties<T extends any>(model: T, options: any): T {
+    const props = resolveInputProperties(
+      Object.getPrototypeOf(model).constructor
     );
-  }
-  context.imports.forEach(importDec =>
-    updateImportDeclarations(importSpecs, [importDec])
-  );
-  const classDec = ts.createClassDeclaration(
-    [],
-    createExportModifier(!unExport),
-    ts.createIdentifier(name),
-    [],
-    exists([context.extendParent!, ...context.implementParents]),
-    exists([...context.fields, ...context.properties, ...context.methods])
-  );
-  const sourceFile = ts.createSourceFile(
-    "temp.tsx",
-    "",
-    ts.ScriptTarget.ES2017,
-    undefined,
-    ts.ScriptKind.TSX
-  );
-  return ts.updateSourceFileNode(
-    sourceFile,
-    [...importSpecs, classDec],
-    sourceFile.isDeclarationFile,
-    sourceFile.referencedFiles,
-    sourceFile.typeReferenceDirectives,
-    sourceFile.hasNoDefaultLib,
-    sourceFile.libReferenceDirectives
-  );
-}
-
-function initPropsContextIst<T extends BasicCompilationEntity>(
-  template: InjectDIToken<T>,
-  options: { [prop: string]: any },
-  context: IBasicCompilationContext
-): T {
-  const model = inputProperties(new (<any>template)(), options);
-  Object.defineProperty(model, "__context", {
-    enumerable: true,
-    configurable: false,
-    get() {
-      return context;
-    }
-  });
-  return model;
-}
-
-function inputProperties<T extends any>(model: T, options: any): T {
-  const props = resolveInputProperties(
-    Object.getPrototypeOf(model).constructor
-  );
-  for (const key in props) {
-    if (props.hasOwnProperty(key)) {
-      const prop = props[key];
-      const group = prop.group;
-      if (
-        group &&
-        options.hasOwnProperty(group) &&
-        options[group].hasOwnProperty(prop.name.value!)
-      ) {
-        (<any>model)[prop.realName] = options[group][prop.name.value!];
-      } else if (options.hasOwnProperty(prop.name!)) {
-        (<any>model)[prop.realName] = options[prop.name.value!];
+    for (const key in props) {
+      if (props.hasOwnProperty(key)) {
+        const prop = props[key];
+        const group = prop.group;
+        if (
+          group &&
+          options.hasOwnProperty(group) &&
+          options[group].hasOwnProperty(prop.name.value!)
+        ) {
+          (<any>model)[prop.realName] = options[group][prop.name.value!];
+        } else if (options.hasOwnProperty(prop.name!)) {
+          (<any>model)[prop.realName] = options[prop.name.value!];
+        }
       }
     }
+    this.onPropertiesInit(model);
+    return model;
   }
-  return model;
 }
 
 function updateImportDeclarations(

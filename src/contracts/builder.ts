@@ -7,7 +7,9 @@ import {
   resolveInputProperties,
   resolvePropertyGroups,
   resolveOutputProperties,
-  resolveAttachProperties
+  resolveAttachProperties,
+  IFrameworkStructure,
+  IFrameworkDepts
 } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
@@ -15,6 +17,20 @@ import { Injector, InjectDIToken } from "@bonbons/di";
 import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
 import { resolveComponent } from "../decorators/component";
+import { BasicEntityProvider } from "../core/component";
+import { BasicError } from "../errors";
+
+export interface IMetadataGroup {
+  inputs: { [name: string]: any };
+  outputs: { [name: string]: any };
+  attaches: { [name: string]: any };
+  groups: { [name: string]: any };
+  entityExtensions?: Partial<
+    IFrameworkStructure<{
+      [name: string]: any;
+    }>
+  >;
+}
 
 export interface IMapEntry<T = any> {
   moduleName?: string;
@@ -22,12 +38,7 @@ export interface IMapEntry<T = any> {
   displayName: string;
   value: T;
   provider?: string;
-  metadata: {
-    inputs: { [name: string]: any };
-    outputs: { [name: string]: any };
-    attaches: { [name: string]: any };
-    groups: { [name: string]: any };
-  };
+  metadata: IMetadataGroup;
 }
 
 export interface IModuleEntry<T = any> extends IMapEntry<T> {
@@ -42,6 +53,15 @@ export interface IGlobalMap {
 @Injectable()
 export class GlobalMap {
   public readonly maps: IGlobalMap = { modules: {} };
+  public readonly providers: Partial<IFrameworkStructure<any>> = {};
+
+  public useProvider(
+    name: keyof IFrameworkDepts,
+    provider: typeof BasicEntityProvider
+  ) {
+    this.providers[name] = provider;
+    return this;
+  }
 
   public useModule(mdname: EntityConstructor<any>) {
     const metadata = resolveModule(mdname);
@@ -64,7 +84,11 @@ export class GlobalMap {
           moduleName,
           value: i,
           provider: meta.provider,
-          metadata: getMetadata(i)
+          metadata: getMetadata(
+            i,
+            meta.provider,
+            new (this.getProvider(meta.provider))()
+          )
         };
       });
     }
@@ -77,7 +101,11 @@ export class GlobalMap {
           displayName: meta.displayName || pipeName,
           moduleName,
           value: i,
-          metadata: getMetadata(i)
+          metadata: getMetadata(
+            i,
+            meta.provider,
+            new (this.getProvider(meta.provider))()
+          )
         };
       });
     }
@@ -95,15 +123,31 @@ export class GlobalMap {
   public getDirective(module: string, name: string): IMapEntry<any> {
     return this.getModule(module).directives[name];
   }
+
+  public getProvider(name: keyof IFrameworkDepts): typeof BasicEntityProvider {
+    if (!this.providers[name])
+      throw new BasicError(`provider for [${name}] is not provided.`);
+    return this.providers[name];
+  }
 }
 
-function getMetadata(mdname: EntityConstructor<any>) {
-  return {
+function getMetadata(
+  mdname: EntityConstructor<any>,
+  providerName?: keyof IFrameworkDepts,
+  provider?: BasicEntityProvider
+): IMetadataGroup {
+  const result: IMetadataGroup = {
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
     outputs: resolveOutputProperties(mdname),
     attaches: resolveAttachProperties(mdname)
   };
+  if (!!providerName) {
+    result.entityExtensions = {
+      [providerName]: provider!.resolveExtensionsMetadata(mdname)
+    };
+  }
+  return result;
 }
 
 export interface IPageCreateOptions {

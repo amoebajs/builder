@@ -8,11 +8,7 @@ import {
 import { emitSourceFileSync, createReactMainFile } from "../utils";
 import { NotFoundError, InvalidOperationError } from "../errors";
 import { Injectable } from "../decorators";
-import {
-  IInstanceCreateOptions,
-  createTemplateInstance,
-  callCompilation
-} from "../core/component";
+import { IInstanceCreateOptions } from "../core/component";
 
 export interface IModuleCreateOptions<T> {
   module: string;
@@ -86,8 +82,13 @@ export class BuilderProvider extends Builder {
 
   protected async createComponentSource(options: IComponentCreateOptions) {
     const opts = this.resolveCreateOptions("component", options);
-    const instance = createTemplateInstance(opts);
-    return callCompilation(opts.provider, instance, options.componentName);
+    const provider = new (this.globalMap.getProvider(opts.provider))();
+    const instance = provider.createInstance(opts);
+    return provider.callCompilation(
+      opts.provider,
+      instance,
+      options.componentName
+    );
   }
 
   public async createSource(options: ISourceCreateOptions): Promise<void> {
