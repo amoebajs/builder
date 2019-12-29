@@ -16,8 +16,16 @@ export interface IBasicCompilationFinalContext {
   methods: ts.MethodDeclaration[];
 }
 
+type EntityType = "directive" | "component" | "entity";
+
+export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
+  scope: string | symbol;
+  type: TYPE;
+  items: ENTITY;
+}
+
 type ScopeMap<T> = {
-  [key in keyof T]: Map<string | symbol, T[key]>;
+  [key in keyof T]: Map<string | symbol, IScopeStructure<EntityType, T[key]>>;
 };
 
 export type IBasicCompilationContext = ScopeMap<IBasicCompilationFinalContext>;
@@ -35,6 +43,7 @@ export function createEntityId() {
 
 export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   private __scope = createEntityId();
+  private __etype: EntityType = "entity";
   private __state: T = <T>{};
   private __context!: IBasicCompilationContext;
 
@@ -138,25 +147,40 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     args: A[],
     type: IBasicComponentAppendType
   ) {
-    const host: Map<string | symbol, any> = this.__context[target];
+    const host: Map<string | symbol, IScopeStructure<EntityType, any>> = this
+      .__context[target];
+    let container = host.get(this.__scope);
+    if (!container) {
+      host.set(
+        this.__scope,
+        (container = {
+          scope: this.__scope,
+          type: this.__etype,
+          items: []
+        })
+      );
+    }
     if (target === "extendParent") {
-      host.set(this.__scope, args[0]);
+      container.items = args[0];
+      host.set(this.__scope, container);
       return;
     }
     if (type === "reset") {
-      host.set(this.__scope, args);
+      container.items = args;
+      host.set(this.__scope, container);
     } else {
-      const oldValues = <unknown[]>host.get(this.__scope) || [];
+      const oldValues = container.items || [];
       const newValues = [...oldValues];
       newValues[type](...args);
-      host.set(this.__scope, newValues);
+      container.items = newValues;
+      host.set(this.__scope, container);
     }
   }
 
   private __getChildElements<K extends keyof IBasicCompilationContext>(
     target: K
   ): MapValueType<IBasicCompilationContext[K]> {
-    return this.__context[target].get(this.__scope) as any;
+    return this.__context[target].get(this.__scope)?.items as any;
   }
 }
 

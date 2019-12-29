@@ -137,9 +137,9 @@ export class BasicEntityProvider {
         for (const scope of scopesArr) {
           const value = item.get(scope);
           if (key === "extendParent") {
-            context[key] = <any>value;
+            context[key] = <any>value?.items;
           } else {
-            (<any>context)[key].push(...(<any[]>value));
+            (<any>context)[key].push(...(<any[]>value?.items));
           }
         }
       }
