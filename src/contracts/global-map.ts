@@ -31,7 +31,7 @@ export interface IMapEntry<T = any> {
   name: string;
   displayName: string;
   value: T;
-  provider?: string;
+  provider: string;
   metadata: IMetadataGroup;
 }
 
@@ -66,8 +66,10 @@ export class GlobalMap {
       value: mdname,
       components: {},
       directives: {},
+      provider: metadata.provider,
       metadata: getMetadata(mdname)
     });
+    const provider = new (this.getProvider(metadata.provider))();
     if (metadata.components) {
       metadata.components.forEach(i => {
         const meta = resolveComponent(i);
@@ -77,12 +79,8 @@ export class GlobalMap {
           displayName: meta.displayName || pageName,
           moduleName,
           value: i,
-          provider: meta.provider,
-          metadata: getMetadata(
-            i,
-            meta.provider,
-            new (this.getProvider(meta.provider))()
-          )
+          provider: metadata.provider,
+          metadata: getMetadata(i, metadata.provider, provider)
         };
       });
     }
@@ -95,11 +93,8 @@ export class GlobalMap {
           displayName: meta.displayName || pipeName,
           moduleName,
           value: i,
-          metadata: getMetadata(
-            i,
-            meta.provider,
-            new (this.getProvider(meta.provider))()
-          )
+          provider: metadata.provider,
+          metadata: getMetadata(i, metadata.provider, provider)
         };
       });
     }

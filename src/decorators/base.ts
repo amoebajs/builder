@@ -15,8 +15,10 @@ export type UnnamedPartial<T> = Partial<T> & { name: string };
 export interface IModuleContract {
   name: string | null;
   displayName: string | null;
+  provider: keyof IFrameworkDepts;
   components: EntityConstructor<any>[];
   directives: EntityConstructor<any>[];
+  dependencies: { [name: string]: string | string[] };
 }
 
 export interface IBasicI18NContract {

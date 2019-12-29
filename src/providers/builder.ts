@@ -32,65 +32,6 @@ export interface IComponentCreateOptions extends IDirectiveCreateOptions {
 
 @Injectable()
 export class BuilderProvider extends Builder {
-  protected resolveType(
-    moduleName: string,
-    templateName: string,
-    type: "component" | "directive"
-  ) {
-    const target = this.globalMap[
-      type === "component" ? "getComponent" : "getDirective"
-    ](moduleName, templateName);
-    if (!target) {
-      throw new NotFoundError(
-        `${type} [${moduleName}.${templateName}] not found`
-      );
-    }
-    return target;
-  }
-
-  protected resolveCreateOptions(
-    type: "component" | "directive",
-    options: IComponentCreateOptions | IDirectiveCreateOptions
-  ): IInstanceCreateOptions<any> {
-    const entity = this.resolveType(
-      options.moduleName,
-      options.templateName,
-      type
-    );
-    const comps: any[] = [];
-    const direcs: any[] = [];
-    if (type === "component") {
-      comps.push(
-        ...((<IComponentCreateOptions>options).components || []).map(i =>
-          this.resolveCreateOptions("component", i)
-        )
-      );
-      direcs.push(
-        ...((<IComponentCreateOptions>options).directives || []).map(i =>
-          this.resolveCreateOptions("directive", i)
-        )
-      );
-    }
-    return {
-      provider: <any>entity.provider!,
-      template: entity.value,
-      options: options.options,
-      components: comps,
-      directives: direcs
-    };
-  }
-
-  protected async createComponentSource(options: IComponentCreateOptions) {
-    const opts = this.resolveCreateOptions("component", options);
-    const provider = new (this.globalMap.getProvider(opts.provider))();
-    const instance = provider.createInstance(opts);
-    return provider.callCompilation(
-      opts.provider,
-      instance,
-      options.componentName
-    );
-  }
-
   public async createSource(options: ISourceCreateOptions): Promise<void> {
     const compName = "App";
     if ((<ISourceFileCreateOptions>options).fileName) {
@@ -101,7 +42,7 @@ export class BuilderProvider extends Builder {
         folder: opt.outDir,
         filename: opt.fileName + ".tsx",
         statements: (
-          await this.createComponentSource({
+          await this._createComponentSource({
             moduleName: configs.page.module,
             templateName: configs.page.name,
             componentName: compName,
@@ -125,7 +66,7 @@ export class BuilderProvider extends Builder {
             resolve();
           },
           statements: (
-            await this.createComponentSource({
+            await this._createComponentSource({
               moduleName: configs.page.module,
               templateName: configs.page.name,
               componentName: compName,
@@ -141,6 +82,65 @@ export class BuilderProvider extends Builder {
     options: import("../contracts").IWebpackOptions
   ): Promise<void> {
     return this.webpackBuild.buildSource(options);
+  }
+
+  private _resolveType(
+    moduleName: string,
+    templateName: string,
+    type: "component" | "directive"
+  ) {
+    const target = this.globalMap[
+      type === "component" ? "getComponent" : "getDirective"
+    ](moduleName, templateName);
+    if (!target) {
+      throw new NotFoundError(
+        `${type} [${moduleName}.${templateName}] not found`
+      );
+    }
+    return target;
+  }
+
+  private _resolveCreateOptions(
+    type: "component" | "directive",
+    options: IComponentCreateOptions | IDirectiveCreateOptions
+  ): IInstanceCreateOptions<any> {
+    const entity = this._resolveType(
+      options.moduleName,
+      options.templateName,
+      type
+    );
+    const comps: any[] = [];
+    const direcs: any[] = [];
+    if (type === "component") {
+      comps.push(
+        ...((<IComponentCreateOptions>options).components || []).map(i =>
+          this._resolveCreateOptions("component", i)
+        )
+      );
+      direcs.push(
+        ...((<IComponentCreateOptions>options).directives || []).map(i =>
+          this._resolveCreateOptions("directive", i)
+        )
+      );
+    }
+    return {
+      provider: <any>entity.provider!,
+      template: entity.value,
+      options: options.options,
+      components: comps,
+      directives: direcs
+    };
+  }
+
+  private async _createComponentSource(options: IComponentCreateOptions) {
+    const opts = this._resolveCreateOptions("component", options);
+    const provider = new (this.globalMap.getProvider(opts.provider))();
+    const instance = provider.createInstance(opts);
+    return provider.callCompilation(
+      opts.provider,
+      instance,
+      options.componentName
+    );
   }
 }
 

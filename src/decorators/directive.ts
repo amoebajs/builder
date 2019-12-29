@@ -29,14 +29,12 @@ export function resolveDirective(
 export interface IDirectiveContract extends IBasicI18NContract {
   name: string | null;
   displayName: string | null;
-  provider: "react";
-  dependencies: { [name: string]: string };
+  dependencies: { [name: string]: string | string[] };
 }
 
 const defaults: IDirectiveContract = {
   name: null,
   displayName: null,
-  provider: "react",
   dependencies: {},
   description: null,
   i18nDescription: null,
@@ -58,13 +56,6 @@ export function Directive(define: any) {
         ...deco_params.dependencies
       }
     };
-    const fwk_depts = default_framework_depts[options.provider];
-    if (fwk_depts) {
-      options.dependencies = {
-        ...fwk_depts,
-        ...options.dependencies
-      };
-    }
     defineDirective(target, options);
     return <any>target;
   };
