@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts, { symbolName } from "typescript";
 import { InjectDIToken } from "@bonbons/di";
 import {
   IBasicCompilationContext,
@@ -10,6 +10,16 @@ import { IFrameworkDepts, EntityConstructor } from "../../decorators/base";
 import { InvalidOperationError } from "../../errors";
 import { exists, createExportModifier } from "../../utils";
 import { BasicComponent } from "./basic";
+
+const defaults: IBasicCompilationFinalContext = {
+  extendParent: null,
+  implementParents: [],
+  fields: [],
+  properties: [],
+  methods: [],
+  imports: [],
+  classes: []
+};
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>>
   extends IDirectivePluginOptions<T> {
@@ -43,7 +53,8 @@ export class BasicEntityProvider {
       fields: new Map(),
       properties: new Map(),
       methods: new Map(),
-      imports: new Map()
+      imports: new Map(),
+      classes: new Map()
     };
     const model = this._initPropsContextInstance(template, options, context);
     for (const iterator of components) {
@@ -80,16 +91,9 @@ export class BasicEntityProvider {
     await model["onPreRender"]();
     await model["onRender"]();
     await model["onPostRender"]();
-    const context = this.onCompilationCall(model["__context"]);
-    const importSpecs = this.onImportsUpdate(context.imports);
-    const classDec = ts.createClassDeclaration(
-      [],
-      createExportModifier(!unExport),
-      ts.createIdentifier(name),
-      [],
-      exists([context.extendParent!, ...context.implementParents]),
-      exists([...context.fields, ...context.properties, ...context.methods])
-    );
+    const context = this.onCompilationCall(model, model["__context"]);
+    const imports = this.onImportsUpdate(model, context.imports);
+    const classApp = createClass(unExport, name, context);
     const sourceFile = ts.createSourceFile(
       "temp.tsx",
       "",
@@ -99,7 +103,7 @@ export class BasicEntityProvider {
     );
     return ts.updateSourceFileNode(
       sourceFile,
-      [...importSpecs, classDec],
+      [...imports, ...context.classes, classApp],
       sourceFile.isDeclarationFile,
       sourceFile.referencedFiles,
       sourceFile.typeReferenceDirectives,
@@ -119,29 +123,54 @@ export class BasicEntityProvider {
   protected onPropertiesInit<T extends any>(model: T) {}
 
   /** @override */
-  protected onCompilationCall(_context: IBasicCompilationContext) {
-    const context: IBasicCompilationFinalContext = {
-      extendParent: null,
-      implementParents: [],
-      fields: [],
-      properties: [],
-      methods: [],
-      imports: []
-    };
+  protected onCompilationCall(
+    model: BasicComponent,
+    _context: IBasicCompilationContext
+  ) {
+    const context: IBasicCompilationFinalContext = { ...defaults };
+    const classPreList: Array<[
+      string | symbol,
+      Partial<IBasicCompilationFinalContext>
+    ]> = [];
     for (const key in _context) {
       if (_context.hasOwnProperty(key)) {
-        const item = _context[<keyof typeof _context>key];
+        const currentKey: keyof IBasicCompilationFinalContext = <any>key;
+        const item = _context[currentKey];
         const scopesArr = Array.from(
           <IterableIterator<string | symbol>>item.keys()
         );
         for (const scope of scopesArr) {
-          const value = item.get(scope);
-          if (key === "extendParent") {
-            context[key] = <any>value?.items;
-          } else {
-            (<any>context)[key].push(...(<any[]>value?.items));
+          const value = item.get(scope)!;
+          // 组件作用域在当前SourceFile中
+          if (value.type === "component" && scope !== model["entityId"]) {
+            if (currentKey === "imports") {
+              (<any>context)[key].push(...(<any[]>value.items));
+            } else {
+              const target = classPreList.find(([id, ctx]) => id === scope);
+              if (!target) {
+                classPreList.push([scope, { [currentKey]: <any>value.items }]);
+              } else {
+                if (currentKey === "extendParent") {
+                } else if (!target[1][currentKey]) {
+                  target[1][currentKey] = <any>value.items;
+                } else {
+                  target[1][currentKey]!.push(...(<any>value.items));
+                }
+              }
+            }
+          }
+          // 指令作用域在当前Class中
+          if (value.type === "directive" || scope == model["entityId"]) {
+            if (currentKey === "extendParent") {
+              context[currentKey] = <any>value.items;
+            } else {
+              (<any>context)[key].push(...(<any[]>value.items));
+            }
           }
         }
+        context.classes = classPreList.map(([scope, ctx]) =>
+          createClass(false, "C" + scope.toString(), { ...defaults, ...ctx })
+        );
       }
     }
     return context;
@@ -149,6 +178,7 @@ export class BasicEntityProvider {
 
   /** @override */
   protected onImportsUpdate(
+    model: BasicComponent,
     imports: ts.ImportDeclaration[],
     init: ts.ImportDeclaration[] = []
   ) {
@@ -194,6 +224,21 @@ export class BasicEntityProvider {
     this.onPropertiesInit(model);
     return model;
   }
+}
+
+function createClass(
+  unExport: boolean,
+  name: string,
+  context: IBasicCompilationFinalContext
+) {
+  return ts.createClassDeclaration(
+    [],
+    createExportModifier(!unExport),
+    ts.createIdentifier(name),
+    [],
+    exists([context.extendParent!, ...context.implementParents]),
+    exists([...context.fields, ...context.properties, ...context.methods])
+  );
 }
 
 function updateImportDeclarations(

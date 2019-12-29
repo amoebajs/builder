@@ -14,6 +14,7 @@ export interface IBasicCompilationFinalContext {
   fields: ts.PropertyDeclaration[];
   properties: ts.PropertyDeclaration[];
   methods: ts.MethodDeclaration[];
+  classes: ts.ClassDeclaration[];
 }
 
 type EntityType = "directive" | "component" | "entity";

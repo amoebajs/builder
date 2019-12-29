@@ -7,6 +7,11 @@ export abstract class BasicDirective<
     return "D" + this.entityId;
   }
 
+  constructor() {
+    super();
+    this["__etype"] = "directive";
+  }
+
   /** @override */
   protected async onInit(): Promise<void> {
     return Promise.resolve();

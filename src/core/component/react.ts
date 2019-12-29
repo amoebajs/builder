@@ -124,8 +124,11 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
 }
 
 export class ReactEntityProvider extends BasicEntityProvider {
-  protected onImportsUpdate(imports: ts.ImportDeclaration[]) {
-    return super.onImportsUpdate(imports, [
+  protected onImportsUpdate(
+    model: BasicComponent,
+    imports: ts.ImportDeclaration[]
+  ) {
+    return super.onImportsUpdate(model, imports, [
       ts.createImportDeclaration(
         [],
         [],

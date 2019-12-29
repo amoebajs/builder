@@ -16,6 +16,11 @@ export abstract class BasicComponent<
     return "C" + this.entityId;
   }
 
+  constructor() {
+    super();
+    this["__etype"] = "component";
+  }
+
   //#region hooks
 
   /** @override */
