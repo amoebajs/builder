@@ -121,14 +121,14 @@ export abstract class BasicComponent<
 
   /** @override */
   protected async onRender(): Promise<void> {
+    await this.onDirectivesPreAttach();
+    await this.onDirectivesAttach();
+    await this.onDirectivesPostAttach();
     return Promise.resolve();
   }
 
   /** @override */
   protected async onPostRender(): Promise<void> {
-    await this.onDirectivesPreAttach();
-    await this.onDirectivesAttach();
-    await this.onDirectivesPostAttach();
     this.__rendered = true;
   }
 

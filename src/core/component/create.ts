@@ -40,15 +40,18 @@ export interface IInstanceCreateOptions<T extends InjectDIToken<any>>
 }
 
 export class BasicEntityProvider {
-  public createInstance<T extends typeof BasicComponent>({
-    template,
-    options = {},
-    components = [],
-    directives = [],
-    children = [],
-    id,
-    passContext
-  }: IInstanceCreateOptions<T>) {
+  public createInstance<T extends typeof BasicComponent>(
+    {
+      template,
+      options = {},
+      components = [],
+      directives = [],
+      children = [],
+      id,
+      passContext
+    }: IInstanceCreateOptions<T>,
+    provider: BasicEntityProvider
+  ) {
     const context: IBasicCompilationContext = passContext || {
       extendParent: new Map(),
       implementParents: new Map(),
@@ -65,15 +68,18 @@ export class BasicEntityProvider {
     ).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
-        this.createInstance({
-          id: iterator.id,
-          provider: iterator.provider,
-          template: iterator.template,
-          options: iterator.options,
-          components: iterator.components,
-          directives: iterator.directives,
-          passContext: context
-        })
+        this.createInstance(
+          {
+            id: iterator.id,
+            provider: iterator.provider,
+            template: iterator.template,
+            options: iterator.options,
+            components: iterator.components,
+            directives: iterator.directives,
+            passContext: context
+          },
+          provider
+        )
       );
     }
     for (const iterator of children) {
@@ -86,11 +92,14 @@ export class BasicEntityProvider {
     }
     for (const iterator of directives) {
       model["__directives"].push(
-        this._initPropsContextInstance<BasicDirective>(
-          iterator.template,
-          iterator.options || {},
-          context
-        ).setEntityId(iterator.id)
+        provider.attachDirective(
+          model,
+          this._initPropsContextInstance<BasicDirective>(
+            iterator.template,
+            iterator.options || {},
+            context
+          ).setEntityId(iterator.id)
+        )
       );
     }
     return model;
@@ -136,6 +145,14 @@ export class BasicEntityProvider {
   }
 
   /** @override */
+  public attachDirective<T extends BasicDirective, P extends BasicComponent>(
+    parent: P,
+    target: T
+  ) {
+    return target;
+  }
+
+  /** @override */
   protected onPropertiesInit<T extends any>(model: T) {}
 
   /** @override */
@@ -143,7 +160,6 @@ export class BasicEntityProvider {
     model: BasicComponent,
     _context: IBasicCompilationContext
   ) {
-    console.log(_context);
     const context: IBasicCompilationFinalContext = {
       extendParent: null,
       implementParents: [],

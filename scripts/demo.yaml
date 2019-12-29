@@ -11,7 +11,12 @@ page:
     - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective
-      options: {}
+      options:
+        host: ZentBtnDemoCompRef02
+        eventType: setState
+        attrName: onClick
+        targetName: zentBtn02Content
+        expression: e => new Date().getTime()
   children:
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
@@ -38,9 +43,8 @@ page:
           syntaxType: boolean
           expression: false
         content:
-          type: literal
-          syntaxType: string
-          expression: BUTTON02
+          type: state
+          expression: zentBtn02Content
         size:
           type: literal
           syntaxType: string
@@ -56,6 +60,7 @@ page:
         btn01Text: "10002"
         zentBtnLoading: true
         zentBtnType: danger
+        zentBtn02Content: BUTTON02
     gridTemplateColumnsCount: 2
     gridTemplateRowsFrs: [1, 2]
   attach:

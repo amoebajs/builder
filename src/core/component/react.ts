@@ -16,6 +16,8 @@ import {
 import { PropertyRef, ReactVbRef } from "../base";
 import { BasicEntityProvider } from "./create";
 import { EntityConstructor, resolveReactProps } from "../../decorators";
+import { ReactDirective } from "../directive/react";
+import { BasicDirective } from "../directive";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -30,22 +32,16 @@ type TP = IBasicReactContainerState<IPureObject>;
 type TY = IBasicReactContainerState<{}>;
 
 export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
-  protected addRootChildren(
-    args: ts.JsxElement[],
-    type: IBasicComponentAppendType = "push"
-  ) {
-    const rootChildren = this.getRootChildren();
-    if (type === "reset") {
-      this.setState("rootChildren", args);
-    } else {
-      const newChildren = [...rootChildren];
-      newChildren[type](...args);
-      this.setState("rootChildren", newChildren);
-    }
+  private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
+
+  protected addRootChildren(id: string, element: ts.JsxElement) {
+    this.__elementMap.set(id, element);
   }
 
   protected getRootChildren() {
-    return this.getState("rootChildren") || [];
+    const list = Array.from(this.__elementMap.values());
+    const nlist = this.getState("rootChildren") || [];
+    return [...nlist, ...list];
   }
 
   protected setRootElement(tagName: string, attrs: IJsxAttrs) {
@@ -104,7 +100,6 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
   protected async onPreRender() {
     await super.onPreRender();
     const children = this.getChildren();
-    const rootChildren = this.getState("rootChildren");
     for (const iterator of children) {
       const options = iterator.options || {};
       const attrs: IJsxAttrs = {};
@@ -136,14 +131,14 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
           }
         }
       }
-      rootChildren.push(
+      this.addRootChildren(
+        iterator.id,
         createJsxElement(iterator.component, [], {
           ...attrs,
           key: iterator.id
         })
       );
     }
-    this.setState("rootChildren", rootChildren);
   }
 
   protected async onRender() {
@@ -163,7 +158,12 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
         createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
         ts.createReturn(
           ts.createParen(
-            createJsxElement(root.name, root.types, root.attrs, children)
+            createJsxElement(
+              root.name,
+              root.types,
+              { ...root.attrs, key: this.entityId },
+              children
+            )
           )
         )
       ])
@@ -193,5 +193,31 @@ export class ReactEntityProvider extends BasicEntityProvider {
     return {
       props: resolveReactProps(target)
     };
+  }
+
+  public attachDirective(
+    parent: BasicComponent,
+    target: BasicDirective
+  ): BasicDirective;
+  public attachDirective(
+    parent: BasicReactContainer,
+    target: ReactDirective
+  ): ReactDirective;
+  public attachDirective(parent: BasicReactContainer, target: ReactDirective) {
+    Object.defineProperty(target, "__parentId", {
+      enumerable: true,
+      configurable: false,
+      get() {
+        return parent.entityId;
+      }
+    });
+    Object.defineProperty(target, "__parentRef", {
+      enumerable: true,
+      configurable: false,
+      get() {
+        return parent;
+      }
+    });
+    return target;
   }
 }

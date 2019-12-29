@@ -133,7 +133,7 @@ export class BuilderProvider extends Builder {
   private async _createComponentSource(options: IRootComponentCreateOptions) {
     const opts = this._resolveCreateOptions("root", options);
     const provider = new (this.globalMap.getProvider(opts.provider))();
-    const instance = provider.createInstance(opts);
+    const instance = provider.createInstance(opts, provider);
     return provider.callCompilation(
       opts.provider,
       instance,
