@@ -5,11 +5,7 @@ import {
   ISourceFileCreateOptions,
   ISourceStringCreateOptions
 } from "../contracts";
-import {
-  createReactSourceFile,
-  emitSourceFileSync,
-  createReactMainFile
-} from "../utils";
+import { emitSourceFileSync, createReactMainFile } from "../utils";
 import { NotFoundError, InvalidOperationError } from "../errors";
 import { Injectable } from "../decorators";
 import {

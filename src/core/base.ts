@@ -161,11 +161,22 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return (<any>this)[name];
   }
 
-  protected resolveRef(name: string): any {
+  protected resolveRef(name: string): ts.Expression | null {
     const ref = this.getRef(name);
     if (!ref) return null;
     if (ref.type === "literal") {
-      return ref.expression;
+      switch (ref.syntaxType) {
+        case "number":
+          return ts.createNumericLiteral(ref.expression);
+        case "string":
+          return ts.createStringLiteral(ref.expression);
+        case "boolean":
+          return String(ref.expression) === "true"
+            ? ts.createTrue()
+            : ts.createFalse();
+        default:
+          return null;
+      }
     }
     return null;
   }

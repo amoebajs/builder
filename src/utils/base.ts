@@ -235,8 +235,8 @@ export function createConstVariableStatement(
   );
 }
 
-interface IJsxAttrs {
-  [key: string]: ts.JsxExpression | string;
+export interface IJsxAttrs {
+  [key: string]: ts.JsxExpression | string | null;
 }
 
 export function createJsxElement(
@@ -250,14 +250,16 @@ export function createJsxElement(
       ts.createIdentifier(tagName),
       types,
       ts.createJsxAttributes(
-        Object.keys(attrs).map(k =>
-          ts.createJsxAttribute(
-            ts.createIdentifier(k),
-            typeof attrs[k] === "string"
-              ? ts.createStringLiteral(<string>attrs[k])
-              : <ts.JsxExpression>attrs[k]
+        Object.keys(attrs)
+          .filter(k => !!attrs[k])
+          .map(k =>
+            ts.createJsxAttribute(
+              ts.createIdentifier(k),
+              typeof attrs[k] === "string"
+                ? ts.createStringLiteral(<string>attrs[k])
+                : <ts.JsxExpression>attrs[k]
+            )
           )
-        )
       )
     ),
     (children || []).map(i =>

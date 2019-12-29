@@ -1,13 +1,15 @@
 import ts from "typescript";
-import { BasicComponent, IJsxAttrs } from "./basic";
+import { BasicComponent } from "./basic";
 import { IBasicComponentAppendType, IPureObject } from "../base";
 import {
   TYPES,
   REACT,
   createConstVariableStatement,
   THIS,
-  createJsxElement
+  createJsxElement,
+  IJsxAttrs
 } from "../../utils";
+import { PropertyRef, ReactVbRef } from "../../utils/directive";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -46,6 +48,26 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       attrs,
       types: []
     });
+  }
+
+  protected getRef(name: string): ReactVbRef | null;
+  protected getRef(name: string): PropertyRef | null;
+  protected getRef(name: string) {
+    const ref = super.getRef(name);
+    if (ref instanceof ReactVbRef) {
+      return ref;
+    }
+    return null;
+  }
+
+  protected resolveRef(name: string): ts.Expression | null {
+    const ref = this.getRef(name);
+    if (ref) {
+      if (ref.type === "props") {
+        return ts.createPropertyAccess(ts.createThis(), ref["expression"]);
+      }
+    }
+    return super.resolveRef(name);
   }
 
   protected async onInit() {
