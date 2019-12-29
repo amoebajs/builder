@@ -216,7 +216,7 @@ export class BasicEntityProvider {
           options[group].hasOwnProperty(prop.name.value!)
         ) {
           (<any>model)[prop.realName] = options[group][prop.name.value!];
-        } else if (options.hasOwnProperty(prop.name!)) {
+        } else if (options.hasOwnProperty(prop.name.value!)) {
           (<any>model)[prop.realName] = options[prop.name.value!];
         }
       }
