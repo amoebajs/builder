@@ -10,6 +10,8 @@ import {
 import { BasicError } from "../errors";
 import { Injectable } from "../decorators";
 
+const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
+
 @Injectable()
 export class WebpackBuildProvider implements WebpackBuild {
   constructor(
@@ -32,7 +34,7 @@ export class WebpackBuildProvider implements WebpackBuild {
         .then(
           () =>
             new Promise((resolve, reject) => {
-              spawn("yarn", {
+              spawn(yarn, {
                 env: { ...process.env },
                 cwd: sandbox.rootPath!,
                 stdio: ["pipe", process.stdout, process.stderr]

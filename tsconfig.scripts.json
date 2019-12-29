@@ -1,4 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "scripts-build",
+    "allowJs": false
+  },
   "include": ["scripts"]
 }

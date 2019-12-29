@@ -64,5 +64,6 @@ typings/
 
 dist
 build
+scripts-build
 
 !src/build
