@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { Component, Input } from "../decorators";
-import { ReactVbRef } from "../utils/directive";
+import { ReactVbRef } from "../core/base";
 import { BasicReactContainer } from "../core/component";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
@@ -51,9 +51,9 @@ export class ZentButtonComponent extends BasicReactContainer {
     this.setState("rootElement", {
       ...rootEle,
       name: "Button",
-      attrs: {
+      attrs: this.resolveJsxAttrs({
         loading: this.resolveRef("zenBtnLoading")
-      }
+      })
     });
   }
 }

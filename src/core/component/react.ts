@@ -9,7 +9,7 @@ import {
   createJsxElement,
   IJsxAttrs
 } from "../../utils";
-import { PropertyRef, ReactVbRef } from "../../utils/directive";
+import { PropertyRef, ReactVbRef } from "../base";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -68,6 +68,20 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       }
     }
     return super.resolveRef(name);
+  }
+
+  protected resolveJsxAttrs(attrs: {
+    [name: string]: string | ts.Expression | null;
+  }): IJsxAttrs {
+    return Object.keys(attrs)
+      .filter(i => !!attrs[i])
+      .map(k => ({
+        [k]:
+          typeof attrs[k] === "string"
+            ? <string>attrs[k]
+            : ts.createJsxExpression(undefined, <any>attrs[k]!)
+      }))
+      .reduce((p, c) => ({ ...p, ...c }), {});
   }
 
   protected async onInit() {

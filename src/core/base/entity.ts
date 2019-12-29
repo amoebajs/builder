@@ -1,46 +1,7 @@
 import ts from "typescript";
 import uuid from "uuid/v4";
-import { PropertyRef } from "../utils/directive";
-
-export interface IPureObject {
-  [prop: string]: any;
-}
-
-export type MapValueType<T> = T extends Map<any, infer V> ? V : never;
-
-export interface IUnitBase {
-  name: IDescriptionMeta;
-  description: IWeakDescriptionMeta | null;
-}
-
-export interface IWeakDescriptionMeta {
-  value: string;
-  i18n: {
-    [key: string]: string | null;
-  };
-}
-
-export interface IDescriptionMeta extends IWeakDescriptionMeta {
-  displayValue: string | null;
-}
-
-export type PropertyType =
-  | "object"
-  | "string"
-  | "number"
-  | "boolean"
-  | (string | number)[]
-  | number[]
-  | string[]
-  | null;
-
-export interface IPropertyGroupBase extends IUnitBase {}
-
-export interface IPropertyBase extends IUnitBase {
-  realName: string;
-  group: string | null;
-  type: PropertyType | null;
-}
+import { MapValueType, IPureObject } from "./common";
+import { PropertyRef } from "./directive";
 
 export type ImportStatementsUpdater = (
   statements: ts.ImportDeclaration[]
@@ -165,18 +126,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     const ref = this.getRef(name);
     if (!ref) return null;
     if (ref.type === "literal") {
-      switch (ref.syntaxType) {
-        case "number":
-          return ts.createNumericLiteral(ref.expression);
-        case "string":
-          return ts.createStringLiteral(ref.expression);
-        case "boolean":
-          return String(ref.expression) === "true"
-            ? ts.createTrue()
-            : ts.createFalse();
-        default:
-          return null;
-      }
+      return resolveSyntaxInsert(ref.syntaxType, ref.expression);
     }
     return null;
   }
@@ -207,5 +157,39 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     target: K
   ): MapValueType<IBasicCompilationContext[K]> {
     return this.__context[target].get(this.__scope) as any;
+  }
+}
+
+export function resolveSyntaxInsert(
+  type: "string",
+  expression: string
+): ts.StringLiteral;
+export function resolveSyntaxInsert(
+  type: "number",
+  expression: number
+): ts.NumericLiteral;
+export function resolveSyntaxInsert(
+  type: "boolean",
+  expression: boolean
+): ts.BooleanLiteral;
+export function resolveSyntaxInsert(
+  type: string,
+  expression: any,
+  otherHandler?: (type: string, exp: any) => ts.Expression | null
+): ts.BooleanLiteral;
+export function resolveSyntaxInsert(
+  type: string,
+  expression: any,
+  otherHandler?: (type: string, exp: any) => ts.Expression | null
+): ts.Expression | null {
+  switch (type) {
+    case "number":
+      return ts.createNumericLiteral(expression.toString());
+    case "string":
+      return ts.createStringLiteral(expression.toString());
+    case "boolean":
+      return String(expression) === "true" ? ts.createTrue() : ts.createFalse();
+    default:
+      return !otherHandler ? null : otherHandler(type, expression);
   }
 }

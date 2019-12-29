@@ -46,21 +46,18 @@ export class CssGridContainer extends BasicReactContainer {
     await super.onInit();
     const rootElement = this.getState("rootElement");
     rootElement.name = DOMS.Div;
-    rootElement.attrs["style"] = ts.createJsxExpression(
-      undefined,
-      createValueAttr({
-        height: "100vh",
-        display: "grid",
-        gridTemplateColumns: this.use_GridRowRepeat
-          ? this.calcColnmnsRepeat()
-          : this.calcColumnsSize(),
-        gridTemplateRows: this.use_GridColumnRepeat
-          ? this.calcRowsRepeat()
-          : this.calcRowsSize(),
-        gridRowGap: `${this.gridRowGap}px`,
-        gridColumnGap: `${this.gridColumnGap}px`
-      })
-    );
+    rootElement.attrs["style"] = createValueAttr({
+      height: "100vh",
+      display: "grid",
+      gridTemplateColumns: this.use_GridRowRepeat
+        ? this.calcColnmnsRepeat()
+        : this.calcColumnsSize(),
+      gridTemplateRows: this.use_GridColumnRepeat
+        ? this.calcRowsRepeat()
+        : this.calcRowsSize(),
+      gridRowGap: `${this.gridRowGap}px`,
+      gridColumnGap: `${this.gridColumnGap}px`
+    });
     this.setState("rootElement", rootElement);
     this.initState();
     this.initExtends();

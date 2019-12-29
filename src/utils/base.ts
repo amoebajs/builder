@@ -4,6 +4,7 @@ import ts from "typescript";
 import chalk from "chalk";
 import prettier from "prettier";
 import { NotFoundError, BasicError } from "../errors";
+import { resolveSyntaxInsert } from "../core/base";
 
 export interface IFileCreateOptions {
   folder?: string;
@@ -236,7 +237,7 @@ export function createConstVariableStatement(
 }
 
 export interface IJsxAttrs {
-  [key: string]: ts.JsxExpression | string | null;
+  [key: string]: ts.Expression | string | number | boolean | null;
 }
 
 export function createJsxElement(
@@ -257,7 +258,10 @@ export function createJsxElement(
               ts.createIdentifier(k),
               typeof attrs[k] === "string"
                 ? ts.createStringLiteral(<string>attrs[k])
-                : <ts.JsxExpression>attrs[k]
+                : ts.createJsxExpression(
+                    undefined,
+                    resolveSyntaxInsert(typeof attrs[k], attrs[k], (t, e) => e)
+                  )
             )
           )
       )
@@ -269,22 +273,19 @@ export function createJsxElement(
   );
 }
 
-export function createValueAttr(value: { [prop: string]: number | string }) {
-  const kvs: [string, string | number][] = Object.keys(value).map(k => [
-    k,
-    value[k]
-  ]);
+export function createValueAttr(value: {
+  [prop: string]: number | string | boolean | ts.Expression;
+}) {
+  const kvs: [
+    string,
+    string | number | boolean | ts.Expression
+  ][] = Object.keys(value).map(k => [k, value[k]]);
   return ts.createObjectLiteral(
     kvs.map(([n, v]) =>
-      typeof v === "number"
-        ? ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            ts.createNumericLiteral(v.toString())
-          )
-        : ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            ts.createStringLiteral(v)
-          )
+      ts.createPropertyAssignment(
+        ts.createIdentifier(n),
+        resolveSyntaxInsert(typeof v, v, (_, e) => e)
+      )
     ),
     true
   );
