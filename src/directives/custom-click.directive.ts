@@ -21,34 +21,15 @@ export class CustomClickDirective extends ReactDirective {
   public expression: string = "e => e";
 
   protected async onAttach() {
-    const element = this.getElementById(this.host!);
-    if (!element) return;
-    const openEle = element.openingElement;
-    const props = openEle.attributes.properties.filter(
-      i => i.name && ts.isIdentifier(i.name) && i.name.text !== this.attrName!
-    );
-    const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
-      ...props,
-      ts.createJsxAttribute(
-        ts.createIdentifier(this.attrName!),
+    try {
+      this.appendJsxAttribute(
+        this.host!,
+        this.attrName!,
         ts.createJsxExpression(undefined, this.resolveExpr())
-      )
-    ]);
-    const newElement = ts.updateJsxOpeningElement(
-      openEle,
-      openEle.tagName,
-      openEle.typeArguments,
-      newAttrs
-    );
-    this.setElementById(
-      this.host,
-      ts.updateJsxElement(
-        element,
-        newElement,
-        element.children,
-        element.closingElement
-      )
-    );
+      );
+    } catch (error) {
+      /** ignore */
+    }
   }
 
   private resolveExpr() {
