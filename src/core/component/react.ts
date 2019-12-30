@@ -86,6 +86,16 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       .reduce((p, c) => ({ ...p, ...c }), {});
   }
 
+  protected resolvePropState(
+    expression: string,
+    type: "props" | "state" = "props"
+  ) {
+    return ts.createPropertyAccess(
+      ts.createThis(),
+      type + "." + expression.toString()
+    );
+  }
+
   protected async onInit() {
     await super.onInit();
     this.setRootElement(REACT.Fragment, {});
@@ -108,15 +118,10 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
           const element = options[key];
           switch (element.type) {
             case "state":
-              attrs[key] = ts.createPropertyAccess(
-                ts.createThis(),
-                "state." + element.expression.toString()
-              );
-              break;
             case "props":
-              attrs[key] = ts.createPropertyAccess(
-                ts.createIdentifier("props"),
-                element.expression.toString()
+              attrs[key] = this.resolvePropState(
+                element.expression,
+                element.type
               );
               break;
             case "literal":
@@ -155,7 +160,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       [],
       undefined,
       ts.createBlock([
-        createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
+        // createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
         ts.createReturn(
           ts.createParen(
             createJsxElement(

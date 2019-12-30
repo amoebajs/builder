@@ -2,6 +2,7 @@ import ts from "typescript";
 import { BasicReactContainer } from "../core/component";
 import { Group, Component, Input } from "../decorators";
 import { DOMS, createValueAttr, TYPES } from "../utils";
+import { resolveSyntaxInsert } from "../core/base";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })
@@ -79,17 +80,12 @@ export class CssGridContainer extends BasicReactContainer {
           Object.keys(state).map(n =>
             ts.createPropertyAssignment(
               n,
-              typeof state[n] === "number"
-                ? ts.createNumericLiteral(state[n])
-                : state[n] === true
-                ? ts.createTrue()
-                : state[n] === false
-                ? ts.createFalse()
-                : typeof state[n] === "string"
-                ? ts.createStringLiteral(state[n])
-                : ts.createStringLiteral(state[n])
+              resolveSyntaxInsert(typeof state[n], state[n], (_, v) =>
+                ts.createStringLiteral(String(state[n]))
+              )
             )
-          )
+          ),
+          true
         )
       );
       this.addFields([field], "unshift");

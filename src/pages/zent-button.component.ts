@@ -24,23 +24,14 @@ export class ZentButtonComponent extends BasicReactContainer {
       ...rootEle,
       name: "Button",
       attrs: {
-        loading: ts.createPropertyAccess(
-          ts.createIdentifier("props"),
-          "loading"
-        ),
-        type: ts.createPropertyAccess(ts.createIdentifier("props"), "type"),
-        size: ts.createPropertyAccess(ts.createIdentifier("props"), "size"),
-        onClick: ts.createPropertyAccess(
-          ts.createIdentifier("props"),
-          "onClick"
-        )
+        loading: this.resolvePropState("loading"),
+        type: this.resolvePropState("type"),
+        size: this.resolvePropState("size"),
+        onClick: this.resolvePropState("onClick")
       }
     });
     this.setState("rootChildren", [
-      ts.createJsxExpression(
-        undefined,
-        ts.createPropertyAccess(ts.createIdentifier("props"), "content")
-      )
+      ts.createJsxExpression(undefined, this.resolvePropState("content"))
     ]);
   }
 }
