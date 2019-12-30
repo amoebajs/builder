@@ -1,7 +1,7 @@
+import ts from "typescript";
 import { IPureObject } from "../base";
 import { BasicDirective } from "./basic";
 import { BasicReactContainer } from "../component";
-import ts = require("typescript");
 import { NotFoundError } from "../../errors";
 
 export abstract class ReactDirective<
