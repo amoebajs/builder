@@ -1,23 +1,12 @@
 import ts from "typescript";
 import { BasicComponent } from "./basic";
-import {
-  IBasicComponentAppendType,
-  IPureObject,
-  resolveSyntaxInsert
-} from "../base";
-import {
-  TYPES,
-  REACT,
-  createConstVariableStatement,
-  THIS,
-  createJsxElement,
-  IJsxAttrs
-} from "../../utils";
-import { PropertyRef, ReactVbRef } from "../base";
+import { IPureObject, resolveSyntaxInsert } from "../base";
+import { TYPES, REACT, createJsxElement, IJsxAttrs } from "../../utils";
 import { BasicEntityProvider } from "./create";
 import { EntityConstructor, resolveReactProps } from "../../decorators";
 import { ReactDirective } from "../directive/react";
 import { BasicDirective } from "../directive";
+import { ReactRender, ReactHelper } from "../libs";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -33,104 +22,13 @@ type TY = IBasicReactContainerState<{}>;
 
 export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
-
-  protected addRootChildren(id: string, element: ts.JsxElement) {
-    this.__elementMap.set(id, element);
-  }
-
-  protected getRootChildren() {
-    const list = Array.from(this.__elementMap.values());
-    const nlist = this.getState("rootChildren") || [];
-    return [...nlist, ...list];
-  }
-
-  protected setRootElement(tagName: string, attrs: IJsxAttrs) {
-    this.setState("rootElement", {
-      name: tagName,
-      attrs,
-      types: []
-    });
-  }
-
-  protected getRef(name: string): ReactVbRef | null;
-  protected getRef(name: string): PropertyRef | null;
-  protected getRef(name: string) {
-    const ref = super.getRef(name);
-    if (ref instanceof ReactVbRef) {
-      return ref;
-    }
-    return null;
-  }
-
-  protected resolveRef(name: string): ts.Expression | null {
-    const ref = this.getRef(name);
-    if (ref) {
-      if (ref.type === "props") {
-        return ts.createPropertyAccess(ts.createThis(), ref["expression"]);
-      }
-    }
-    return super.resolveRef(name);
-  }
-
-  protected resolveJsxAttrs(attrs: {
-    [name: string]: string | ts.Expression | null;
-  }): IJsxAttrs {
-    return Object.keys(attrs)
-      .filter(i => attrs.hasOwnProperty(i))
-      .map(k => ({
-        [k]:
-          typeof attrs[k] === "string"
-            ? <string>attrs[k]
-            : ts.createJsxExpression(undefined, <any>attrs[k]!)
-      }))
-      .reduce((p, c) => ({ ...p, ...c }), {});
-  }
-
-  protected resolvePropState(expression: string): ts.PropertyAccessExpression;
-  protected resolvePropState(
-    expression: string,
-    type: "props" | "state"
-  ): ts.PropertyAccessExpression;
-  protected resolvePropState(
-    expression: string,
-    options: Partial<{
-      type: "props" | "state";
-      defaultValue: any;
-      defaultCheck: "||" | "??";
-    }>
-  ): ts.PropertyAccessExpression;
-  protected resolvePropState(expression: string, sec?: any) {
-    let type: "props" | "state" = "props";
-    let defaultCheck: "||" | "??" = "||";
-    let defaultValue: any = null;
-    if (typeof sec === "string") type = <any>sec;
-    if (typeof sec === "object") {
-      if (sec.type) type = sec.type;
-      if (sec.defaultCheck) defaultCheck = sec.defaultCheck;
-      if (sec.defaultValue !== null && sec.defaultValue !== void 0) {
-        defaultValue = sec.defaultValue;
-      }
-    }
-    let expr: ts.Expression = ts.createPropertyAccess(
-      ts.createThis(),
-      type + "." + expression.toString()
-    );
-    if (defaultValue !== null) {
-      expr = ts.createBinary(
-        expr,
-        defaultCheck === "||"
-          ? ts.SyntaxKind.BarBarToken
-          : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, v) =>
-          ts.createStringLiteral(String(defaultValue))
-        )
-      );
-    }
-    return expr;
-  }
+  protected helper!: ReactHelper;
+  protected render!: ReactRender;
 
   protected async onInit() {
     await super.onInit();
+    this.render = new ReactRender(this);
+    this.helper = new ReactHelper();
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(
@@ -152,7 +50,7 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
           switch (element.type) {
             case "state":
             case "props":
-              attrs[key] = this.resolvePropState(
+              attrs[key] = this.helper.resolvePropState(
                 element.expression,
                 element.type
               );
@@ -207,6 +105,24 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       ])
     );
     this.addMethods([renderMethod]);
+  }
+
+  protected addRootChildren(id: string, element: ts.JsxElement) {
+    this.__elementMap.set(id, element);
+  }
+
+  protected getRootChildren() {
+    const list = Array.from(this.__elementMap.values());
+    const nlist = this.getState("rootChildren") || [];
+    return [...nlist, ...list];
+  }
+
+  protected setRootElement(tagName: string, attrs: IJsxAttrs) {
+    this.setState("rootElement", {
+      name: tagName,
+      attrs,
+      types: []
+    });
   }
 }
 

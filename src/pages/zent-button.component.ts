@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Component, Input, ReactProp } from "../decorators";
+import { Component } from "../decorators";
 import { BasicReactContainer } from "../core/component";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
@@ -7,30 +7,33 @@ export class ZentButtonComponent extends BasicReactContainer {
   protected async onInit() {
     await super.onInit();
     const ButtonRefName = "Button";
-    this.addImports([this.createImport("zent", [ButtonRefName])]);
+    const helper = this.helper;
+    this.addImports([helper.createImport("zent", [ButtonRefName])]);
     this.setState("rootElement", {
       ...this.getState("rootElement"),
       name: ButtonRefName,
       attrs: {
-        type: this.resolvePropState("type", { defaultValue: "default" }),
-        size: this.resolvePropState("size", { defaultValue: "medium" }),
-        htmlType: this.resolvePropState("htmlType", { defaultValue: "button" }),
-        block: this.resolvePropState("block", { defaultValue: false }),
-        disabled: this.resolvePropState("disabled", { defaultValue: false }),
-        loading: this.resolvePropState("loading", { defaultValue: false }),
-        outline: this.resolvePropState("outline", { defaultValue: false }),
-        bordered: this.resolvePropState("bordered", {
+        type: helper.resolvePropState("type", { defaultValue: "default" }),
+        size: helper.resolvePropState("size", { defaultValue: "medium" }),
+        htmlType: helper.resolvePropState("htmlType", {
+          defaultValue: "button"
+        }),
+        block: helper.resolvePropState("block", { defaultValue: false }),
+        disabled: helper.resolvePropState("disabled", { defaultValue: false }),
+        loading: helper.resolvePropState("loading", { defaultValue: false }),
+        outline: helper.resolvePropState("outline", { defaultValue: false }),
+        bordered: helper.resolvePropState("bordered", {
           defaultValue: true,
           defaultCheck: "??"
         }),
-        href: this.resolvePropState("href"),
-        target: this.resolvePropState("target", { defaultValue: "" }),
-        download: this.resolvePropState("download"),
-        onClick: this.resolvePropState("onClick")
+        href: helper.resolvePropState("href"),
+        target: helper.resolvePropState("target", { defaultValue: "" }),
+        download: helper.resolvePropState("download"),
+        onClick: helper.resolvePropState("onClick")
       }
     });
     this.setState("rootChildren", [
-      ts.createJsxExpression(undefined, this.resolvePropState("content"))
+      ts.createJsxExpression(undefined, helper.resolvePropState("content"))
     ]);
   }
 }

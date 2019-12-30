@@ -136,53 +136,6 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("extendParent") || null;
   }
 
-  protected getRef(name: string): PropertyRef | null {
-    return (<any>this)[name];
-  }
-
-  protected resolveRef(name: string): ts.Expression | null {
-    const ref = this.getRef(name);
-    if (!ref) return null;
-    if (ref.type === "literal") {
-      return resolveSyntaxInsert(ref.syntaxType, ref.expression);
-    }
-    return null;
-  }
-
-  protected createImport(
-    modulePath: string,
-    names: Array<string | [string, string]> | string = []
-  ) {
-    const ref = ts.createStringLiteral(modulePath);
-    if (typeof names === "string") {
-      return ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(ts.createIdentifier(names), undefined),
-        ref
-      );
-    } else if (names.length === 0) {
-      return ts.createImportDeclaration([], [], undefined, ref);
-    } else {
-      return ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(
-          undefined,
-          ts.createNamedImports(
-            names.map(s =>
-              ts.createImportSpecifier(
-                Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
-                ts.createIdentifier(Array.isArray(s) ? s[1] : s)
-              )
-            )
-          )
-        ),
-        ref
-      );
-    }
-  }
-
   //#endregion
 
   private __addChildElements<A extends any>(

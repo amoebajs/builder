@@ -22,7 +22,7 @@ export class CustomClickDirective extends ReactDirective {
 
   protected async onAttach() {
     try {
-      this.appendJsxAttribute(
+      this.render.appendJsxAttribute(
         this.host!,
         this.attrName!,
         ts.createJsxExpression(undefined, this.resolveExpr())
