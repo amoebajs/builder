@@ -86,14 +86,47 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       .reduce((p, c) => ({ ...p, ...c }), {});
   }
 
+  protected resolvePropState(expression: string): ts.PropertyAccessExpression;
   protected resolvePropState(
     expression: string,
-    type: "props" | "state" = "props"
-  ) {
-    return ts.createPropertyAccess(
+    type: "props" | "state"
+  ): ts.PropertyAccessExpression;
+  protected resolvePropState(
+    expression: string,
+    options: Partial<{
+      type: "props" | "state";
+      defaultValue: any;
+      defaultCheck: "||" | "??";
+    }>
+  ): ts.PropertyAccessExpression;
+  protected resolvePropState(expression: string, sec?: any) {
+    let type: "props" | "state" = "props";
+    let defaultCheck: "||" | "??" = "||";
+    let defaultValue: any = null;
+    if (typeof sec === "string") type = <any>sec;
+    if (typeof sec === "object") {
+      if (sec.type) type = sec.type;
+      if (sec.defaultCheck) defaultCheck = sec.defaultCheck;
+      if (sec.defaultValue !== null && sec.defaultValue !== void 0) {
+        defaultValue = sec.defaultValue;
+      }
+    }
+    let expr: ts.Expression = ts.createPropertyAccess(
       ts.createThis(),
       type + "." + expression.toString()
     );
+    if (defaultValue !== null) {
+      expr = ts.createBinary(
+        expr,
+        defaultCheck === "||"
+          ? ts.SyntaxKind.BarBarToken
+          : ts.SyntaxKind.QuestionQuestionToken,
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, v) =>
+          ts.createStringLiteral(String(defaultValue))
+        )
+      );
+    }
+    return expr;
   }
 
   protected async onInit() {

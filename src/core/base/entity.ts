@@ -149,6 +149,40 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return null;
   }
 
+  protected createImport(
+    modulePath: string,
+    names: Array<string | [string, string]> | string = []
+  ) {
+    const ref = ts.createStringLiteral(modulePath);
+    if (typeof names === "string") {
+      return ts.createImportDeclaration(
+        [],
+        [],
+        ts.createImportClause(ts.createIdentifier(names), undefined),
+        ref
+      );
+    } else if (names.length === 0) {
+      return ts.createImportDeclaration([], [], undefined, ref);
+    } else {
+      return ts.createImportDeclaration(
+        [],
+        [],
+        ts.createImportClause(
+          undefined,
+          ts.createNamedImports(
+            names.map(s =>
+              ts.createImportSpecifier(
+                Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
+                ts.createIdentifier(Array.isArray(s) ? s[1] : s)
+              )
+            )
+          )
+        ),
+        ref
+      );
+    }
+  }
+
   //#endregion
 
   private __addChildElements<A extends any>(

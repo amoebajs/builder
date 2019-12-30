@@ -6,27 +6,26 @@ import { BasicReactContainer } from "../core/component";
 export class ZentButtonComponent extends BasicReactContainer {
   protected async onInit() {
     await super.onInit();
-    this.addImports([
-      ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(
-          undefined,
-          ts.createNamedImports([
-            ts.createImportSpecifier(undefined, ts.createIdentifier("Button"))
-          ])
-        ),
-        ts.createStringLiteral("zent")
-      )
-    ]);
-    const rootEle = this.getState("rootElement");
+    const ButtonRefName = "Button";
+    this.addImports([this.createImport("zent", [ButtonRefName])]);
     this.setState("rootElement", {
-      ...rootEle,
-      name: "Button",
+      ...this.getState("rootElement"),
+      name: ButtonRefName,
       attrs: {
-        loading: this.resolvePropState("loading"),
-        type: this.resolvePropState("type"),
-        size: this.resolvePropState("size"),
+        type: this.resolvePropState("type", { defaultValue: "default" }),
+        size: this.resolvePropState("size", { defaultValue: "medium" }),
+        htmlType: this.resolvePropState("htmlType", { defaultValue: "button" }),
+        block: this.resolvePropState("block", { defaultValue: false }),
+        disabled: this.resolvePropState("disabled", { defaultValue: false }),
+        loading: this.resolvePropState("loading", { defaultValue: false }),
+        outline: this.resolvePropState("outline", { defaultValue: false }),
+        bordered: this.resolvePropState("bordered", {
+          defaultValue: true,
+          defaultCheck: "??"
+        }),
+        href: this.resolvePropState("href"),
+        target: this.resolvePropState("target", { defaultValue: "" }),
+        download: this.resolvePropState("download"),
         onClick: this.resolvePropState("onClick")
       }
     });
