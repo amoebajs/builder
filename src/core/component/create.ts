@@ -5,8 +5,11 @@ import {
   BasicCompilationEntity,
   IBasicCompilationFinalContext
 } from "../base";
-import { resolveInputProperties } from "../../decorators/property";
-import { IFrameworkDepts, EntityConstructor } from "../../decorators/base";
+import {
+  resolveInputProperties,
+  IFrameworkDepts,
+  EntityConstructor
+} from "../decorators";
 import { InvalidOperationError } from "../../errors";
 import { exists, createExportModifier } from "../../utils";
 import { BasicComponent } from "./basic";

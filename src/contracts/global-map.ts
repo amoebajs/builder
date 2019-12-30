@@ -10,7 +10,7 @@ import {
   resolveInputProperties,
   resolveOutputProperties,
   resolveAttachProperties
-} from "../decorators";
+} from "../core/decorators";
 import { BasicEntityProvider } from "../core/component";
 import { BasicError } from "../errors";
 

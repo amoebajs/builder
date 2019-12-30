@@ -8,7 +8,7 @@ import {
   WebpackConfig
 } from "../contracts";
 import { BasicError } from "../errors";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
 

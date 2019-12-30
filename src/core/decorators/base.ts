@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { InjectDIToken, getDependencies } from "@bonbons/di";
-import { IWeakDescriptionMeta, IDescriptionMeta } from "../core/base";
+import { IWeakDescriptionMeta, IDescriptionMeta } from "../../core/base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 

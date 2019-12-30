@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Component } from "../decorators";
+import { Component } from "../core/decorators";
 import { BasicReactContainer } from "../core/component";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })

@@ -1,4 +1,4 @@
-import { IPropertyBase, IPropertyGroupBase } from "../core/base";
+import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import {
   EntityConstructor,
   IBasicI18NContract,

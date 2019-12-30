@@ -1,5 +1,5 @@
 import { Path } from "../contracts";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 
 @Injectable()
 export class PathNodeProvider extends Path {

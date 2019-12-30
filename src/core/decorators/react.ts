@@ -1,6 +1,6 @@
 import { resolveParams, IBasicI18NContract, EntityConstructor } from "./base";
 import { REALNAME } from "./property";
-import { IPropertyBase } from "../core/base";
+import { IPropertyBase } from "../../core/base";
 
 export const REACT_PROPS_DEFINE = "ambjs::extensions_react_props_define";
 

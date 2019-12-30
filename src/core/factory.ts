@@ -1,9 +1,5 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
-import {
-  EntityConstructor,
-  resolveDepts,
-  IFrameworkDepts
-} from "../decorators";
+import { EntityConstructor, resolveDepts, IFrameworkDepts } from "./decorators";
 import {
   Path,
   WebpackConfig,

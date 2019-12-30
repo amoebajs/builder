@@ -1,5 +1,5 @@
 import { Path } from "./path";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
 import { Injector, InjectDIToken } from "@bonbons/di";

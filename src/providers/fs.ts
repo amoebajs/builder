@@ -1,5 +1,5 @@
 import { Fs } from "../contracts";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 
 @Injectable()
 export class FsProvider extends Fs {

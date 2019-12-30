@@ -1,5 +1,5 @@
 import webpack from "webpack";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 
 @Injectable()
 export abstract class WebpackPlugins {

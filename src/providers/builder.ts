@@ -8,7 +8,7 @@ import {
 } from "../contracts";
 import { emitSourceFileSync, createReactMainFile } from "../utils";
 import { NotFoundError } from "../errors";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 import {
   IInstanceCreateOptions,
   IChildRefPluginOptions

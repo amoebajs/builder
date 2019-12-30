@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Directive, Input } from "../decorators";
+import { Directive, Input } from "../core/decorators";
 import { ReactDirective } from "../core/directive/react";
 import { TYPES } from "../utils";
 

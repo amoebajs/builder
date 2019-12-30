@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { BasicReactContainer } from "../core/component";
-import { Group, Component, Input } from "../decorators";
+import { Group, Component, Input } from "../core/decorators";
 import { DOMS, createValueAttr, TYPES } from "../utils";
 import { resolveSyntaxInsert } from "../core/base";
 

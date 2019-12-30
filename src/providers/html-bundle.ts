@@ -1,7 +1,7 @@
 import cheerio from "cheerio";
 import { HtmlBundle, Path, Fs } from "../contracts";
 import { BasicError } from "../errors";
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 
 @Injectable()
 export class HtmlBundleProvider implements HtmlBundle {

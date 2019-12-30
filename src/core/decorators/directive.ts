@@ -3,8 +3,7 @@ import {
   EntityConstructor,
   IBasicI18NContract,
   UnnamedPartial,
-  resolveParams,
-  default_framework_depts
+  resolveParams
 } from "./base";
 
 export const DIRECTIVE_DEFINE = "ambjs::pipe_define";

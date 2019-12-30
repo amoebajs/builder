@@ -3,7 +3,7 @@ import { BasicComponent } from "./basic";
 import { IPureObject, resolveSyntaxInsert } from "../base";
 import { TYPES, REACT, createJsxElement, IJsxAttrs } from "../../utils";
 import { BasicEntityProvider } from "./create";
-import { EntityConstructor, resolveReactProps } from "../../decorators";
+import { EntityConstructor, resolveReactProps } from "../decorators";
 import { ReactDirective } from "../directive/react";
 import { BasicDirective } from "../directive";
 import { ReactRender, ReactHelper } from "../libs";

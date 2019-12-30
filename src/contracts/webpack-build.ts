@@ -1,4 +1,4 @@
-import { Injectable } from "../decorators";
+import { Injectable } from "../core/decorators";
 import { IWebpackOptions } from "./webpack-config";
 
 @Injectable()
