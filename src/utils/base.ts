@@ -4,12 +4,13 @@ import ts from "typescript";
 import chalk from "chalk";
 import prettier from "prettier";
 import { NotFoundError, BasicError } from "../errors";
+import { resolveSyntaxInsert } from "../core/base";
 
 export interface IFileCreateOptions {
   folder?: string;
   filename?: string;
   emit?: (str: string) => void;
-  statements: ts.Statement[];
+  statements: ts.Statement[] | ts.NodeArray<ts.Statement>;
 }
 
 export interface IPrettierFileCreateOptions extends IFileCreateOptions {
@@ -235,8 +236,8 @@ export function createConstVariableStatement(
   );
 }
 
-interface IJsxAttrs {
-  [key: string]: ts.JsxExpression | string;
+export interface IJsxAttrs {
+  [key: string]: ts.Expression | string | number | boolean | null;
 }
 
 export function createJsxElement(
@@ -250,14 +251,19 @@ export function createJsxElement(
       ts.createIdentifier(tagName),
       types,
       ts.createJsxAttributes(
-        Object.keys(attrs).map(k =>
-          ts.createJsxAttribute(
-            ts.createIdentifier(k),
-            typeof attrs[k] === "string"
-              ? ts.createStringLiteral(<string>attrs[k])
-              : <ts.JsxExpression>attrs[k]
+        Object.keys(attrs)
+          .filter(k => attrs.hasOwnProperty(k))
+          .map(k =>
+            ts.createJsxAttribute(
+              ts.createIdentifier(k),
+              typeof attrs[k] === "string"
+                ? ts.createStringLiteral(<string>attrs[k])
+                : ts.createJsxExpression(
+                    undefined,
+                    resolveSyntaxInsert(typeof attrs[k], attrs[k], (t, e) => e)
+                  )
+            )
           )
-        )
       )
     ),
     (children || []).map(i =>
@@ -267,22 +273,19 @@ export function createJsxElement(
   );
 }
 
-export function createValueAttr(value: { [prop: string]: number | string }) {
-  const kvs: [string, string | number][] = Object.keys(value).map(k => [
-    k,
-    value[k]
-  ]);
+export function createValueAttr(value: {
+  [prop: string]: number | string | boolean | ts.Expression;
+}) {
+  const kvs: [
+    string,
+    string | number | boolean | ts.Expression
+  ][] = Object.keys(value).map(k => [k, value[k]]);
   return ts.createObjectLiteral(
     kvs.map(([n, v]) =>
-      typeof v === "number"
-        ? ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            ts.createNumericLiteral(v.toString())
-          )
-        : ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            ts.createStringLiteral(v)
-          )
+      ts.createPropertyAssignment(
+        ts.createIdentifier(n),
+        resolveSyntaxInsert(typeof v, v, (_, e) => e)
+      )
     ),
     true
   );

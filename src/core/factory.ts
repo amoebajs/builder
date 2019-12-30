@@ -1,5 +1,9 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
-import { EntityConstructor, resolveDepts } from "../decorators";
+import {
+  EntityConstructor,
+  resolveDepts,
+  IFrameworkDepts
+} from "../decorators";
 import {
   Path,
   WebpackConfig,
@@ -19,8 +23,9 @@ import {
   HtmlBundleProvider,
   WebpackPluginsProvider
 } from "../providers";
-import { CommonPageModule } from "../pages";
-import { CommonPipeModule } from "../pipes";
+import { CommonComponentModule } from "../pages/common.module";
+import { CommonDirectiveModule } from "../directives/common.module";
+import { BasicEntityProvider, ReactEntityProvider } from "./component";
 
 export class Factory {
   private _completed = false;
@@ -37,6 +42,7 @@ export class Factory {
 
   constructor() {
     this.initProviders();
+    this.initEntityProviders();
     this.initModules();
   }
 
@@ -54,8 +60,13 @@ export class Factory {
 
   /** @override can be overrided */
   protected initModules() {
-    this.useModule(CommonPageModule);
-    this.useModule(CommonPipeModule);
+    this.useModule(CommonComponentModule);
+    this.useModule(CommonDirectiveModule);
+  }
+
+  /** @override can be overrided */
+  protected initEntityProviders() {
+    this.useEntityProvider("react", ReactEntityProvider);
   }
 
   public useProvider(
@@ -76,6 +87,16 @@ export class Factory {
   public useModule(moduleName: EntityConstructor<any>) {
     if (!this._completed) {
       this._map.useModule(moduleName);
+    }
+    return this;
+  }
+
+  public useEntityProvider<T extends typeof BasicEntityProvider>(
+    name: keyof IFrameworkDepts,
+    provider: T
+  ) {
+    if (!this._completed) {
+      this._map.useProvider(name, provider);
     }
     return this;
   }

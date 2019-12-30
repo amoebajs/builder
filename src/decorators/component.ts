@@ -2,7 +2,9 @@ import {
   EntityConstructor,
   IBasicI18NContract,
   UnnamedPartial,
-  resolveParams
+  resolveParams,
+  IFrameworkDepts,
+  default_framework_depts
 } from "./base";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
@@ -27,25 +29,12 @@ export function resolveComponent(
 export interface IComponentContract extends IBasicI18NContract {
   name: string | null;
   displayName: string | null;
-  provider: keyof IFrameworkDepts;
-  dependencies: { [name: string]: string };
+  dependencies: { [name: string]: string | string[] };
 }
-
-export interface IFrameworkDepts {
-  react: { [name: string]: string };
-}
-
-const default_framework_depts: IFrameworkDepts = {
-  react: {
-    react: "^16.12.0",
-    "react-dom": "^16.12.0"
-  }
-};
 
 const defaults: IComponentContract = {
   name: null,
   displayName: null,
-  provider: "react",
   dependencies: {},
   description: null,
   i18nDescription: null,
@@ -67,13 +56,6 @@ export function Component(define: any) {
         ...deco_params.dependencies
       }
     };
-    const fwk_depts = default_framework_depts[options.provider];
-    if (fwk_depts) {
-      options.dependencies = {
-        ...fwk_depts,
-        ...options.dependencies
-      };
-    }
     defineComponent(target, options);
     return <any>target;
   };

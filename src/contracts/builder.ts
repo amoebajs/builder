@@ -1,119 +1,35 @@
 import { Path } from "./path";
-import {
-  Injectable,
-  resolveModule,
-  resolvePage,
-  resolvePipe,
-  EntityConstructor,
-  resolveInputProperties,
-  resolvePropertyGroups,
-  resolveOutputProperties,
-  resolveAttachProperties
-} from "../decorators";
+import { Injectable } from "../decorators";
 import { WebpackBuild } from "./webpack-build";
 import { IWebpackOptions, WebpackConfig } from "./webpack-config";
 import { Injector, InjectDIToken } from "@bonbons/di";
 import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
+import { GlobalMap } from "./global-map";
 
-export interface IMapEntry<T = any> {
-  moduleName?: string;
+export interface IDirectiveDefine {
+  module: string;
   name: string;
-  displayName: string;
-  value: T;
-  metadata: {
-    inputs: { [name: string]: any };
-    outputs: { [name: string]: any };
-    attaches: { [name: string]: any };
-    groups: { [name: string]: any };
-  };
+  id: string;
+  options?: { [name: string]: any };
 }
 
-export interface IModuleEntry<T = any> extends IMapEntry<T> {
-  pages: { [name: string]: IMapEntry<any> };
-  pipes: { [name: string]: IMapEntry<any> };
-}
-
-export interface IGlobalMap {
-  modules: { [key: string]: IModuleEntry<any> };
-}
-
-@Injectable()
-export class GlobalMap {
-  public readonly maps: IGlobalMap = { modules: {} };
-
-  public useModule(mdname: EntityConstructor<any>) {
-    const metadata = resolveModule(mdname);
-    const moduleName = metadata.name || "[unnamed]";
-    const thisModule: IModuleEntry<any> = (this.maps.modules[moduleName] = {
-      name: moduleName,
-      displayName: metadata.displayName || moduleName,
-      value: mdname,
-      pages: {},
-      pipes: {},
-      metadata: getMetadata(mdname)
-    });
-    if (metadata.pages) {
-      metadata.pages.forEach(i => {
-        const meta = resolvePage(i);
-        const pageName = meta.name || "[unnamed]";
-        thisModule.pages[pageName] = {
-          name: pageName,
-          displayName: meta.displayName || pageName,
-          moduleName,
-          value: i,
-          metadata: getMetadata(i)
-        };
-      });
-    }
-    if (metadata.pipes) {
-      metadata.pipes.forEach(i => {
-        const meta = resolvePipe(i);
-        const pipeName = meta.name || "[unnamed]";
-        thisModule.pipes[pipeName] = {
-          name: pipeName,
-          displayName: meta.displayName || pipeName,
-          moduleName,
-          value: i,
-          metadata: getMetadata(i)
-        };
-      });
-    }
-    return this;
-  }
-
-  public getModule(name: string): IModuleEntry<any> {
-    return this.maps.modules[name];
-  }
-
-  public getPage(module: string, name: string): IMapEntry<any> {
-    return this.getModule(module).pages[name];
-  }
-
-  public getPipe(module: string, name: string): IMapEntry<any> {
-    return this.getModule(module).pipes[name];
-  }
-}
-
-function getMetadata(mdname: EntityConstructor<any>) {
-  return {
-    groups: resolvePropertyGroups(mdname),
-    inputs: resolveInputProperties(mdname),
-    outputs: resolveOutputProperties(mdname),
-    attaches: resolveAttachProperties(mdname)
-  };
+export interface IChildDefine {
+  ref: string;
+  id: string;
+  options?: { [name: string]: any };
 }
 
 export interface IPageCreateOptions {
   page: {
     module: string;
     name: string;
+    id: string;
     options?: { [name: string]: any };
-    post: Array<{
-      module: string;
-      name: string;
-      args?: { [name: string]: any };
-    }>;
+    attach?: { [name: string]: any };
+    components?: IDirectiveDefine[];
+    directives?: IDirectiveDefine[];
+    children?: IChildDefine[];
   };
 }
 

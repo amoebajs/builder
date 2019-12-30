@@ -3,7 +3,7 @@ const config = require("./script.publish");
 
 run.default({
   ...config,
-  rc: "beta",
+  rc: "alpha",
   useStamp: true,
   debug: false
 });

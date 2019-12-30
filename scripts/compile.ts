@@ -5,9 +5,8 @@ import jsyaml from "js-yaml";
 import chalk from "chalk";
 import { Factory } from "../src";
 
-// import demo_conf = require("./assets/demo.json");
 const demo_conf = jsyaml.load(
-  fs.readFileSync("src/assets/demo.yaml").toString()
+  fs.readFileSync(path.resolve(__dirname, "demo.yaml")).toString()
 );
 
 const buildFolder = path.resolve(process.cwd(), "build");
@@ -30,5 +29,6 @@ builder
     // configs: demo_conf
   })
   .catch(error => {
+    console.log(error);
     console.log(chalk.red(error));
   });

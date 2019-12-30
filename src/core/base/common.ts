@@ -1,3 +1,9 @@
+export interface IPureObject {
+  [prop: string]: any;
+}
+
+export type MapValueType<T> = T extends Map<any, infer V> ? V : never;
+
 export interface IUnitBase {
   name: IDescriptionMeta;
   description: IWeakDescriptionMeta | null;
