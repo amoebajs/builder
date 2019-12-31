@@ -1,20 +1,21 @@
 import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
+import { BasicComponent } from "../core/component";
+import {
+  IFrameworkDepts,
+  EntityConstructor,
+  resolveInputProperties,
+  Injectable
+} from "../core/decorators";
 import {
   IBasicCompilationContext,
-  BasicCompilationEntity,
-  IBasicCompilationFinalContext
-} from "../base";
-import {
-  resolveInputProperties,
-  IFrameworkDepts,
-  EntityConstructor
-} from "../decorators";
-import { InvalidOperationError } from "../../errors";
-import { exists, createExportModifier } from "../../utils";
-import { BasicComponent } from "./basic";
-import { BasicChildRef } from "../childref";
-import { BasicDirective } from "../directive";
+  IBasicCompilationFinalContext,
+  BasicCompilationEntity
+} from "../core/base";
+import { BasicChildRef } from "../core/childref";
+import { BasicDirective } from "../core/directive";
+import { createExportModifier, exists } from "../utils";
+import { InvalidOperationError } from "../errors";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
@@ -42,6 +43,7 @@ export interface IInstanceCreateOptions<T extends InjectDIToken<any>>
   passContext?: IBasicCompilationContext;
 }
 
+@Injectable()
 export class BasicEntityProvider {
   public createInstance<T extends typeof BasicComponent>(
     {

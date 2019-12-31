@@ -21,7 +21,8 @@ import {
 } from "../providers";
 import { CommonComponentModule } from "../pages/common.module";
 import { CommonDirectiveModule } from "../directives/common.module";
-import { BasicEntityProvider, ReactEntityProvider } from "./component";
+import { ReactEntityProvider } from "./component";
+import { BasicEntityProvider } from "../contracts/basic-entity";
 
 export class Factory {
   private _completed = false;
@@ -52,6 +53,7 @@ export class Factory {
     this.useProvider(WebpackPlugins, WebpackPluginsProvider);
     this.useProvider(HtmlBundle, HtmlBundleProvider);
     this.useProvider(Builder, BuilderProvider);
+    this.useProvider(BasicEntityProvider);
   }
 
   /** @override can be overrided */
@@ -67,13 +69,13 @@ export class Factory {
 
   public useProvider(
     contract: InjectDIToken<any>,
-    imple: EntityConstructor<any>
+    imple?: EntityConstructor<any>
   ) {
     if (!this._completed) {
       this._di.register({
         token: contract,
-        imp: imple,
-        depts: resolveDepts(imple),
+        imp: imple || contract,
+        depts: resolveDepts(imple || contract),
         scope: InjectScope.Singleton
       });
     }
@@ -93,6 +95,7 @@ export class Factory {
   ) {
     if (!this._completed) {
       this._map.useProvider(name, provider);
+      this.useProvider(provider);
     }
     return this;
   }

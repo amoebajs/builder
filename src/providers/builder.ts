@@ -4,15 +4,22 @@ import {
   ISourceCreateOptions,
   ISourceFileCreateOptions,
   ISourceStringCreateOptions,
-  IPageCreateOptions
+  IPageCreateOptions,
+  Path,
+  GlobalMap,
+  WebpackConfig,
+  WebpackBuild,
+  WebpackPlugins,
+  HtmlBundle
 } from "../contracts";
 import { emitSourceFileSync, createReactMainFile } from "../utils";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
+import { Injector, InjectDIToken } from "@bonbons/di";
 import {
-  IInstanceCreateOptions,
-  IChildRefPluginOptions
-} from "../core/component";
+  IChildRefPluginOptions,
+  IInstanceCreateOptions
+} from "../contracts/basic-entity";
 
 export interface IDirectiveCreateOptions {
   moduleName: string;
@@ -30,7 +37,21 @@ export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
 }
 
 @Injectable()
-export class BuilderProvider extends Builder {
+export class BuilderProvider implements Builder {
+  constructor(
+    protected readonly injector: Injector,
+    protected readonly path: Path,
+    protected readonly globalMap: GlobalMap,
+    public readonly webpackConfig: WebpackConfig,
+    public readonly webpackBuild: WebpackBuild,
+    public readonly webpackPlugins: WebpackPlugins,
+    public readonly htmlBundle: HtmlBundle
+  ) {}
+
+  public get<T>(contract: InjectDIToken<T>): T {
+    return this.injector.get(contract);
+  }
+
   public async createSource(options: ISourceCreateOptions): Promise<void> {
     const { configs } = options;
     const compName = configs.page.id || "App";
@@ -132,7 +153,8 @@ export class BuilderProvider extends Builder {
 
   private async _createComponentSource(options: IRootComponentCreateOptions) {
     const opts = this._resolveCreateOptions("root", options);
-    const provider = new (this.globalMap.getProvider(opts.provider))();
+    const PROVIDER = this.globalMap.getProvider(opts.provider);
+    const provider = this.get(PROVIDER);
     const instance = provider.createInstance(opts, provider);
     return provider.callCompilation(
       opts.provider,

@@ -53,19 +53,7 @@ export type ISourceCreateOptions =
 
 @Injectable()
 export abstract class Builder {
-  constructor(
-    protected readonly injector: Injector,
-    protected readonly path: Path,
-    protected readonly globalMap: GlobalMap,
-    public readonly webpackConfig: WebpackConfig,
-    public readonly webpackBuild: WebpackBuild,
-    public readonly webpackPlugins: WebpackPlugins,
-    public readonly htmlBundle: HtmlBundle
-  ) {}
-
-  public get<T>(contract: InjectDIToken<T>): T {
-    return this.injector.get(contract);
-  }
+  public abstract get<T>(contract: InjectDIToken<T>): T;
 
   public abstract async createSource(
     options: ISourceCreateOptions

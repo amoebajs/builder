@@ -11,8 +11,8 @@ import {
   resolveOutputProperties,
   resolveAttachProperties
 } from "../core/decorators";
-import { BasicEntityProvider } from "../core/component";
 import { BasicError } from "../errors";
+import { BasicEntityProvider } from "./basic-entity";
 
 export interface IMetadataGroup {
   inputs: { [name: string]: any };
