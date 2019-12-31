@@ -5,7 +5,10 @@ import { WebpackConfig, IWebpackOptions } from "./webpack-config";
 import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
-import { IChildRefPluginOptions, IInstanceCreateOptions } from "./basic-entity";
+import {
+  IChildRefPluginOptions,
+  IInstanceCreateOptions
+} from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { emitSourceFileSync, createReactMainFile } from "../utils";

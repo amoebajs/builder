@@ -2,11 +2,7 @@ import ts from "typescript";
 import { BasicComponent } from "./basic";
 import { IPureObject, resolveSyntaxInsert } from "../base";
 import { TYPES, REACT, createJsxElement, IJsxAttrs } from "../../utils";
-import { EntityConstructor, resolveReactProps } from "../decorators";
-import { ReactDirective } from "../directive/react";
-import { BasicDirective } from "../directive";
 import { ReactRender, ReactHelper } from "../libs";
-import { BasicEntityProvider } from "../../providers";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -122,52 +118,5 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
       attrs,
       types: []
     });
-  }
-}
-
-export class ReactEntityProvider extends BasicEntityProvider {
-  protected helper = new ReactHelper();
-
-  protected onImportsUpdate(
-    model: BasicComponent,
-    imports: ts.ImportDeclaration[]
-  ) {
-    return super.onImportsUpdate(model, imports, [
-      this.helper.createImport("react", REACT.NS)
-    ]);
-  }
-
-  public resolveExtensionsMetadata(
-    target: EntityConstructor<any>
-  ): { [name: string]: any } {
-    return {
-      props: resolveReactProps(target)
-    };
-  }
-
-  public attachDirective(
-    parent: BasicComponent,
-    target: BasicDirective
-  ): BasicDirective;
-  public attachDirective(
-    parent: BasicReactContainer,
-    target: ReactDirective
-  ): ReactDirective;
-  public attachDirective(parent: BasicReactContainer, target: ReactDirective) {
-    Object.defineProperty(target, "__parentId", {
-      enumerable: true,
-      configurable: false,
-      get() {
-        return parent.entityId;
-      }
-    });
-    Object.defineProperty(target, "__parentRef", {
-      enumerable: true,
-      configurable: false,
-      get() {
-        return parent;
-      }
-    });
-    return target;
   }
 }

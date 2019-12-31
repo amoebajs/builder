@@ -12,7 +12,7 @@ import {
   resolveAttachProperties
 } from "../core/decorators";
 import { BasicError } from "../errors";
-import { BasicEntityProvider } from "./basic-entity";
+import { BasicEntityProvider } from "./entity-parser";
 
 export interface IMetadataGroup {
   inputs: { [name: string]: any };

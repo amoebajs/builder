@@ -9,11 +9,11 @@ import {
   Fs,
   HtmlBundle,
   WebpackPlugins,
-  BasicEntityProvider
+  BasicEntityProvider,
+  ReactEntityProvider
 } from "../providers";
 import { CommonComponentModule } from "../pages/common.module";
 import { CommonDirectiveModule } from "../directives/common.module";
-import { ReactEntityProvider } from "./component";
 
 export class Factory {
   private _completed = false;

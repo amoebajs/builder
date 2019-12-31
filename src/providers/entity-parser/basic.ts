@@ -1,21 +1,21 @@
 import ts from "typescript";
 import { InjectDIToken } from "@bonbons/di";
-import { BasicComponent } from "../core/component";
+import { BasicComponent } from "../../core/component";
 import {
   IFrameworkDepts,
   EntityConstructor,
   resolveInputProperties,
   Injectable
-} from "../core/decorators";
+} from "../../core/decorators";
 import {
   IBasicCompilationContext,
   IBasicCompilationFinalContext,
   BasicCompilationEntity
-} from "../core/base";
-import { BasicChildRef } from "../core/childref";
-import { BasicDirective } from "../core/directive";
-import { createExportModifier, exists } from "../utils";
-import { InvalidOperationError } from "../errors";
+} from "../../core/base";
+import { BasicChildRef } from "../../core/childref";
+import { BasicDirective } from "../../core/directive";
+import { createExportModifier, exists } from "../../utils";
+import { InvalidOperationError } from "../../errors";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
