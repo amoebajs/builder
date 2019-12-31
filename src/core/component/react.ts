@@ -22,13 +22,12 @@ type TY = IBasicReactContainerState<{}>;
 
 export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
-  protected helper!: ReactHelper;
+  protected helper = new ReactHelper();
   protected render!: ReactRender;
 
   protected async onInit() {
     await super.onInit();
     this.render = new ReactRender(this);
-    this.helper = new ReactHelper();
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(
@@ -127,17 +126,14 @@ export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
 }
 
 export class ReactEntityProvider extends BasicEntityProvider {
+  protected helper = new ReactHelper();
+
   protected onImportsUpdate(
     model: BasicComponent,
     imports: ts.ImportDeclaration[]
   ) {
     return super.onImportsUpdate(model, imports, [
-      ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
-        ts.createStringLiteral("react")
-      )
+      this.helper.createImport("react", REACT.NS)
     ]);
   }
 

@@ -8,12 +8,11 @@ export abstract class ReactDirective<
 > extends BasicDirective<T> {
   private readonly __parentId!: string;
   private readonly __parentRef!: BasicReactContainer;
+  protected helper = new ReactHelper();
   protected render!: ReactRender;
-  protected helper!: ReactHelper;
 
   protected async onInit() {
     await super.onInit();
     this.render = new ReactRender(this.__parentRef);
-    this.helper = new ReactHelper();
   }
 }
