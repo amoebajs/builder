@@ -17,16 +17,18 @@ const buildSrcFolder = path.resolve(process.cwd(), "build", "src");
 
 if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
+const outDir = path.resolve(process.cwd(), "build", "src");
+
 // new Factory().builder
 const builder = new Factory().builder;
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
-  .createSource({
-    outDir: path.resolve(process.cwd(), "build", "src"),
-    fileName: "cssgrid-component",
-    configs: demo_conf
-    // onEmit: fileString => console.log(fileString),
-    // configs: demo_conf
+  .createSource({ configs: demo_conf })
+  .then(sourceString => {
+    fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceString, {
+      encoding: "utf8"
+    });
+    console.log("emit ---> " + path.resolve(outDir, "main.tsx"));
   })
   .catch(error => {
     console.log(error);

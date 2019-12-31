@@ -1,3 +1,5 @@
+import ts from "typescript";
+import prettier from "prettier";
 import { Injector, InjectDIToken } from "@bonbons/di";
 import { Path } from "./path";
 import { HtmlBundle } from "./html-bundle";
@@ -42,23 +44,10 @@ export interface IPageCreateOptions {
   };
 }
 
-interface IBaseSourceCreateOptions {
+export interface ISourceCreateOptions {
   prettier?: boolean;
   configs: IPageCreateOptions;
 }
-
-export interface ISourceFileCreateOptions extends IBaseSourceCreateOptions {
-  outDir: string;
-  fileName: string;
-}
-
-export interface ISourceStringCreateOptions extends IBaseSourceCreateOptions {
-  onEmit: (output: string) => void;
-}
-
-export type ISourceCreateOptions =
-  | ISourceStringCreateOptions
-  | ISourceFileCreateOptions;
 
 export interface IDirectiveCreateOptions {
   moduleName: string;
@@ -91,8 +80,8 @@ export class Builder {
     return this.injector.get(contract);
   }
 
-  public async createSource(options: ISourceCreateOptions): Promise<void> {
-    const { configs } = options;
+  public async createSource(options: ISourceCreateOptions): Promise<string> {
+    const { configs, prettier: usePrettier = true } = options;
     const compName = configs.page.id || "App";
     const sourceFile = await this._createComponentSource({
       moduleName: configs.page.module,
@@ -103,33 +92,15 @@ export class Builder {
       directives: mapDire(configs),
       children: mapChild(configs)
     });
-    if ((<ISourceFileCreateOptions>options).fileName) {
-      const opt = <ISourceFileCreateOptions>options;
-      await emitSourceFileSync({
-        statements: sourceFile.statements,
-        prettier: opt.prettier,
-        folder: opt.outDir,
-        filename: opt.fileName + ".tsx"
-      });
-      await emitSourceFileSync({
-        statements: createReactMainFile(compName, opt.fileName),
-        prettier: opt.prettier,
-        folder: opt.outDir,
-        filename: "main.tsx"
-      });
-    } else {
-      const opt = <ISourceStringCreateOptions>options;
-      return new Promise(async (resolve, reject) => {
-        emitSourceFileSync({
-          statements: sourceFile.statements,
-          prettier: opt.prettier,
-          emit: content => {
-            opt.onEmit(content);
-            resolve();
-          }
-        }).catch(reject);
-      });
+    const printer = ts.createPrinter();
+    let sourceString = printer.printFile(sourceFile);
+    if (!usePrettier) {
+      return sourceString;
     }
+    return prettier.format(sourceString, {
+      printWidth: 120,
+      parser: "typescript"
+    });
   }
 
   public buildSource(options: IWebpackOptions): Promise<void> {

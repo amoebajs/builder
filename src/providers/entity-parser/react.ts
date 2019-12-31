@@ -2,7 +2,7 @@ import ts from "typescript";
 import { BasicEntityProvider } from "./basic";
 import { ReactHelper } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
-import { REACT } from "../../utils";
+import { REACT, createJsxElement } from "../../utils";
 import {
   EntityConstructor,
   resolveReactProps,
@@ -10,6 +10,7 @@ import {
 } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";
+import { IBasicCompilationFinalContext } from "../../core";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
@@ -20,8 +21,45 @@ export class ReactEntityProvider extends BasicEntityProvider {
     imports: ts.ImportDeclaration[]
   ) {
     return super.onImportsUpdate(model, imports, [
-      this.helper.createImport("react", REACT.NS)
+      this.helper.createImport("react", REACT.NS),
+      this.helper.createImport("react-dom", REACT.DomNS)
     ]);
+  }
+
+  protected onStatementsEmitted(
+    model: BasicComponent,
+    statements: ts.Statement[]
+  ) {
+    return [
+      ...statements,
+      ts.createExpressionStatement(
+        ts.createCall(
+          ts.createPropertyAccess(
+            ts.createIdentifier(REACT.DomNS),
+            ts.createIdentifier("render")
+          ),
+          [],
+          [
+            createJsxElement(model.entityId, [], {}),
+            ts.createCall(
+              ts.createPropertyAccess(
+                ts.createIdentifier("document"),
+                ts.createIdentifier("getElementById")
+              ),
+              [],
+              [ts.createStringLiteral("app")]
+            )
+          ]
+        )
+      )
+    ];
+  }
+
+  protected createRootComponent(
+    model: BasicComponent,
+    context: IBasicCompilationFinalContext
+  ): ts.ClassDeclaration {
+    return super.createRootComponent(model, context, false);
   }
 
   public resolveExtensionsMetadata(

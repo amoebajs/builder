@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts, { YieldExpression } from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { BasicComponent, IInnerComponent } from "../../core/component";
 import {
@@ -126,7 +126,12 @@ export class BasicEntityProvider {
     await model["onPostRender"]();
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
-    const classApp = createClass(unExport, name, context);
+    const classApp = this.createRootComponent(model, context);
+    const statements = this.onStatementsEmitted(model, [
+      ...imports,
+      ...context.classes,
+      classApp
+    ]);
     const sourceFile = ts.createSourceFile(
       "temp.tsx",
       "",
@@ -136,7 +141,7 @@ export class BasicEntityProvider {
     );
     return ts.updateSourceFileNode(
       sourceFile,
-      [...imports, ...context.classes, classApp],
+      statements,
       sourceFile.isDeclarationFile,
       sourceFile.referencedFiles,
       sourceFile.typeReferenceDirectives,
@@ -242,6 +247,23 @@ export class BasicEntityProvider {
   ) {
     imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
     return init;
+  }
+
+  /** @override */
+  protected onStatementsEmitted(
+    model: BasicComponent,
+    statements: ts.Statement[]
+  ): ts.Statement[] {
+    return statements;
+  }
+
+  /** @override */
+  protected createRootComponent(
+    model: BasicComponent,
+    context: IBasicCompilationFinalContext,
+    isExport = true
+  ): ts.ClassDeclaration {
+    return createClass(!isExport, model.entityId, context);
   }
 
   private _initPropsContextInstance<T extends BasicCompilationEntity>(
