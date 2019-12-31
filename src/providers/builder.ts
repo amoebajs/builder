@@ -1,8 +1,5 @@
 import { Injector, InjectDIToken } from "@bonbons/di";
 import { Path } from "./path";
-import { WebpackBuild } from "./webpack-build";
-import { WebpackConfig, IWebpackOptions } from "./webpack-config";
-import { WebpackPlugins } from "./webpack-plugins";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
 import {
@@ -12,6 +9,12 @@ import {
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { emitSourceFileSync, createReactMainFile } from "../utils";
+import {
+  WebpackConfig,
+  WebpackBuild,
+  WebpackPlugins,
+  IWebpackOptions
+} from "./webpack";
 
 export interface IDirectiveDefine {
   module: string;

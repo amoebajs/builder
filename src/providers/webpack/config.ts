@@ -1,8 +1,8 @@
 import webpack from "webpack";
 import transformerFactory from "ts-import-plugin";
 import HtmlWebPackPlugin from "html-webpack-plugin";
-import { Injectable } from "../core/decorators";
-import { Path } from "./path";
+import { Injectable } from "../../core/decorators";
+import { Path } from "../path";
 
 export interface IWebpackOptions {
   entry?: Partial<{

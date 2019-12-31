@@ -1,9 +1,9 @@
 import chalk from "chalk";
 import { ProgressPlugin, Plugin } from "webpack";
-import { Injectable } from "../core/decorators";
-import { Path } from "./path";
-import { Fs } from "./fs";
-import { WebpackConfig } from "./webpack-config";
+import { Injectable } from "../../core/decorators";
+import { Path } from "../path";
+import { Fs } from "../fs";
+import { WebpackConfig } from "./config";
 
 @Injectable()
 export class WebpackPlugins {
