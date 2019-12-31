@@ -1,12 +1,12 @@
 import ts from "typescript";
-import { BasicReactContainer } from "../core/component";
-import { Group, Component, Input } from "../core/decorators";
-import { DOMS, createValueAttr, TYPES } from "../utils";
-import { resolveSyntaxInsert } from "../core/base";
+import { Group, Component, Input } from "../../core/decorators";
+import { DOMS, createValueAttr, TYPES } from "../../utils";
+import { resolveSyntaxInsert } from "../../core/base";
+import { ReactComponent } from "../../providers";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })
-export class CssGridContainer extends BasicReactContainer {
+export class CssGridContainer extends ReactComponent {
   @Input({ group: "basic", displayName: "是否使用组件状态" })
   public useComponentState: boolean = false;
 

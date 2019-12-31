@@ -1,11 +1,17 @@
 import ts from "typescript";
 import { BasicEntityProvider } from "./basic";
 import { ReactHelper } from "../../core/libs";
-import { BasicComponent, BasicReactContainer } from "../../core/component";
+import { BasicComponent } from "../../core/component";
 import { REACT } from "../../utils";
-import { EntityConstructor, resolveReactProps } from "../../core/decorators";
-import { BasicDirective, ReactDirective } from "../../core/directive";
+import {
+  EntityConstructor,
+  resolveReactProps,
+  Injectable
+} from "../../core/decorators";
+import { BasicDirective } from "../../core/directive";
+import { ReactComponent, ReactDirective } from "../entities";
 
+@Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
   protected helper = new ReactHelper();
 
@@ -31,10 +37,10 @@ export class ReactEntityProvider extends BasicEntityProvider {
     target: BasicDirective
   ): BasicDirective;
   public attachDirective(
-    parent: BasicReactContainer,
+    parent: ReactComponent,
     target: ReactDirective
   ): ReactDirective;
-  public attachDirective(parent: BasicReactContainer, target: ReactDirective) {
+  public attachDirective(parent: ReactComponent, target: ReactDirective) {
     Object.defineProperty(target, "__parentId", {
       enumerable: true,
       configurable: false,

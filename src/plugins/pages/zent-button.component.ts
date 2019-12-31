@@ -1,9 +1,9 @@
 import ts from "typescript";
-import { Component } from "../core/decorators";
-import { BasicReactContainer } from "../core/component";
+import { Component } from "../../core/decorators";
+import { ReactComponent } from "../../providers";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
-export class ZentButtonComponent extends BasicReactContainer {
+export class ZentButtonComponent extends ReactComponent {
   protected async onInit() {
     await super.onInit();
     const ButtonRefName = "Button";

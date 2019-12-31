@@ -13,6 +13,7 @@ import {
 } from "../core/decorators";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";
+import { InjectDIToken } from "@bonbons/di";
 
 export interface IMetadataGroup {
   inputs: { [name: string]: any };
@@ -57,19 +58,21 @@ export class GlobalMap {
     return this;
   }
 
-  public useModule(mdname: EntityConstructor<any>) {
+  public useModule(
+    mdname: EntityConstructor<any>,
+    register: (injectable: InjectDIToken<any>) => InjectDIToken<any>
+  ) {
     const metadata = resolveModule(mdname);
     const moduleName = metadata.name || "[unnamed]";
     const thisModule: IModuleEntry<any> = (this.maps.modules[moduleName] = {
       name: moduleName,
       displayName: metadata.displayName || moduleName,
-      value: mdname,
+      value: register(mdname),
       components: {},
       directives: {},
       provider: metadata.provider,
-      metadata: getMetadata(mdname)
+      metadata: <any>{}
     });
-    const provider = new (this.getProvider(metadata.provider))();
     if (metadata.components) {
       metadata.components.forEach(i => {
         const meta = resolveComponent(i);
@@ -78,9 +81,9 @@ export class GlobalMap {
           name: pageName,
           displayName: meta.displayName || pageName,
           moduleName,
-          value: i,
+          value: register(i),
           provider: metadata.provider,
-          metadata: getMetadata(i, metadata.provider, provider)
+          metadata: <any>{}
         };
       });
     }
@@ -92,9 +95,9 @@ export class GlobalMap {
           name: pipeName,
           displayName: meta.displayName || pipeName,
           moduleName,
-          value: i,
+          value: register(i),
           provider: metadata.provider,
-          metadata: getMetadata(i, metadata.provider, provider)
+          metadata: <any>{}
         };
       });
     }
@@ -118,11 +121,34 @@ export class GlobalMap {
       throw new BasicError(`provider for [${name}] is not provided.`);
     return this.providers[name];
   }
+
+  public initMetadatas(
+    resolver: (provider: typeof BasicEntityProvider) => BasicEntityProvider
+  ) {
+    for (const key in this.maps.modules) {
+      if (this.maps.modules.hasOwnProperty(key)) {
+        const thisModule = this.maps.modules[key];
+        const provider = resolver(this.getProvider(<any>thisModule.provider));
+        thisModule.metadata = getMetadata(thisModule.value, provider);
+        for (const key in thisModule.components) {
+          if (thisModule.components.hasOwnProperty(key)) {
+            const thisComp = thisModule.components[key];
+            thisComp.metadata = getMetadata(thisComp.value, provider);
+          }
+        }
+        for (const key in thisModule.directives) {
+          if (thisModule.directives.hasOwnProperty(key)) {
+            const thisDire = thisModule.directives[key];
+            thisDire.metadata = getMetadata(thisDire.value, provider);
+          }
+        }
+      }
+    }
+  }
 }
 
-function getMetadata(
+export function getMetadata(
   mdname: EntityConstructor<any>,
-  providerName?: keyof IFrameworkDepts,
   provider?: BasicEntityProvider
 ): IMetadataGroup {
   const result: IMetadataGroup = {
@@ -131,10 +157,8 @@ function getMetadata(
     outputs: resolveOutputProperties(mdname),
     attaches: resolveAttachProperties(mdname)
   };
-  if (!!providerName) {
-    result.entityExtensions = {
-      [providerName]: provider!.resolveExtensionsMetadata(mdname)
-    };
+  if (!!provider) {
+    result.entityExtensions = provider!.resolveExtensionsMetadata(mdname);
   }
   return result;
 }

@@ -1,21 +1,22 @@
 import ts from "typescript";
-import { InjectDIToken } from "@bonbons/di";
-import { BasicComponent } from "../../core/component";
+import { InjectDIToken, Injector } from "@bonbons/di";
+import { BasicComponent, IInnerComponent } from "../../core/component";
 import {
   IFrameworkDepts,
   EntityConstructor,
   resolveInputProperties,
-  Injectable
+  Injectable,
+  IConstructor
 } from "../../core/decorators";
 import {
   IBasicCompilationContext,
   IBasicCompilationFinalContext,
   BasicCompilationEntity
 } from "../../core/base";
-import { BasicChildRef } from "../../core/childref";
 import { BasicDirective } from "../../core/directive";
 import { createExportModifier, exists } from "../../utils";
 import { InvalidOperationError } from "../../errors";
+import { BasicChildRef } from "../entities";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
@@ -45,7 +46,9 @@ export interface IInstanceCreateOptions<T extends InjectDIToken<any>>
 
 @Injectable()
 export class BasicEntityProvider {
-  public createInstance<T extends typeof BasicComponent>(
+  constructor(protected readonly injector: Injector) {}
+
+  public createInstance<T extends IConstructor<IInnerComponent>>(
     {
       template,
       options = {},
@@ -246,7 +249,8 @@ export class BasicEntityProvider {
     options: { [prop: string]: any },
     context: IBasicCompilationContext
   ): T {
-    const model = this._inputProperties(new (<any>template)(), options);
+    const instance = this.injector.get(template);
+    const model = this._inputProperties(instance, options);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,

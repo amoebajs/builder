@@ -1,14 +1,50 @@
-import { BasicDirective } from "../directive";
-import { IPureObject, BasicCompilationEntity } from "../base";
-import { BasicChildRef } from "../childref";
+import { IInnerDirective as IDirective } from "./directive";
+import {
+  IPureObject,
+  BasicCompilationEntity,
+  IEwsEntity,
+  IEwsEntityProtectedHooks,
+  IEwsEntityPrivates
+} from "./base";
+import { IInnerChildRef as IChildRef } from "./child-ref";
+
+export interface IComponent extends IEwsEntity {}
+
+export interface IComponentProtectedHooks extends IEwsEntityProtectedHooks {
+  onComponentsEmitted(): Promise<void>;
+  onComponentsPreRender(): Promise<void>;
+  onComponentsRender(): Promise<void>;
+  onComponentsPostRender(): Promise<void>;
+  onChildrenPreRender(): Promise<void>;
+  onChildrenRender(): Promise<void>;
+  onChildrenPostRender(): Promise<void>;
+  onDirectivesPreAttach(): Promise<void>;
+  onDirectivesAttach(): Promise<void>;
+  onDirectivesPostAttach(): Promise<void>;
+  onPreRender(): Promise<void>;
+  onRender(): Promise<void>;
+  onPostRender(): Promise<void>;
+}
+
+export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
+  readonly __rendered: boolean;
+  readonly __children: IChildRef[];
+  readonly __components: IInnerComponent[];
+  readonly __directives: IDirective[];
+}
+
+export interface IInnerComponent
+  extends IComponent,
+    IComponentPrivates,
+    IComponentProtectedHooks {}
 
 export abstract class BasicComponent<
   T extends IPureObject = IPureObject
 > extends BasicCompilationEntity<T> {
   private __rendered: boolean = false;
-  private __children: BasicChildRef[] = [];
-  private __components: BasicComponent[] = [];
-  private __directives: BasicDirective[] = [];
+  private readonly __children: IChildRef[] = [];
+  private readonly __components: IInnerComponent[] = [];
+  private readonly __directives: IDirective[] = [];
 
   public get rendered() {
     return this.__rendered;
@@ -18,7 +54,7 @@ export abstract class BasicComponent<
     return this.__children.map(i => ({
       component: i.componentRef,
       id: i.entityId,
-      options: i["__refOptions"]
+      options: i.__refOptions
     }));
   }
 
@@ -32,13 +68,13 @@ export abstract class BasicComponent<
   /** @override */
   protected async onInit(): Promise<void> {
     for (const iterator of this.__components) {
-      await iterator["onInit"]();
+      await iterator.onInit();
     }
     for (const iterator of this.__directives) {
-      await iterator["onInit"]();
+      await iterator.onInit();
     }
     for (const iterator of this.__children) {
-      await iterator["onInit"]();
+      await iterator.onInit();
     }
   }
 
@@ -52,63 +88,63 @@ export abstract class BasicComponent<
   /** @override */
   protected async onComponentsPreRender(): Promise<void> {
     for (const iterator of this.__components) {
-      await iterator["onPreRender"]();
+      await iterator.onPreRender();
     }
   }
 
   /** @override */
   protected async onComponentsRender(): Promise<void> {
     for (const iterator of this.__components) {
-      await iterator["onRender"]();
+      await iterator.onRender();
     }
   }
 
   /** @override */
   protected async onComponentsPostRender(): Promise<void> {
     for (const iterator of this.__components) {
-      await iterator["onPostRender"]();
+      await iterator.onPostRender();
     }
   }
 
   /** @override */
   protected async onChildrenPreRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onPreEmit"]();
+      await iterator.onPreEmit();
     }
   }
 
   /** @override */
   protected async onChildrenRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onEmit"]();
+      await iterator.onEmit();
     }
   }
 
   /** @override */
   protected async onChildrenPostRender(): Promise<void> {
     for (const iterator of this.__children) {
-      await iterator["onPostEmit"]();
+      await iterator.onPostEmit();
     }
   }
 
   /** @override */
   protected async onDirectivesPreAttach(): Promise<void> {
     for (const iterator of this.__directives) {
-      await iterator["onPreAttach"]();
+      await iterator.onPreAttach();
     }
   }
 
   /** @override */
   protected async onDirectivesAttach(): Promise<void> {
     for (const iterator of this.__directives) {
-      await iterator["onAttach"]();
+      await iterator.onAttach();
     }
   }
 
   /** @override */
   protected async onDirectivesPostAttach(): Promise<void> {
     for (const iterator of this.__directives) {
-      await iterator["onPostAttach"]();
+      await iterator.onPostAttach();
     }
   }
 

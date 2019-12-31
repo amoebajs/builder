@@ -1,8 +1,10 @@
 import ts from "typescript";
-import { BasicComponent } from "./basic";
-import { IPureObject, resolveSyntaxInsert } from "../base";
+import { InjectScope } from "@bonbons/di";
+import { IPureObject, resolveSyntaxInsert } from "../../core/base";
 import { TYPES, REACT, createJsxElement, IJsxAttrs } from "../../utils";
-import { ReactRender, ReactHelper } from "../libs";
+import { ReactRender, ReactHelper } from "../../core/libs";
+import { BasicComponent } from "../../core/component";
+import { Injectable } from "../../core/decorators";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -16,7 +18,8 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
 type TP = IBasicReactContainerState<IPureObject>;
 type TY = IBasicReactContainerState<{}>;
 
-export class BasicReactContainer<T extends TP = TY> extends BasicComponent<T> {
+@Injectable(InjectScope.New)
+export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
   protected helper = new ReactHelper();
   protected render!: ReactRender;

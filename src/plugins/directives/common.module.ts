@@ -1,4 +1,4 @@
-import { Module } from "../core/decorators";
+import { Module } from "../../core/decorators";
 import { CustomClickDirective } from "./custom-click.directive";
 
 @Module({

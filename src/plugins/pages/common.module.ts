@@ -1,4 +1,4 @@
-import { Module } from "../core/decorators";
+import { Module } from "../../core/decorators";
 import { CssGridContainer } from "./css-grid.component";
 import { ZentButtonComponent } from "./zent-button.component";
 

@@ -1,9 +1,9 @@
 import ts from "typescript";
-import { BasicReactContainer } from "../component/react";
 import { NotFoundError } from "../../errors";
+import { ReactComponent } from "../../providers";
 
 export class ReactRender {
-  constructor(private parentRef: BasicReactContainer) {}
+  constructor(private parentRef: ReactComponent) {}
 
   public getElementById(entityId: string) {
     const map = this.parentRef["__elementMap"];

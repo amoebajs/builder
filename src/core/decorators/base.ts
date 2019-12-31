@@ -1,7 +1,8 @@
 import "reflect-metadata";
-import { InjectDIToken, getDependencies } from "@bonbons/di";
+import { InjectDIToken, getDependencies, InjectScope } from "@bonbons/di";
 import { IWeakDescriptionMeta, IDescriptionMeta } from "../../core/base";
 
+export const PROVIDER_SCOPE = "ambjs::provider-scope";
 export const MODULE_DEFINE = "ambjs::module_define";
 
 export interface IConstructor<T> {
@@ -46,6 +47,20 @@ export const default_framework_depts: IFrameworkDepts = {
 
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
   return getDependencies(target) || [];
+}
+
+export function defineScope(
+  target: EntityConstructor<any>,
+  scope: InjectScope
+) {
+  return Reflect.defineMetadata(PROVIDER_SCOPE, scope, target);
+}
+
+export function resolveScope(
+  target: EntityConstructor<any>,
+  defaults: InjectScope = InjectScope.Singleton
+) {
+  return <InjectScope>Reflect.getMetadata(PROVIDER_SCOPE, target) || defaults;
 }
 
 export function defineModule(
