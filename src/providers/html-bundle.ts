@@ -1,15 +1,28 @@
 import cheerio from "cheerio";
-import { HtmlBundle, Path, Fs } from "../contracts";
 import { BasicError } from "../errors";
 import { Injectable } from "../core/decorators";
+import { Path } from "./path";
+import { Fs } from "./fs";
+
+export interface IHtmlEleMatch {
+  match: string | RegExp;
+  path: string | ((pathname: string) => string);
+}
+
+export interface IBundleOptions {
+  path: string;
+  outPath?: string;
+  checkUnchange?: (match: string | RegExp, value: string) => boolean;
+  shouldBundle?: (promises: Promise<any>[]) => boolean;
+  scripts?: IHtmlEleMatch[];
+  styles?: IHtmlEleMatch[];
+}
 
 @Injectable()
-export class HtmlBundleProvider implements HtmlBundle {
+export class HtmlBundle {
   constructor(protected path: Path, protected fs: Fs) {}
 
-  public async build(
-    options: import("../contracts").IBundleOptions
-  ): Promise<void> {
+  public async build(options: IBundleOptions): Promise<void> {
     const {
       path: filepath,
       outPath,

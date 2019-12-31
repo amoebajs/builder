@@ -1,10 +1,37 @@
-import { WebpackConfig, IWebpackOptions, Path } from "../contracts";
+import webpack from "webpack";
 import transformerFactory from "ts-import-plugin";
 import HtmlWebPackPlugin from "html-webpack-plugin";
 import { Injectable } from "../core/decorators";
+import { Path } from "./path";
+
+export interface IWebpackOptions {
+  entry?: Partial<{
+    app: string;
+    vendor: string[];
+  }>;
+  output?: Partial<{
+    path: string;
+    filename: string;
+  }>;
+  template?: Partial<{
+    title: string;
+    path: string;
+  }>;
+  typescript?: Partial<{
+    tsconfig: string;
+    importPlugins: any[];
+  }>;
+  mode?: "production" | "development";
+  minimize?: boolean;
+  plugins?: webpack.Plugin[];
+  sandbox?: Partial<{
+    rootPath: string;
+    dependencies: { [prop: string]: string };
+  }>;
+}
 
 @Injectable()
-export class WebpackConfigProvider implements WebpackConfig {
+export class WebpackConfig {
   constructor(protected path: Path) {}
 
   public getConfigs(options: IWebpackOptions) {

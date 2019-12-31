@@ -8,21 +8,12 @@ import {
   WebpackBuild,
   Fs,
   HtmlBundle,
-  WebpackPlugins
-} from "../contracts";
-import {
-  PathNodeProvider,
-  WebpackConfigProvider,
-  BuilderProvider,
-  WebpackBuildProvider,
-  FsProvider,
-  HtmlBundleProvider,
-  WebpackPluginsProvider
+  WebpackPlugins,
+  BasicEntityProvider
 } from "../providers";
 import { CommonComponentModule } from "../pages/common.module";
 import { CommonDirectiveModule } from "../directives/common.module";
 import { ReactEntityProvider } from "./component";
-import { BasicEntityProvider } from "../contracts/basic-entity";
 
 export class Factory {
   private _completed = false;
@@ -45,14 +36,14 @@ export class Factory {
 
   /** @override can be overrided */
   protected initProviders() {
-    this.useProvider(Fs, FsProvider);
-    this.useProvider(Path, PathNodeProvider);
     this.useProvider(GlobalMap, () => this._map);
-    this.useProvider(WebpackConfig, WebpackConfigProvider);
-    this.useProvider(WebpackBuild, WebpackBuildProvider);
-    this.useProvider(WebpackPlugins, WebpackPluginsProvider);
-    this.useProvider(HtmlBundle, HtmlBundleProvider);
-    this.useProvider(Builder, BuilderProvider);
+    this.useProvider(Fs);
+    this.useProvider(Path);
+    this.useProvider(WebpackConfig);
+    this.useProvider(WebpackBuild);
+    this.useProvider(WebpackPlugins);
+    this.useProvider(HtmlBundle);
+    this.useProvider(Builder);
     this.useProvider(BasicEntityProvider);
   }
 

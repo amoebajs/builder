@@ -1,19 +1,15 @@
 import webpack from "webpack";
 import { spawn } from "child_process";
-import {
-  WebpackBuild,
-  IWebpackOptions,
-  Path,
-  Fs,
-  WebpackConfig
-} from "../contracts";
 import { BasicError } from "../errors";
 import { Injectable } from "../core/decorators";
+import { Path } from "./path";
+import { Fs } from "./fs";
+import { IWebpackOptions, WebpackConfig } from "./webpack-config";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
 
 @Injectable()
-export class WebpackBuildProvider implements WebpackBuild {
+export class WebpackBuild {
   constructor(
     protected path: Path,
     protected fs: Fs,

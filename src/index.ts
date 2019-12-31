@@ -1,5 +1,4 @@
 export * from "./errors";
-export * from "./contracts";
 export * from "./providers";
 
 export * from "./core/factory";

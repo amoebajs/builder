@@ -6,7 +6,7 @@ import { EntityConstructor, resolveReactProps } from "../decorators";
 import { ReactDirective } from "../directive/react";
 import { BasicDirective } from "../directive";
 import { ReactRender, ReactHelper } from "../libs";
-import { BasicEntityProvider } from "../../contracts/basic-entity";
+import { BasicEntityProvider } from "../../providers";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {

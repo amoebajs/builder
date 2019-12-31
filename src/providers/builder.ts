@@ -1,25 +1,58 @@
-import ts from "typescript";
-import {
-  Builder,
-  ISourceCreateOptions,
-  ISourceFileCreateOptions,
-  ISourceStringCreateOptions,
-  IPageCreateOptions,
-  Path,
-  GlobalMap,
-  WebpackConfig,
-  WebpackBuild,
-  WebpackPlugins,
-  HtmlBundle
-} from "../contracts";
-import { emitSourceFileSync, createReactMainFile } from "../utils";
+import { Injector, InjectDIToken } from "@bonbons/di";
+import { Path } from "./path";
+import { WebpackBuild } from "./webpack-build";
+import { WebpackConfig, IWebpackOptions } from "./webpack-config";
+import { WebpackPlugins } from "./webpack-plugins";
+import { HtmlBundle } from "./html-bundle";
+import { GlobalMap } from "./global-map";
+import { IChildRefPluginOptions, IInstanceCreateOptions } from "./basic-entity";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
-import { Injector, InjectDIToken } from "@bonbons/di";
-import {
-  IChildRefPluginOptions,
-  IInstanceCreateOptions
-} from "../contracts/basic-entity";
+import { emitSourceFileSync, createReactMainFile } from "../utils";
+
+export interface IDirectiveDefine {
+  module: string;
+  name: string;
+  id: string;
+  options?: { [name: string]: any };
+}
+
+export interface IChildDefine {
+  ref: string;
+  id: string;
+  options?: { [name: string]: any };
+}
+
+export interface IPageCreateOptions {
+  page: {
+    module: string;
+    name: string;
+    id: string;
+    options?: { [name: string]: any };
+    attach?: { [name: string]: any };
+    components?: IDirectiveDefine[];
+    directives?: IDirectiveDefine[];
+    children?: IChildDefine[];
+  };
+}
+
+interface IBaseSourceCreateOptions {
+  prettier?: boolean;
+  configs: IPageCreateOptions;
+}
+
+export interface ISourceFileCreateOptions extends IBaseSourceCreateOptions {
+  outDir: string;
+  fileName: string;
+}
+
+export interface ISourceStringCreateOptions extends IBaseSourceCreateOptions {
+  onEmit: (output: string) => void;
+}
+
+export type ISourceCreateOptions =
+  | ISourceStringCreateOptions
+  | ISourceFileCreateOptions;
 
 export interface IDirectiveCreateOptions {
   moduleName: string;
@@ -37,7 +70,7 @@ export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
 }
 
 @Injectable()
-export class BuilderProvider implements Builder {
+export class Builder {
   constructor(
     protected readonly injector: Injector,
     protected readonly path: Path,
@@ -93,9 +126,7 @@ export class BuilderProvider implements Builder {
     }
   }
 
-  public buildSource(
-    options: import("../contracts").IWebpackOptions
-  ): Promise<void> {
+  public buildSource(options: IWebpackOptions): Promise<void> {
     return this.webpackBuild.buildSource(options);
   }
 

@@ -1,10 +1,12 @@
 import chalk from "chalk";
 import { ProgressPlugin, Plugin } from "webpack";
-import { WebpackPlugins, WebpackConfig, Path, Fs } from "../contracts";
 import { Injectable } from "../core/decorators";
+import { Path } from "./path";
+import { Fs } from "./fs";
+import { WebpackConfig } from "./webpack-config";
 
 @Injectable()
-export class WebpackPluginsProvider implements WebpackPlugins {
+export class WebpackPlugins {
   constructor(
     protected path: Path,
     protected fs: Fs,

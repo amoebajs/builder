@@ -1,8 +1,7 @@
-import { Path } from "../contracts";
 import { Injectable } from "../core/decorators";
 
 @Injectable()
-export class PathNodeProvider extends Path {
+export class Path {
   public join(...paths: string[]): string {
     return require("path").join(...paths);
   }
