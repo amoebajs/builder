@@ -1,7 +1,7 @@
 import {
-  IConstructor,
   EntityConstructor,
   IBasicI18NContract,
+  IConstructor,
   UnnamedPartial,
   resolveParams
 } from "./base";
@@ -45,14 +45,14 @@ export function Directive(
   params: UnnamedPartial<IDirectiveContract>
 ): ClassDecorator;
 export function Directive(define: any) {
-  const deco_params = resolveParams<IDirectiveContract>(define);
-  return function custom_directive(target: IConstructor<any>) {
+  const decoParams = resolveParams<IDirectiveContract>(define);
+  return function customDirective(target: IConstructor<any>) {
     const options: IDirectiveContract = {
       ...defaults,
-      ...deco_params,
+      ...decoParams,
       dependencies: {
         ...defaults.dependencies,
-        ...deco_params.dependencies
+        ...decoParams.dependencies
       }
     };
     defineDirective(target, options);

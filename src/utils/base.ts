@@ -1,9 +1,4 @@
-import * as fs from "fs-extra";
-import * as path from "path";
 import ts from "typescript";
-import chalk from "chalk";
-import prettier from "prettier";
-import { NotFoundError, BasicError } from "../errors";
 import { resolveSyntaxInsert } from "../core/base";
 
 export interface IFileCreateOptions {
@@ -29,6 +24,10 @@ export const REACT = {
   Fragment: "React.Fragment",
   Render: "render"
 };
+
+export interface IJsxAttrs {
+  [key: string]: ts.Expression | string | number | boolean | null;
+}
 
 const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
 
@@ -96,121 +95,6 @@ export const DOMS = {
   Br: "br"
 };
 
-export function createReactSourceFile(statements: ts.Statement[]) {
-  return (<ts.Statement[]>[IMPORTS.React]).concat(statements);
-}
-
-export async function emitSourceFileSync(options: IPrettierFileCreateOptions) {
-  return new Promise<void>(async (resolve, reject) => {
-    if (!options.folder) {
-      const sourceString = await compileAndPrettier(options, () => {}, reject);
-      options.emit && options.emit(sourceString);
-    } else {
-      fs.pathExists(options.folder).then(async exist => {
-        if (!exist) {
-          reject(new NotFoundError(`folder [${options.folder}] is not exist.`));
-        } else {
-          let sourceFile!: ts.SourceFile;
-          const sourceString = await compileAndPrettier(
-            options,
-            s => (sourceFile = s),
-            reject
-          );
-          fs.writeFile(
-            sourceFile.fileName,
-            sourceString,
-            { flag: "w+" },
-            error => {
-              if (error) {
-                console.log(sourceString);
-                console.log(chalk.red("write source file failed"));
-                return reject(new BasicError(error));
-              }
-              console.log("emit --> " + sourceFile.fileName);
-              resolve();
-            }
-          );
-        }
-      });
-    }
-  });
-}
-
-async function compileAndPrettier(
-  options: IPrettierFileCreateOptions,
-  onEmit: (sourceFile: ts.SourceFile) => void,
-  onError: (reason?: any) => void
-) {
-  const printer = ts.createPrinter();
-  const sourceFile = await createSourceFile(options);
-  onEmit(sourceFile);
-  let sourceString = printer.printFile(sourceFile);
-  try {
-    return getPrettierAfterString(options, sourceString);
-  } catch (error) {
-    onError(error);
-    return sourceString;
-  }
-}
-
-function getPrettierAfterString(
-  options: IPrettierFileCreateOptions,
-  sourceString: string
-) {
-  try {
-    if (options.prettier !== false) {
-      return prettier.format(sourceString, {
-        printWidth: 120,
-        parser: "typescript"
-      });
-    }
-    return sourceString;
-  } catch (error) {
-    console.log(sourceString);
-    console.log(chalk.red("format source file failed"));
-    throw new BasicError(error);
-  }
-}
-
-export async function createSourceFile(options: IFileCreateOptions) {
-  return new Promise<ts.SourceFile>((resolve, reject) => {
-    if (options.folder) {
-      fs.pathExists(options.folder).then(async exist => {
-        if (!exist) {
-          reject(new NotFoundError(`folder [${options.folder}] is not exist.`));
-        } else {
-          createSourceDirectly(options, resolve, reject);
-        }
-      });
-    } else {
-      createSourceDirectly(
-        { ...options, filename: "undefined.tsx", folder: "." },
-        resolve,
-        reject
-      );
-    }
-  });
-}
-
-function createSourceDirectly(
-  options: IFileCreateOptions,
-  resolve: (
-    value?: ts.SourceFile | PromiseLike<ts.SourceFile> | undefined
-  ) => void,
-  reject: (reason?: any) => void
-) {
-  try {
-    const sourceFile = ts.createSourceFile(
-      path.join(options.folder!, options.filename!),
-      "",
-      ts.ScriptTarget.ES2017
-    );
-    resolve(ts.updateSourceFileNode(sourceFile, options.statements));
-  } catch (error) {
-    reject(new BasicError(error));
-  }
-}
-
 export function createExportModifier(isExport = false) {
   return !!isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [];
 }
@@ -234,10 +118,6 @@ export function createConstVariableStatement(
       ts.NodeFlags.Const
     )
   );
-}
-
-export interface IJsxAttrs {
-  [key: string]: ts.Expression | string | number | boolean | null;
 }
 
 export function createJsxElement(

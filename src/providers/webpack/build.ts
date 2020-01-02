@@ -4,7 +4,7 @@ import { BasicError } from "../../errors";
 import { Injectable } from "../../core/decorators";
 import { Path } from "../path";
 import { Fs } from "../fs";
-import { WebpackConfig, IWebpackOptions } from "./config";
+import { IWebpackOptions, WebpackConfig } from "./config";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
 

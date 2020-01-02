@@ -1,9 +1,9 @@
 import {
   BasicCompilationEntity,
-  IPureObject,
   IEwsEntity,
+  IEwsEntityPrivates,
   IEwsEntityProtectedHooks,
-  IEwsEntityPrivates
+  IPureObject
 } from "./base";
 
 export interface IDirective extends IEwsEntity {}

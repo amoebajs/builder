@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import { InjectDIToken, getDependencies, InjectScope } from "@bonbons/di";
-import { IWeakDescriptionMeta, IDescriptionMeta } from "../../core/base";
+import { InjectDIToken, InjectScope, getDependencies } from "@bonbons/di";
+import { IDescriptionMeta, IWeakDescriptionMeta } from "../../core/base";
 
 export const PROVIDER_SCOPE = "ambjs::provider-scope";
 export const MODULE_DEFINE = "ambjs::module_define";
@@ -38,7 +38,7 @@ export type IFrameworkStructure<T> = {
   [key in keyof IFrameworkDepts]: T;
 };
 
-export const default_framework_depts: IFrameworkDepts = {
+export const defaultFrameworkDepts: IFrameworkDepts = {
   react: {
     react: "^16.12.0",
     "react-dom": "^16.12.0"
@@ -82,10 +82,10 @@ export function resolveModule(
 export function resolveParams<T extends IBasicI18NContract>(
   params: string | { [prop: string]: any }
 ): Partial<T> {
-  let deco_params: Partial<T> = {};
-  if (typeof params === "string") deco_params.name = params;
-  else if (typeof params === "object") deco_params = <any>{ ...params };
-  return deco_params;
+  let decoParams: Partial<T> = {};
+  if (typeof params === "string") decoParams.name = params;
+  else if (typeof params === "object") decoParams = <any>{ ...params };
+  return decoParams;
 }
 
 export function setDisplayI18NMeta(

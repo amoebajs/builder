@@ -1,6 +1,6 @@
 import ts from "typescript";
 import uuid from "uuid/v4";
-import { MapValueType, IPureObject } from "./common";
+import { IPureObject, MapValueType } from "./common";
 import { BasicError } from "../../errors";
 
 export type ImportStatementsUpdater = (

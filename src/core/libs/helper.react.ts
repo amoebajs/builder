@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { resolveSyntaxInsert, ReactVbRef, PropertyRef } from "../base";
+import { PropertyRef, ReactVbRef, resolveSyntaxInsert } from "../base";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
 
@@ -73,7 +73,7 @@ export class ReactHelper extends BasicHelper {
         defaultCheck === "||"
           ? ts.SyntaxKind.BarBarToken
           : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, v) =>
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
           ts.createStringLiteral(String(defaultValue))
         )
       );

@@ -1,15 +1,15 @@
 import {
+  EntityConstructor,
+  IFrameworkDepts,
   IFrameworkStructure,
   Injectable,
-  IFrameworkDepts,
-  EntityConstructor,
-  resolveModule,
+  resolveAttachProperties,
   resolveComponent,
   resolveDirective,
-  resolvePropertyGroups,
   resolveInputProperties,
+  resolveModule,
   resolveOutputProperties,
-  resolveAttachProperties
+  resolvePropertyGroups
 } from "../core/decorators";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";

@@ -1,10 +1,10 @@
 import { IInnerDirective as IDirective } from "./directive";
 import {
-  IPureObject,
   BasicCompilationEntity,
   IEwsEntity,
+  IEwsEntityPrivates,
   IEwsEntityProtectedHooks,
-  IEwsEntityPrivates
+  IPureObject
 } from "./base";
 import { IInnerChildRef as IChildRef } from "./child-ref";
 

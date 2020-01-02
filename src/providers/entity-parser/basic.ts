@@ -1,17 +1,17 @@
-import ts, { YieldExpression } from "typescript";
+import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { BasicComponent, IInnerComponent } from "../../core/component";
 import {
-  IFrameworkDepts,
   EntityConstructor,
-  resolveInputProperties,
+  IConstructor,
+  IFrameworkDepts,
   Injectable,
-  IConstructor
+  resolveInputProperties
 } from "../../core/decorators";
 import {
+  BasicCompilationEntity,
   IBasicCompilationContext,
-  IBasicCompilationFinalContext,
-  BasicCompilationEntity
+  IBasicCompilationFinalContext
 } from "../../core/base";
 import { BasicDirective } from "../../core/directive";
 import { createExportModifier, exists } from "../../utils";
@@ -126,7 +126,7 @@ export class BasicEntityProvider {
     await model["onPostRender"]();
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
-    const classApp = this.createRootComponent(model, context);
+    const classApp = this.createRootComponent(model, context, unExport);
     const statements = this.onStatementsEmitted(model, [
       ...imports,
       ...context.classes,
@@ -152,7 +152,7 @@ export class BasicEntityProvider {
 
   /** @override */
   public resolveExtensionsMetadata(
-    target: EntityConstructor<any>
+    _: EntityConstructor<any>
   ): { [name: string]: any } {
     return {};
   }
@@ -166,7 +166,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onPropertiesInit<T extends any>(model: T) {}
+  protected onPropertiesInit<T extends any>(_: T) {}
 
   /** @override */
   protected onCompilationCall(
@@ -200,7 +200,7 @@ export class BasicEntityProvider {
             if (currentKey === "imports") {
               (<any>context)[key].push(...(<any[]>value.items));
             } else {
-              const target = classPreList.find(([id, ctx]) => id === scope);
+              const target = classPreList.find(([id, _]) => id === scope);
               if (!target) {
                 classPreList.push([scope, { [currentKey]: <any>value.items }]);
               } else {

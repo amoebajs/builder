@@ -35,7 +35,7 @@ export class WebpackConfig {
   constructor(protected path: Path) {}
 
   public getConfigs(options: IWebpackOptions) {
-    const node_modules = options.sandbox
+    const nodeModules = options.sandbox
       ? [this.path.resolve(options.sandbox.rootPath!, "node_modules")]
       : undefined;
     return {
@@ -52,7 +52,7 @@ export class WebpackConfig {
       mode: options.mode ?? "production",
       resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-        modules: node_modules
+        modules: nodeModules
       },
       optimization: {
         minimize: options.minimize ?? true
@@ -83,7 +83,7 @@ export class WebpackConfig {
                           {
                             libraryName: "zent",
                             libraryDirectory: "es",
-                            resolveContext: node_modules,
+                            resolveContext: nodeModules,
                             style: n =>
                               n.replace("zent/es", "zent/css") + ".css"
                           }

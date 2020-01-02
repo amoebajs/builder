@@ -2,9 +2,9 @@ import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import {
   EntityConstructor,
   IBasicI18NContract,
+  UnnamedPartial,
   resolveParams,
-  setDisplayI18NMeta,
-  UnnamedPartial
+  setDisplayI18NMeta
 } from "./base";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
@@ -37,7 +37,7 @@ export type REALNAME<T> = T & {
   realName: string;
 };
 
-const default_group: IPropertyGroupContract = {
+const defaultGroup: IPropertyGroupContract = {
   name: null,
   displayName: null,
   description: null,
@@ -50,17 +50,17 @@ export function Group(
   params: UnnamedPartial<IPropertyGroupContract>
 ): ClassDecorator;
 export function Group(params: any) {
-  const deco_params = resolveParams<IPropertyGroupContract>(params);
+  const decoParams = resolveParams<IPropertyGroupContract>(params);
   if (!params.name) throw new Error("property group name can't be empty");
-  return function prop_group_factory(target: any) {
+  return function propGroupFactory(target: any) {
     definePropertyGroup(target, {
-      ...default_group,
-      ...deco_params
+      ...defaultGroup,
+      ...decoParams
     });
   };
 }
 
-const default_input: IInputPropertyContract = {
+const defaultInput: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
@@ -76,17 +76,17 @@ export function Input(
   params: Partial<IInputPropertyContract>
 ): PropertyDecorator;
 export function Input(params?: any) {
-  const deco_params = resolveParams<IInputPropertyContract>(params);
-  return function prop_input_factory(target: any, propertyKey: string) {
+  const decoParams = resolveParams<IInputPropertyContract>(params);
+  return function propInputFactory(target: any, propertyKey: string) {
     defineBasicProperty(target.constructor, {
-      ...default_input,
-      ...deco_params,
+      ...defaultInput,
+      ...decoParams,
       realName: propertyKey
     });
   };
 }
 
-const default_output: IInputPropertyContract = {
+const defaultOutput: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
@@ -102,13 +102,13 @@ export function Output(
   params: Partial<IOutputPropertyContract>
 ): PropertyDecorator;
 export function Output(params?: any) {
-  const deco_params = resolveParams<IOutputPropertyContract>(params);
-  return function prop_output_factory(target: any, propertyKey: string) {
+  const decoParams = resolveParams<IOutputPropertyContract>(params);
+  return function propOutputFactory(target: any, propertyKey: string) {
     defineBasicProperty(
       target.constructor,
       {
-        ...default_output,
-        ...deco_params,
+        ...defaultOutput,
+        ...decoParams,
         realName: propertyKey
       },
       PROP_OUTPUT_DEFINE
@@ -122,13 +122,13 @@ export function Attach(
   params: Partial<IAttachPropertyContract>
 ): PropertyDecorator;
 export function Attach(params?: any) {
-  const deco_params = resolveParams<IAttachPropertyContract>(params);
-  return function prop_attach_factory(target: any, propertyKey: string) {
+  const decoParams = resolveParams<IAttachPropertyContract>(params);
+  return function propAttachFactory(target: any, propertyKey: string) {
     defineBasicProperty(
       target.constructor,
       {
-        ...default_output,
-        ...deco_params,
+        ...defaultOutput,
+        ...decoParams,
         realName: propertyKey
       },
       PROP_ATTACH_DEFINE

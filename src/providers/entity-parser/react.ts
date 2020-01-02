@@ -5,8 +5,8 @@ import { BasicComponent } from "../../core/component";
 import { REACT, createJsxElement } from "../../utils";
 import {
   EntityConstructor,
-  resolveReactProps,
-  Injectable
+  Injectable,
+  resolveReactProps
 } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";

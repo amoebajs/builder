@@ -1,6 +1,6 @@
 import ts from "typescript";
 import prettier from "prettier";
-import { Injector, InjectDIToken } from "@bonbons/di";
+import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
@@ -10,12 +10,11 @@ import {
 } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
-import { emitSourceFileSync, createReactMainFile } from "../utils";
 import {
-  WebpackConfig,
+  IWebpackOptions,
   WebpackBuild,
-  WebpackPlugins,
-  IWebpackOptions
+  WebpackConfig,
+  WebpackPlugins
 } from "./webpack";
 
 export interface IDirectiveDefine {
@@ -56,7 +55,7 @@ export interface IDirectiveCreateOptions {
   options: { [prop: string]: any };
 }
 
-export interface IChildCreateOptions extends IChildRefPluginOptions {}
+export type IChildCreateOptions = IChildRefPluginOptions;
 
 export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
   components?: IDirectiveCreateOptions[];
@@ -93,7 +92,7 @@ export class Builder {
       children: mapChild(configs)
     });
     const printer = ts.createPrinter();
-    let sourceString = printer.printFile(sourceFile);
+    const sourceString = printer.printFile(sourceFile);
     if (!usePrettier) {
       return sourceString;
     }

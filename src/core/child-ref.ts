@@ -1,7 +1,7 @@
 import {
   IEwsEntity,
-  IEwsEntityProtectedHooks,
-  IEwsEntityPrivates
+  IEwsEntityPrivates,
+  IEwsEntityProtectedHooks
 } from "./base";
 
 export interface IChildRef extends IEwsEntity {

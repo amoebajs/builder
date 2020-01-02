@@ -1,25 +1,25 @@
-import { DIContainer, InjectDIToken, InjectScope, Injector } from "@bonbons/di";
+import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
   EntityConstructor,
-  resolveDepts,
   IFrameworkDepts,
+  Injectable,
   getInjectScope,
-  Injectable
+  resolveDepts
 } from "./core/decorators";
 import {
-  Path,
-  WebpackConfig,
-  GlobalMap,
-  Builder,
-  WebpackBuild,
-  Fs,
-  HtmlBundle,
-  WebpackPlugins,
-  BasicEntityProvider,
-  ReactEntityProvider,
   BasicChildRef,
+  BasicEntityProvider,
+  Builder,
+  Fs,
+  GlobalMap,
+  HtmlBundle,
+  Path,
+  ReactComponent,
   ReactDirective,
-  ReactComponent
+  ReactEntityProvider,
+  WebpackBuild,
+  WebpackConfig,
+  WebpackPlugins
 } from "./providers";
 import { CommonComponentModule, CommonDirectiveModule } from "./plugins";
 

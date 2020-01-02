@@ -1,11 +1,10 @@
-import ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
 import jsyaml from "js-yaml";
 import chalk from "chalk";
 import { Factory } from "../src";
 
-const demo_conf = jsyaml.load(
+const demoConf = jsyaml.load(
   fs.readFileSync(path.resolve(__dirname, "demo.yaml")).toString()
 );
 
@@ -23,7 +22,7 @@ const outDir = path.resolve(process.cwd(), "build", "src");
 const builder = new Factory().builder;
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
-  .createSource({ configs: demo_conf })
+  .createSource({ configs: demoConf })
   .then(sourceString => {
     fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceString, {
       encoding: "utf8"

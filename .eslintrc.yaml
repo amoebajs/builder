@@ -1,0 +1,32 @@
+extends:
+  - plugin:@typescript-eslint/recommended
+  - plugin:prettier/recommended
+  - prettier/@typescript-eslint
+rules:
+  sort-imports:
+    - 1
+    - ignoreDeclarationSort: true
+      memberSyntaxSortOrder:
+        - all
+        - single
+        - multiple
+        - none
+  "@typescript-eslint/ban-ts-ignore": 0
+  "@typescript-eslint/explicit-function-return-type": 0
+  "@typescript-eslint/no-non-null-assertion": 0
+  "@typescript-eslint/no-explicit-any": 0
+  "@typescript-eslint/no-empty-function": 0
+  "@typescript-eslint/consistent-type-assertions": 0
+  "@typescript-eslint/no-use-before-define": 0
+  "@typescript-eslint/no-inferrable-types": 0
+  "@typescript-eslint/no-empty-interface": 0
+  "@typescript-eslint/no-unused-vars":
+    - 1
+    - argsIgnorePattern: "^_"
+  "@typescript-eslint/interface-name-prefix":
+    - 1
+    - prefixWithI: always
+  "@typescript-eslint/camelcase":
+    - 2
+    - allow:
+        - ^_

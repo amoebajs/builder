@@ -1,8 +1,8 @@
 import {
   EntityConstructor,
   IModuleContract,
-  defineModule,
-  default_framework_depts
+  defaultFrameworkDepts,
+  defineModule
 } from "./base";
 
 const defaults: IModuleContract = {
@@ -15,12 +15,12 @@ const defaults: IModuleContract = {
 };
 
 export function Module(define: Partial<IModuleContract> = {}) {
-  return function module_factory(target: EntityConstructor<any>) {
+  return function moduleFactory(target: EntityConstructor<any>) {
     const options = { ...defaults, ...define };
-    const fwk_depts = default_framework_depts[options.provider];
-    if (fwk_depts) {
+    const fwkDepts = defaultFrameworkDepts[options.provider];
+    if (fwkDepts) {
       options.dependencies = {
-        ...fwk_depts,
+        ...fwkDepts,
         ...options.dependencies
       };
     }

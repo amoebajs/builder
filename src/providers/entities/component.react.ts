@@ -1,8 +1,8 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { IPureObject, resolveSyntaxInsert } from "../../core/base";
-import { TYPES, REACT, createJsxElement, IJsxAttrs } from "../../utils";
-import { ReactRender, ReactHelper } from "../../core/libs";
+import { IJsxAttrs, REACT, TYPES, createJsxElement } from "../../utils";
+import { ReactHelper, ReactRender } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 

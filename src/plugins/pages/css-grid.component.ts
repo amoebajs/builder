@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { Group, Component, Input } from "../../core/decorators";
-import { DOMS, createValueAttr, TYPES } from "../../utils";
+import { Component, Group, Input } from "../../core/decorators";
+import { DOMS, TYPES, createValueAttr } from "../../utils";
 import { resolveSyntaxInsert } from "../../core/base";
 import { ReactComponent } from "../../providers";
 
@@ -80,7 +80,7 @@ export class CssGridContainer extends ReactComponent {
           Object.keys(state).map(n =>
             ts.createPropertyAssignment(
               n,
-              resolveSyntaxInsert(typeof state[n], state[n], (_, v) =>
+              resolveSyntaxInsert(typeof state[n], state[n], (_, __) =>
                 ts.createStringLiteral(String(state[n]))
               )
             )

@@ -2,9 +2,7 @@ import {
   EntityConstructor,
   IBasicI18NContract,
   UnnamedPartial,
-  resolveParams,
-  IFrameworkDepts,
-  default_framework_depts
+  resolveParams
 } from "./base";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
@@ -46,14 +44,14 @@ export function Component(
   params: UnnamedPartial<IComponentContract>
 ): ClassDecorator;
 export function Component(define: any) {
-  const deco_params = resolveParams<IComponentContract>(define);
-  return function comp_factory(target: EntityConstructor<any>) {
+  const decoParams = resolveParams<IComponentContract>(define);
+  return function compFactory(target: EntityConstructor<any>) {
     const options: IComponentContract = {
       ...defaults,
-      ...deco_params,
+      ...decoParams,
       dependencies: {
         ...defaults.dependencies,
-        ...deco_params.dependencies
+        ...decoParams.dependencies
       }
     };
     defineComponent(target, options);
