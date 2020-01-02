@@ -16,6 +16,9 @@ export interface IWebpackOptions {
   template?: Partial<{
     title: string;
     path: string;
+    charset: string;
+    stylesheets: { href: string }[];
+    scripts: { src: string }[];
   }>;
   typescript?: Partial<{
     tsconfig: string;
@@ -29,6 +32,15 @@ export interface IWebpackOptions {
     dependencies: { [prop: string]: string };
   }>;
 }
+
+const defaultScripts: any[] = [];
+
+const defaultStyleSheets = [
+  {
+    href:
+      "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+  }
+];
 
 @Injectable()
 export class WebpackConfig {
@@ -103,7 +115,14 @@ export class WebpackConfig {
           template:
             options.template?.path ??
             this.path.resolve(__dirname, "..", "assets", "index.html"),
-          title: options.template?.title ?? "Index"
+          title: options.template?.title ?? "Index",
+          charset: options.template?.charset ?? "utf-8",
+          stylesheets: (options.template?.stylesheets ?? defaultStyleSheets)
+            .map(sheet => `<link rel="stylesheet" href="${sheet.href}"/>`)
+            .join("\n"),
+          scriptList: (options.template?.scripts ?? defaultScripts)
+            .map(script => `<script src="${script.src}"></script>`)
+            .join("\n")
         })
       ].concat(options.plugins ?? [])
     };
