@@ -60,9 +60,13 @@ export class WebpackConfig {
   constructor(protected path: Path) {}
 
   public getConfigs(options: IWebpackOptions) {
+    const projectNodeModules = "node_modules";
     const nodeModules = options.sandbox
-      ? [this.path.resolve(options.sandbox.rootPath!, "node_modules")]
-      : undefined;
+      ? [
+          this.path.resolve(options.sandbox.rootPath!, "node_modules"),
+          projectNodeModules
+        ]
+      : [projectNodeModules];
     return {
       entry: {
         app: "./build/src/main.tsx",
