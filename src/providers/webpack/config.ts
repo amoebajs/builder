@@ -4,50 +4,60 @@ import HtmlWebPackPlugin from "html-webpack-plugin";
 import { Injectable } from "../../core/decorators";
 import { Path } from "../path";
 
-export interface IWebpackTemplateScript {
+export interface IWebpackTemplateScriptOptions {
   type: "inline-javascript" | "src-javascript";
   defer?: string | boolean;
   async?: string | boolean;
   value: string;
 }
 
-export interface IWebpackTemplateStyle {
+export interface IWebpackTemplateStyleOptions {
   type: "rel-stylesheet" | "inline-style";
   value: string;
 }
 
+export interface IWebpackTemplateOptions {
+  title: string;
+  path: string;
+  charset: string;
+  styles: IWebpackTemplateStyleOptions[];
+  scripts: IWebpackTemplateScriptOptions[];
+}
+
+export interface IWebpackEntryOptions {
+  app: string;
+  vendor: string[];
+}
+
+export interface IWebpackOutputOptions {
+  path: string;
+  filename: string;
+}
+
+export interface IWebpackTypeScriptOptions {
+  tsconfig: string;
+  importPlugins: any[];
+}
+
+export interface IWebpackSandboxOptions {
+  rootPath: string;
+  dependencies: { [prop: string]: string };
+}
+
 export interface IWebpackOptions {
-  entry?: Partial<{
-    app: string;
-    vendor: string[];
-  }>;
-  output?: Partial<{
-    path: string;
-    filename: string;
-  }>;
-  template?: Partial<{
-    title: string;
-    path: string;
-    charset: string;
-    styles: IWebpackTemplateStyle[];
-    scripts: IWebpackTemplateScript[];
-  }>;
-  typescript?: Partial<{
-    tsconfig: string;
-    importPlugins: any[];
-  }>;
+  entry?: Partial<IWebpackEntryOptions>;
+  output?: Partial<IWebpackOutputOptions>;
+  template?: Partial<IWebpackTemplateOptions>;
+  typescript?: Partial<IWebpackTypeScriptOptions>;
+  sandbox?: Partial<IWebpackSandboxOptions>;
   mode?: "production" | "development";
   minimize?: boolean;
   plugins?: webpack.Plugin[];
-  sandbox?: Partial<{
-    rootPath: string;
-    dependencies: { [prop: string]: string };
-  }>;
 }
 
-const defaultScripts: IWebpackTemplateScript[] = [];
+const defaultScripts: IWebpackTemplateScriptOptions[] = [];
 
-const defaultStyleSheets: IWebpackTemplateStyle[] = [
+const defaultStyleSheets: IWebpackTemplateStyleOptions[] = [
   {
     type: "rel-stylesheet",
     value:
@@ -148,7 +158,7 @@ export class WebpackConfig {
   }
 }
 
-function createStyle(style: IWebpackTemplateStyle, block = "") {
+function createStyle(style: IWebpackTemplateStyleOptions, block = "") {
   switch (style.type) {
     case "rel-stylesheet":
       return `${block}<link rel="stylesheet" href="${style.value}"/>`;
@@ -159,7 +169,7 @@ function createStyle(style: IWebpackTemplateStyle, block = "") {
   }
 }
 
-function createScript(script: IWebpackTemplateScript, block = "") {
+function createScript(script: IWebpackTemplateScriptOptions, block = "") {
   const deferToken = script.defer ? `defer="${script.defer}"` : undefined;
   const asyncToken = script.async ? `async="${script.async}"` : undefined;
   let adds = [deferToken, asyncToken].filter(i => !!i).join(" ");
