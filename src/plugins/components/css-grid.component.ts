@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { Component, Group, Input } from "../../core/decorators";
-import { DOMS, TYPES, createValueAttr } from "../../utils";
+import { DOMS, TYPES } from "../../utils";
 import { resolveSyntaxInsert } from "../../core/base";
 import { ReactComponent } from "../../providers";
 
@@ -47,7 +47,7 @@ export class CssGridContainer extends ReactComponent {
     await super.onInit();
     const rootElement = this.getState("rootElement");
     rootElement.name = DOMS.Div;
-    rootElement.attrs["style"] = createValueAttr({
+    rootElement.attrs["style"] = this.helper.createObjectAttr({
       height: "100vh",
       display: "grid",
       gridTemplateColumns: this.use_GridRowRepeat

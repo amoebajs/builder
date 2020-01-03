@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { IPureObject, resolveSyntaxInsert } from "../../core/base";
-import { IJsxAttrs, REACT, TYPES, createJsxElement } from "../../utils";
+import { IJsxAttrs, REACT, TYPES } from "../../utils";
 import { ReactHelper, ReactRender } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
@@ -67,7 +67,7 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
       }
       this.addRootChildren(
         iterator.id,
-        createJsxElement(iterator.component, [], {
+        this.helper.createJsxElement(iterator.component, [], {
           ...attrs,
           key: iterator.id
         })
@@ -92,7 +92,7 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
         // createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
         ts.createReturn(
           ts.createParen(
-            createJsxElement(
+            this.helper.createJsxElement(
               root.name,
               root.types,
               { ...root.attrs, key: this.entityId },

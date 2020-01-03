@@ -2,7 +2,7 @@ import ts from "typescript";
 import { BasicEntityProvider } from "./basic";
 import { ReactHelper } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
-import { REACT, createJsxElement } from "../../utils";
+import { REACT } from "../../utils";
 import {
   EntityConstructor,
   Injectable,
@@ -40,7 +40,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
           ),
           [],
           [
-            createJsxElement(model.entityId, [], {}),
+            this.helper.createJsxElement(model.entityId, [], {}),
             ts.createCall(
               ts.createPropertyAccess(
                 ts.createIdentifier("document"),

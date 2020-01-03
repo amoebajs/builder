@@ -24,18 +24,59 @@ export class ReactHelper extends BasicHelper {
     return super.resolveRef(name);
   }
 
-  public resolveJsxAttrs(attrs: {
-    [name: string]: string | ts.Expression | null;
-  }): IJsxAttrs {
-    return Object.keys(attrs)
-      .filter(i => attrs.hasOwnProperty(i))
-      .map(k => ({
-        [k]:
-          typeof attrs[k] === "string"
-            ? <string>attrs[k]
-            : ts.createJsxExpression(undefined, <any>attrs[k]!)
-      }))
-      .reduce((p, c) => ({ ...p, ...c }), {});
+  public createObjectAttr(value: {
+    [prop: string]: number | string | boolean | ts.Expression;
+  }) {
+    const kvs: [
+      string,
+      string | number | boolean | ts.Expression
+    ][] = Object.keys(value).map(k => [k, value[k]]);
+    return ts.createObjectLiteral(
+      kvs.map(([n, v]) =>
+        ts.createPropertyAssignment(
+          ts.createIdentifier(n),
+          resolveSyntaxInsert(typeof v, v, (_, e) => e)
+        )
+      ),
+      true
+    );
+  }
+
+  public createJsxElement(
+    tagName: string,
+    types: ts.TypeNode[],
+    attrs: IJsxAttrs,
+    children?: (ts.JsxChild | string)[]
+  ) {
+    return ts.createJsxElement(
+      ts.createJsxOpeningElement(
+        ts.createIdentifier(tagName),
+        types,
+        ts.createJsxAttributes(
+          Object.keys(attrs)
+            .filter(k => attrs.hasOwnProperty(k))
+            .map(k =>
+              ts.createJsxAttribute(
+                ts.createIdentifier(k),
+                typeof attrs[k] === "string"
+                  ? ts.createStringLiteral(<string>attrs[k])
+                  : ts.createJsxExpression(
+                      undefined,
+                      resolveSyntaxInsert(
+                        typeof attrs[k],
+                        attrs[k],
+                        (t, e) => e
+                      )
+                    )
+              )
+            )
+        )
+      ),
+      (children || []).map(i =>
+        typeof i === "string" ? ts.createJsxText(i) : i
+      ),
+      ts.createJsxClosingElement(ts.createIdentifier(tagName))
+    );
   }
 
   public resolvePropState(expression: string): ts.PropertyAccessExpression;

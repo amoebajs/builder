@@ -1,162 +1,164 @@
 import ts from "typescript";
-import {
-  DOMS,
-  REACT,
-  THIS,
-  TYPES,
-  createConstVariableStatement,
-  createExportModifier,
-  createJsxElement
-} from "./base";
 
-export * from "./base";
-export * from "./container";
+export interface IFileCreateOptions {
+  folder?: string;
+  filename?: string;
+  emit?: (str: string) => void;
+  statements: ts.Statement[] | ts.NodeArray<ts.Statement>;
+}
 
-function createTextDivBlock(
-  text: string,
-  onClickRefName: string
-): ts.Expression {
-  return createJsxElement(DOMS.Div, [], {}, [
-    createJsxElement(DOMS.Span, [], {}, [text]),
-    createJsxElement(DOMS.Br, [], {}),
-    createJsxElement(DOMS.Button, [], {
-      onClick: ts.createJsxExpression(
-        undefined,
-        ts.createPropertyAccess(
-          ts.createIdentifier(REACT.Props),
-          ts.createIdentifier(onClickRefName)
-        )
+export interface IPrettierFileCreateOptions extends IFileCreateOptions {
+  prettier?: boolean;
+}
+
+export const REACT = {
+  NS: "React",
+  DomNS: "ReactDOM",
+  PackageName: "react",
+  Props: "props",
+  State: "state",
+  Component: "Component",
+  PureComponent: "PureComponent",
+  StatelessComponent: "StatelessComponent",
+  Fragment: "React.Fragment",
+  Render: "render"
+};
+
+export interface IJsxAttrs {
+  [key: string]: ts.Expression | string | number | boolean | null;
+}
+
+const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+
+export const IMPORTS = {
+  React: ts.createImportDeclaration(
+    [],
+    [],
+    ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
+    ts.createStringLiteral(REACT.PackageName)
+  )
+};
+
+export const GenericGen = {
+  StatelessComponent(props?: ts.TypeNode) {
+    return ts.createTypeReferenceNode(
+      ts.createQualifiedName(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.StatelessComponent)
+      ),
+      [props || AnyType]
+    );
+  },
+  Component(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
+    return ts.createExpressionWithTypeArguments(
+      [props || AnyType, state || AnyType, ss || AnyType],
+      ts.createPropertyAccess(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.Component)
       )
-    })
-  ]);
+    );
+  },
+  PureComponent(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
+    return ts.createExpressionWithTypeArguments(
+      [props || AnyType, state || AnyType, ss || AnyType],
+      ts.createPropertyAccess(
+        ts.createIdentifier(REACT.NS),
+        ts.createIdentifier(REACT.PureComponent)
+      )
+    );
+  }
+};
+
+export const TYPES = {
+  Any: AnyType,
+  StatelessComponent: GenericGen.StatelessComponent(),
+  Component: GenericGen.Component(),
+  PureComponent: GenericGen.PureComponent()
+};
+
+export const THIS = {
+  Props: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.Props)
+  ),
+  State: ts.createPropertyAccess(
+    ts.createThis(),
+    ts.createIdentifier(REACT.State)
+  )
+};
+
+export const DOMS = {
+  Div: "div",
+  Span: "span",
+  Button: "button",
+  Br: "br"
+};
+
+export function createExportModifier(isExport = false) {
+  return !!isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [];
 }
 
-function createTextDivBlockParenExpression(
-  text: string,
-  onClickRefName: string
-) {
-  return ts.createParen(createTextDivBlock(text, onClickRefName));
-}
-
-export function createTextDivBlockArrowFn(
+export function createConstVariableStatement(
   name: string,
-  text: string,
-  onClickRefName: string,
-  isExport = false
+  isExport = false,
+  typeNode?: ts.TypeNode,
+  initializer?: ts.Expression
 ) {
-  return createConstVariableStatement(
-    name,
-    isExport,
-    TYPES.StatelessComponent,
+  return ts.createVariableStatement(
+    isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
+    ts.createVariableDeclarationList(
+      [
+        ts.createVariableDeclaration(
+          ts.createIdentifier(name),
+          typeNode,
+          initializer
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  );
+}
+
+export function createThisAccess(name: string): string | ts.JsxExpression {
+  return ts.createJsxExpression(
+    undefined,
+    ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(name))
+  );
+}
+
+export function createPublicArrow(
+  name: string,
+  params: ts.ParameterDeclaration[],
+  statements: ts.Statement[]
+): ts.PropertyDeclaration {
+  return ts.createProperty(
+    [],
+    [],
+    ts.createIdentifier(name),
+    undefined,
+    undefined,
     ts.createArrowFunction(
       [],
       [],
-      [
-        ts.createParameter(
-          [],
-          [],
-          undefined,
-          ts.createIdentifier(REACT.Props),
-          undefined,
-          TYPES.Any
-        )
-      ],
+      params,
       undefined,
       ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-      createTextDivBlockParenExpression(text, onClickRefName)
+      ts.createBlock(statements)
     )
   );
 }
 
-export function createTextDivBlockClass(
-  name: string,
-  text: string,
-  onClickRefName: string,
-  isExport = false
-) {
-  return ts.createClassDeclaration(
+export function createAnyParameter(name: string): ts.ParameterDeclaration {
+  return ts.createParameter(
     [],
-    createExportModifier(isExport),
+    [],
+    undefined,
     ts.createIdentifier(name),
-    [],
-    [
-      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.PureComponent
-      ])
-    ],
-    [
-      ts.createMethod(
-        [],
-        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
-        undefined,
-        ts.createIdentifier(REACT.Render),
-        undefined,
-        [],
-        [],
-        undefined,
-        ts.createBlock([
-          createConstVariableStatement(
-            REACT.Props,
-            false,
-            undefined,
-            THIS.Props
-          ),
-          ts.createReturn(
-            createTextDivBlockParenExpression(text, onClickRefName)
-          )
-        ])
-      )
-    ]
+    undefined,
+    ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
   );
 }
 
-export function createReactMainFile(
-  compName: string,
-  compModule: string
-): ts.Statement[] {
-  return [
-    ts.createImportDeclaration(
-      [],
-      [],
-      ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
-      ts.createStringLiteral("react")
-    ),
-    ts.createImportDeclaration(
-      [],
-      [],
-      ts.createImportClause(ts.createIdentifier(REACT.DomNS), undefined),
-      ts.createStringLiteral("react-dom")
-    ),
-    ts.createImportDeclaration(
-      [],
-      [],
-      ts.createImportClause(
-        undefined,
-        ts.createNamedImports([
-          ts.createImportSpecifier(undefined, ts.createIdentifier(compName))
-        ])
-      ),
-      ts.createStringLiteral("./" + compModule)
-    ),
-    ts.createExpressionStatement(
-      ts.createCall(
-        ts.createPropertyAccess(
-          ts.createIdentifier(REACT.DomNS),
-          ts.createIdentifier("render")
-        ),
-        [],
-        [
-          createJsxElement(compName, [], {}),
-          ts.createCall(
-            ts.createPropertyAccess(
-              ts.createIdentifier("document"),
-              ts.createIdentifier("getElementById")
-            ),
-            [],
-            [ts.createStringLiteral("app")]
-          )
-        ]
-      )
-    )
-  ];
+export function exists<T>(arr: T[]) {
+  return arr.filter(i => !!i);
 }
