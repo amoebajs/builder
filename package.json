@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.2-alpha.1578034502404",
+  "version": "0.0.2-alpha.1578034966483",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
@@ -26,8 +26,8 @@
     "scripts:webpack": "cd scripts-build && cross-env ENV_MODE=build node scripts/build",
     "scripts:start": "yarn scripts:source && yarn scripts:webpack",
     "scripts:restart": "yarn scripts:output && yarn scripts:run",
-    "pub": "yarn copy:prepublish && node scripts/stable.publish.js",
-    "rc": "yarn copy:prepublish && node scripts/rc.publish.js"
+    "pub": "yarn copy:prepublish && yarn compile && node scripts/stable.publish.js",
+    "rc": "yarn copy:prepublish && yarn compile && node scripts/rc.publish.js"
   },
   "dependencies": {
     "@bonbons/di": "2.0.0-beta.3",
