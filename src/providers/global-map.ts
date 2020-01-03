@@ -1,7 +1,10 @@
 import {
   EntityConstructor,
+  IComponentContract,
+  IDirectiveContract,
   IFrameworkDepts,
   IFrameworkStructure,
+  IModuleContract,
   Injectable,
   resolveAttachProperties,
   resolveComponent,
@@ -16,6 +19,7 @@ import { BasicEntityProvider } from "./entity-parser";
 import { InjectDIToken } from "@bonbons/di";
 
 export interface IMetadataGroup {
+  entity: IDirectiveContract | IComponentContract | IModuleContract;
   inputs: { [name: string]: any };
   outputs: { [name: string]: any };
   attaches: { [name: string]: any };
@@ -71,7 +75,7 @@ export class GlobalMap {
       components: {},
       directives: {},
       provider: metadata.provider,
-      metadata: <any>{}
+      metadata: <any>{ entity: metadata }
     });
     if (metadata.components) {
       metadata.components.forEach(i => {
@@ -83,7 +87,7 @@ export class GlobalMap {
           moduleName,
           value: register(i),
           provider: metadata.provider,
-          metadata: <any>{}
+          metadata: <any>{ entity: meta }
         };
       });
     }
@@ -97,7 +101,7 @@ export class GlobalMap {
           moduleName,
           value: register(i),
           provider: metadata.provider,
-          metadata: <any>{}
+          metadata: <any>{ entity: meta }
         };
       });
     }
@@ -129,17 +133,26 @@ export class GlobalMap {
       if (this.maps.modules.hasOwnProperty(key)) {
         const thisModule = this.maps.modules[key];
         const provider = resolver(this.getProvider(<any>thisModule.provider));
-        thisModule.metadata = getMetadata(thisModule.value, provider);
+        thisModule.metadata = {
+          ...getMetadata(thisModule.value, provider),
+          ...thisModule.metadata
+        };
         for (const key in thisModule.components) {
           if (thisModule.components.hasOwnProperty(key)) {
             const thisComp = thisModule.components[key];
-            thisComp.metadata = getMetadata(thisComp.value, provider);
+            thisComp.metadata = {
+              ...getMetadata(thisComp.value, provider),
+              ...thisComp.metadata
+            };
           }
         }
         for (const key in thisModule.directives) {
           if (thisModule.directives.hasOwnProperty(key)) {
             const thisDire = thisModule.directives[key];
-            thisDire.metadata = getMetadata(thisDire.value, provider);
+            thisDire.metadata = {
+              ...getMetadata(thisDire.value, provider),
+              ...thisDire.metadata
+            };
           }
         }
       }
@@ -152,6 +165,7 @@ export function getMetadata(
   provider?: BasicEntityProvider
 ): IMetadataGroup {
   const result: IMetadataGroup = {
+    entity: <any>{},
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
     outputs: resolveOutputProperties(mdname),

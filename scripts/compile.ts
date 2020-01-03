@@ -23,8 +23,11 @@ const builder = new Factory().builder;
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
   .createSource({ configs: demoConf })
-  .then(sourceString => {
-    fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceString, {
+  .then(({ sourceCode, depsJSON }) => {
+    fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceCode, {
+      encoding: "utf8"
+    });
+    fs.writeFileSync(path.resolve(outDir, "dependencies.json"), depsJSON, {
       encoding: "utf8"
     });
     console.log("emit ---> " + path.resolve(outDir, "main.tsx"));

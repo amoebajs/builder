@@ -30,6 +30,7 @@ export interface IComponentPluginOptions<T extends InjectDIToken<any>>
   components?: IComponentPluginOptions<any>[];
   directives?: IDirectivePluginOptions<any>[];
   children?: IChildRefPluginOptions[];
+  dependencies?: { [prop: string]: any };
 }
 
 export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {

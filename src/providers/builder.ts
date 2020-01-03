@@ -63,6 +63,16 @@ export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
   children?: IChildCreateOptions[];
 }
 
+export interface ISourceCreateResult {
+  sourceCode: string;
+  depsJSON: string;
+}
+
+export interface ICompileResult {
+  sourceFile: ts.SourceFile;
+  dependencies: { [name: string]: string };
+}
+
 @Injectable()
 export class Builder {
   constructor(
@@ -79,10 +89,12 @@ export class Builder {
     return this.injector.get(contract);
   }
 
-  public async createSource(options: ISourceCreateOptions): Promise<string> {
+  public async createSource(
+    options: ISourceCreateOptions
+  ): Promise<ISourceCreateResult> {
     const { configs, prettier: usePrettier = true } = options;
     const compName = configs.page.id || "App";
-    const sourceFile = await this._createComponentSource({
+    const { sourceFile, dependencies } = await this._createComponentSource({
       moduleName: configs.page.module,
       templateName: configs.page.name,
       componentName: compName,
@@ -93,13 +105,19 @@ export class Builder {
     });
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
+    const result: ISourceCreateResult = {
+      sourceCode: "",
+      depsJSON: JSON.stringify(dependencies, null, "  ")
+    };
     if (!usePrettier) {
-      return sourceString;
+      result.sourceCode = sourceString;
+      return result;
     }
-    return prettier.format(sourceString, {
+    result.sourceCode = prettier.format(sourceString, {
       printWidth: 120,
       parser: "typescript"
     });
+    return result;
   }
 
   public buildSource(options: IWebpackOptions): Promise<void> {
@@ -134,6 +152,7 @@ export class Builder {
     const comps: any[] = [];
     const direcs: any[] = [];
     const childs: any[] = [];
+    let depts: any = { ...entity.metadata.entity.dependencies };
     if (type === "root") {
       comps.push(
         ...((<IRootComponentCreateOptions>options).components || []).map(i =>
@@ -146,6 +165,13 @@ export class Builder {
         )
       );
       childs.push(...((<IRootComponentCreateOptions>options).children || []));
+      const arrs = [...comps, ...direcs];
+      for (const iterator of arrs) {
+        depts = {
+          ...depts,
+          ...iterator.dependencies
+        };
+      }
     }
     return {
       id: options.componentName,
@@ -154,20 +180,27 @@ export class Builder {
       options: options.options,
       components: comps,
       directives: direcs,
-      children: childs
+      children: childs,
+      dependencies: depts
     };
   }
 
-  private async _createComponentSource(options: IRootComponentCreateOptions) {
+  private async _createComponentSource(
+    options: IRootComponentCreateOptions
+  ): Promise<ICompileResult> {
     const opts = this._resolveCreateOptions("root", options);
     const PROVIDER = this.globalMap.getProvider(opts.provider);
     const provider = this.get(PROVIDER);
     const instance = provider.createInstance(opts, provider);
-    return provider.callCompilation(
+    const sourceFile = await provider.callCompilation(
       opts.provider,
       instance,
       options.componentName
     );
+    return {
+      sourceFile,
+      dependencies: opts.dependencies || {}
+    };
   }
 }
 
