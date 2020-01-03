@@ -330,7 +330,6 @@ function updateImportDeclarations(
   for (const statement of statements) {
     if (ts.isImportDeclaration(statement)) {
       const { importClause, moduleSpecifier } = statement;
-      if (!importClause) continue;
       if (!ts.isStringLiteral(moduleSpecifier)) continue;
       const existIndex = imports.findIndex(
         i =>
@@ -342,6 +341,7 @@ function updateImportDeclarations(
       if (existIndex < 0) {
         imports.push(statement);
       } else {
+        if (!importClause) continue;
         const sourceItem = imports[existIndex];
         const { importClause: clause01 } = sourceItem;
         const { importClause: clause02 } = statement;

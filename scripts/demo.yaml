@@ -9,6 +9,9 @@ page:
       options: {}
   directives:
     - module: ambjs-common-directive-module
+      name: zent-base-css
+      id: ZentBaseCssDemoDirective
+    - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective
       options:
