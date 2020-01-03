@@ -20,37 +20,12 @@ export class WebpackBuild {
     let promise = Promise.resolve(0);
     if (options.sandbox) {
       const sandbox = options.sandbox;
-      promise = this.fs
-        .writeFile(
-          this.path.join(sandbox.rootPath!, "package.json"),
-          JSON.stringify(
-            {
-              dependencies: sandbox.dependencies || {}
-            },
-            null,
-            "  "
-          )
-        )
-        .then(
-          () =>
-            new Promise((resolve, reject) => {
-              spawn(yarn, {
-                env: { ...process.env },
-                cwd: sandbox.rootPath!,
-                stdio: ["pipe", process.stdout, process.stderr]
-              }).on("exit", (code, signal) => {
-                if (code === 0) {
-                  resolve(code);
-                } else {
-                  reject(
-                    new Error(
-                      `child process exit with code ${code} [${signal || "-"}]`
-                    )
-                  );
-                }
-              });
-            })
-        );
+      promise = writeDeptsFile(
+        this.fs,
+        this.path,
+        sandbox.rootPath!,
+        sandbox.dependencies
+      );
     }
     return promise.then(
       () =>
@@ -67,4 +42,36 @@ export class WebpackBuild {
         })
     );
   }
+}
+
+export async function writeDeptsFile(
+  fs: Fs,
+  path: Path,
+  rootPath: string,
+  dependencies: { [prop: string]: string } = {}
+) {
+  return fs
+    .writeFile(
+      path.join(rootPath, "package.json"),
+      JSON.stringify({ dependencies }, null, "  ")
+    )
+    .then(() => callYarnInstall(rootPath));
+}
+
+function callYarnInstall(sandboxPath: string): number | PromiseLike<number> {
+  return new Promise((resolve, reject) => {
+    spawn(yarn, {
+      env: { ...process.env },
+      cwd: sandboxPath,
+      stdio: ["pipe", process.stdout, process.stderr]
+    }).on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve(code);
+      } else {
+        reject(
+          new Error(`child process exit with code ${code} [${signal || "-"}]`)
+        );
+      }
+    });
+  });
 }

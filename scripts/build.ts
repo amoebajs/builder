@@ -1,9 +1,9 @@
 import * as path from "path";
-import * as fs from "fs";
+import * as fs from "fs-extra";
+import chalk from "chalk";
 import webpack from "webpack";
 import WebpackDevServer from "webpack-dev-server";
-import { Factory, IWebpackOptions } from "../src";
-import chalk from "chalk";
+import { Factory, IWebpackOptions, writeDeptsFile } from "../src";
 
 const ENV_MODE = process.env.ENV_MODE || "build";
 
@@ -15,24 +15,36 @@ const output = path.resolve(__dirname, "..", "build", "output");
 async function build() {
   const builder = new Factory().builder;
 
+  const sandbox = {
+    rootPath: path.resolve(__dirname, "..", "build"),
+    dependencies: JSON.parse(
+      fs.readFileSync(path.resolve(src, "dependencies.json")).toString()
+    )
+  };
+
   if (ENV_MODE === "watch") {
     const { webpackConfig: config } = builder;
 
-    const server = new WebpackDevServer(
-      webpack(
-        config.getConfigs({
-          ...configs,
-          minimize: false,
-          mode: "development"
-        })
-      ),
-      {
-        contentBase: output,
-        compress: true
+    writeDeptsFile(<any>fs, path, sandbox.rootPath, sandbox.dependencies).then(
+      () => {
+        const server = new WebpackDevServer(
+          webpack(
+            config.getConfigs({
+              ...configs,
+              minimize: false,
+              mode: "development",
+              sandbox
+            })
+          ),
+          {
+            contentBase: output,
+            compress: true
+          }
+        );
+
+        server.listen(9000, "localhost");
       }
     );
-
-    server.listen(9000, "localhost");
   } else {
     const { webpackPlugins: plugins, htmlBundle: bundle } = builder;
 
@@ -41,12 +53,7 @@ async function build() {
         ...configs,
         output: { path: output },
         plugins: [plugins.createProgressPlugin()],
-        sandbox: {
-          rootPath: path.resolve(__dirname, "..", "build"),
-          dependencies: JSON.parse(
-            fs.readFileSync(path.resolve(src, "dependencies.json")).toString()
-          )
-        }
+        sandbox
       });
 
       await bundle.build({
