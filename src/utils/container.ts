@@ -1,10 +1,10 @@
 import ts from "typescript";
 import {
-  createExportModifier,
-  TYPES,
-  createConstVariableStatement,
   REACT,
   THIS,
+  TYPES,
+  createConstVariableStatement,
+  createExportModifier,
   createJsxElement
 } from "./base";
 
