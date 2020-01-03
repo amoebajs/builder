@@ -3,7 +3,7 @@ import prettier from "prettier";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path";
 import { HtmlBundle } from "./html-bundle";
-import { GlobalMap } from "./global-map";
+import { GlobalMap, IMapEntry } from "./global-map";
 import {
   IChildRefPluginOptions,
   IInstanceCreateOptions
@@ -149,10 +149,10 @@ export class Builder {
       options.templateName,
       type
     );
-    const comps: any[] = [];
-    const direcs: any[] = [];
-    const childs: any[] = [];
-    let depts: any = { ...entity.metadata.entity.dependencies };
+    const comps: IInstanceCreateOptions<any>[] = [];
+    const direcs: IInstanceCreateOptions<any>[] = [];
+    const childs: IChildRefPluginOptions[] = [];
+    let depts = { ...entity.metadata.entity.dependencies };
     if (type === "root") {
       comps.push(
         ...((<IRootComponentCreateOptions>options).components || []).map(i =>
@@ -165,13 +165,7 @@ export class Builder {
         )
       );
       childs.push(...((<IRootComponentCreateOptions>options).children || []));
-      const arrs = [...comps, ...direcs];
-      for (const iterator of arrs) {
-        depts = {
-          ...depts,
-          ...iterator.dependencies
-        };
-      }
+      depts = this._resolveRootDepts(comps, direcs, depts, entity);
     }
     return {
       id: options.componentName,
@@ -183,6 +177,29 @@ export class Builder {
       children: childs,
       dependencies: depts
     };
+  }
+
+  private _resolveRootDepts(
+    comps: IInstanceCreateOptions<any>[],
+    direcs: IInstanceCreateOptions<any>[],
+    depts: { [x: string]: string | string[] },
+    entity: IMapEntry<any>
+  ) {
+    const arrs = [...comps, ...direcs];
+    for (const iterator of arrs) {
+      depts = {
+        ...depts,
+        ...iterator.dependencies
+      };
+    }
+    const moduleName = entity.moduleName!;
+    const moduleDepts = this.globalMap.getModule(moduleName).metadata.entity
+      .dependencies;
+    depts = {
+      ...depts,
+      ...moduleDepts
+    };
+    return depts;
   }
 
   private async _createComponentSource(

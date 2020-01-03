@@ -11,7 +11,7 @@ const defaults: IModuleContract = {
   provider: "react",
   components: [],
   directives: [],
-  dependencies: {}
+  dependencies: { react: "^16.12.0", "react-dom": "^16.12.0" }
 };
 
 export function Module(define: Partial<IModuleContract> = {}) {

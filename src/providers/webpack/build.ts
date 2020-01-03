@@ -23,9 +23,13 @@ export class WebpackBuild {
       promise = this.fs
         .writeFile(
           this.path.join(sandbox.rootPath!, "package.json"),
-          JSON.stringify({
-            dependencies: sandbox.dependencies || {}
-          })
+          JSON.stringify(
+            {
+              dependencies: sandbox.dependencies || {}
+            },
+            null,
+            "  "
+          )
         )
         .then(
           () =>

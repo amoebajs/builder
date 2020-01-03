@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import webpack from "webpack";
 import WebpackDevServer from "webpack-dev-server";
 import { Factory, IWebpackOptions } from "../src";
@@ -8,6 +9,7 @@ const ENV_MODE = process.env.ENV_MODE || "build";
 
 const configs: IWebpackOptions = { template: { title: "测试" } };
 
+const src = path.resolve(__dirname, "..", "build", "src");
 const output = path.resolve(__dirname, "..", "build", "output");
 
 async function build() {
@@ -41,11 +43,9 @@ async function build() {
         plugins: [plugins.createProgressPlugin()],
         sandbox: {
           rootPath: path.resolve(__dirname, "..", "build"),
-          dependencies: {
-            react: "^16.12.0",
-            zent: "^7.1.0",
-            "react-dom": "^16.12.0"
-          }
+          dependencies: JSON.parse(
+            fs.readFileSync(path.resolve(src, "dependencies.json")).toString()
+          )
         }
       });
 
