@@ -15,7 +15,7 @@ export {
   Group,
   Input,
   Output,
-  Attach
+  Attach,
 } from "./core";
 
 export * from "./errors";

@@ -3,9 +3,7 @@ import uuid from "uuid/v4";
 import { IPureObject, MapValueType } from "./common";
 import { BasicError } from "../../errors";
 
-export type ImportStatementsUpdater = (
-  statements: ts.ImportDeclaration[]
-) => void;
+export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
 
 export interface IBasicCompilationFinalContext {
   imports: ts.ImportDeclaration[];
@@ -57,26 +55,11 @@ export interface IEwsEntityGetters {
 }
 
 export interface IEwsEntitySetters {
-  addImports(
-    args: ts.ImportDeclaration[],
-    type?: IBasicComponentAppendType
-  ): void;
-  addMethods(
-    args: ts.MethodDeclaration[],
-    type?: IBasicComponentAppendType
-  ): void;
-  addProperties(
-    args: ts.PropertyDeclaration[],
-    type?: IBasicComponentAppendType
-  ): void;
-  addFields(
-    args: ts.PropertyDeclaration[],
-    type?: IBasicComponentAppendType
-  ): void;
-  addImplementParents(
-    args: ts.HeritageClause[],
-    type?: IBasicComponentAppendType
-  ): void;
+  addImports(args: ts.ImportDeclaration[], type?: IBasicComponentAppendType): void;
+  addMethods(args: ts.MethodDeclaration[], type?: IBasicComponentAppendType): void;
+  addProperties(args: ts.PropertyDeclaration[], type?: IBasicComponentAppendType): void;
+  addFields(args: ts.PropertyDeclaration[], type?: IBasicComponentAppendType): void;
+  addImplementParents(args: ts.HeritageClause[], type?: IBasicComponentAppendType): void;
   setExtendParent(arg: ts.HeritageClause | null): void;
 }
 
@@ -92,11 +75,9 @@ export interface IEwsEntityPrivates<E extends EntityType = EntityType> {
   __addChildElements<A extends any>(
     target: keyof IBasicCompilationContext,
     args: A[],
-    type: IBasicComponentAppendType
+    type: IBasicComponentAppendType,
   ): void;
-  __getChildElements<K extends keyof IBasicCompilationContext>(
-    target: K
-  ): MapValueType<IBasicCompilationContext[K]>;
+  __getChildElements<K extends keyof IBasicCompilationContext>(target: K): MapValueType<IBasicCompilationContext[K]>;
 }
 
 export interface IEwsEntityProtectedHooks {
@@ -122,8 +103,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   public setEntityId(id: string): this {
-    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id))
-      throw new BasicError("entity id is invalid.");
+    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
     this["__scope"] = id;
     return this;
   }
@@ -138,17 +118,11 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     this.__state[key] = value;
   }
 
-  protected getState<K extends keyof T>(
-    key: K,
-    defaultValue: T[K] | null = null
-  ): T[K] {
+  protected getState<K extends keyof T>(key: K, defaultValue: T[K] | null = null): T[K] {
     return this.__state[key] || (defaultValue as any);
   }
 
-  protected addImports(
-    args: ts.ImportDeclaration[],
-    type: IBasicComponentAppendType = "push"
-  ) {
+  protected addImports(args: ts.ImportDeclaration[], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("imports", args, type);
   }
 
@@ -156,10 +130,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("imports") || [];
   }
 
-  protected addMethods(
-    args: ts.MethodDeclaration[],
-    type: IBasicComponentAppendType = "push"
-  ) {
+  protected addMethods(args: ts.MethodDeclaration[], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("methods", args, type);
   }
 
@@ -167,10 +138,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("methods") || [];
   }
 
-  protected addProperties(
-    args: ts.PropertyDeclaration[],
-    type: IBasicComponentAppendType = "push"
-  ) {
+  protected addProperties(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("properties", args, type);
   }
 
@@ -178,10 +146,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("properties") || [];
   }
 
-  protected addFields(
-    args: ts.PropertyDeclaration[],
-    type: IBasicComponentAppendType = "push"
-  ) {
+  protected addFields(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("fields", args, type);
   }
 
@@ -189,10 +154,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("fields") || [];
   }
 
-  protected addImplementParents(
-    args: ts.HeritageClause[],
-    type: IBasicComponentAppendType = "push"
-  ) {
+  protected addImplementParents(args: ts.HeritageClause[], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("implementParents", args, type);
   }
 
@@ -213,10 +175,9 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   private __addChildElements<A extends any>(
     target: keyof IBasicCompilationContext,
     args: A[],
-    type: IBasicComponentAppendType
+    type: IBasicComponentAppendType,
   ) {
-    const host: Map<string | symbol, IScopeStructure<EntityType, any>> = this
-      .__context[target];
+    const host: Map<string | symbol, IScopeStructure<EntityType, any>> = this.__context[target];
     let container = host.get(this.__scope);
     if (!container) {
       host.set(
@@ -224,8 +185,8 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
         (container = {
           scope: this.__scope,
           type: this.__etype,
-          items: []
-        })
+          items: [],
+        }),
       );
     }
     if (target === "extendParent") {
@@ -246,33 +207,24 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   private __getChildElements<K extends keyof IBasicCompilationContext>(
-    target: K
+    target: K,
   ): MapValueType<IBasicCompilationContext[K]> {
     return this.__context[target].get(this.__scope)?.items as any;
   }
 }
 
+export function resolveSyntaxInsert(type: "string", expression: string): ts.StringLiteral;
+export function resolveSyntaxInsert(type: "number", expression: number): ts.NumericLiteral;
+export function resolveSyntaxInsert(type: "boolean", expression: boolean): ts.BooleanLiteral;
 export function resolveSyntaxInsert(
-  type: "string",
-  expression: string
-): ts.StringLiteral;
-export function resolveSyntaxInsert(
-  type: "number",
-  expression: number
-): ts.NumericLiteral;
-export function resolveSyntaxInsert(
-  type: "boolean",
-  expression: boolean
+  type: string,
+  expression: any,
+  otherHandler?: (type: string, exp: any) => ts.Expression | null,
 ): ts.BooleanLiteral;
 export function resolveSyntaxInsert(
   type: string,
   expression: any,
-  otherHandler?: (type: string, exp: any) => ts.Expression | null
-): ts.BooleanLiteral;
-export function resolveSyntaxInsert(
-  type: string,
-  expression: any,
-  otherHandler?: (type: string, exp: any) => ts.Expression | null
+  otherHandler?: (type: string, exp: any) => ts.Expression | null,
 ): ts.Expression | null {
   switch (type) {
     case "number":

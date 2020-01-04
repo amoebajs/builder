@@ -17,34 +17,30 @@ async function build() {
 
   const sandbox = {
     rootPath: path.resolve(__dirname, "..", "build"),
-    dependencies: JSON.parse(
-      fs.readFileSync(path.resolve(src, "dependencies.json")).toString()
-    )
+    dependencies: JSON.parse(fs.readFileSync(path.resolve(src, "dependencies.json")).toString()),
   };
 
   if (ENV_MODE === "watch") {
     const { webpackConfig: config } = builder;
 
-    writeDeptsFile(<any>fs, path, sandbox.rootPath, sandbox.dependencies).then(
-      () => {
-        const server = new WebpackDevServer(
-          webpack(
-            config.getConfigs({
-              ...configs,
-              minimize: false,
-              mode: "development",
-              sandbox
-            })
-          ),
-          {
-            contentBase: output,
-            compress: true
-          }
-        );
+    writeDeptsFile(<any>fs, path, sandbox.rootPath, sandbox.dependencies).then(() => {
+      const server = new WebpackDevServer(
+        webpack(
+          config.getConfigs({
+            ...configs,
+            minimize: false,
+            mode: "development",
+            sandbox,
+          }),
+        ),
+        {
+          contentBase: output,
+          compress: true,
+        },
+      );
 
-        server.listen(9000, "localhost");
-      }
-    );
+      server.listen(9000, "localhost");
+    });
   } else {
     const { webpackPlugins: plugins, htmlBundle: bundle } = builder;
 
@@ -53,15 +49,15 @@ async function build() {
         ...configs,
         output: { path: output },
         plugins: [plugins.createProgressPlugin()],
-        sandbox
+        sandbox,
       });
 
       await bundle.build({
         path: path.join(output, "index.html"),
         scripts: [
           { match: "app.js", path: path.join(output, "app.js") },
-          { match: "vendor.js", path: path.join(output, "vendor.js") }
-        ]
+          { match: "vendor.js", path: path.join(output, "vendor.js") },
+        ],
       });
     } catch (error) {
       console.log(chalk.red(error));

@@ -60,9 +60,8 @@ const defaultScripts: IWebpackTemplateScriptOptions[] = [];
 const defaultStyleSheets: IWebpackTemplateStyleOptions[] = [
   {
     type: "rel-stylesheet",
-    value:
-      "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-  }
+    value: "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+  },
 ];
 
 @Injectable()
@@ -72,38 +71,32 @@ export class WebpackConfig {
   public getConfigs(options: IWebpackOptions) {
     const projectNodeModules = "node_modules";
     const nodeModules = options.sandbox
-      ? [
-          this.path.resolve(options.sandbox.rootPath!, "node_modules"),
-          projectNodeModules
-        ]
+      ? [this.path.resolve(options.sandbox.rootPath!, "node_modules"), projectNodeModules]
       : [projectNodeModules];
     return {
       entry: {
         app: "./build/src/main.tsx",
         vendor: ["react", "react-dom"],
-        ...options.entry
+        ...options.entry,
       },
       output: {
         path: this.path.resolve(__dirname, "build", "output"),
         filename: "[name].js",
-        ...options.output
+        ...options.output,
       },
       mode: options.mode ?? "production",
       resolve: {
         extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
-        modules: nodeModules
+        modules: nodeModules,
       },
       optimization: {
-        minimize: options.minimize ?? true
+        minimize: options.minimize ?? true,
       },
       module: {
         rules: [
           {
             test: /\.css/,
-            use: [
-              require.resolve("style-loader"),
-              require.resolve("css-loader")
-            ]
+            use: [require.resolve("style-loader"), require.resolve("css-loader")],
           },
           {
             test: /\.tsx?$/,
@@ -112,8 +105,7 @@ export class WebpackConfig {
                 loader: require.resolve("ts-loader"),
                 options: {
                   transpileOnly: true,
-                  configFile:
-                    options.typescript?.tsconfig ?? "tsconfig.jsx.json",
+                  configFile: options.typescript?.tsconfig ?? "tsconfig.jsx.json",
                   compilerOptions: { module: "es2015" },
                   getCustomTransformers: () => ({
                     before: [
@@ -123,25 +115,22 @@ export class WebpackConfig {
                             libraryName: "zent",
                             libraryDirectory: "es",
                             resolveContext: nodeModules,
-                            style: n =>
-                              n.replace("zent/es", "zent/css") + ".css"
-                          }
-                        ]
-                      )
-                    ]
-                  })
-                }
-              }
-            ]
-          }
-        ]
+                            style: n => n.replace("zent/es", "zent/css") + ".css",
+                          },
+                        ],
+                      ),
+                    ],
+                  }),
+                },
+              },
+            ],
+          },
+        ],
       },
 
       plugins: [
         new HtmlWebPackPlugin({
-          template:
-            options.template?.path ??
-            this.path.resolve(__dirname, "..", "..", "assets", "index.html"),
+          template: options.template?.path ?? this.path.resolve(__dirname, "..", "..", "assets", "index.html"),
           title: options.template?.title ?? "Index",
           charset: options.template?.charset ?? "utf-8",
           styleList: (options.template?.styles ?? defaultStyleSheets)
@@ -151,9 +140,9 @@ export class WebpackConfig {
           scriptList: (options.template?.scripts ?? defaultScripts)
             .map(script => createScript(script, "    "))
             .join("\n")
-            .slice(4)
-        })
-      ].concat(options.plugins ?? [])
+            .slice(4),
+        }),
+      ].concat(options.plugins ?? []),
     };
   }
 }

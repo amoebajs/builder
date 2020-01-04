@@ -4,9 +4,7 @@ import { IChildRefPrivates } from "../../core/child-ref";
 import { Injectable } from "../../core/decorators";
 
 @Injectable(InjectScope.New)
-export abstract class BasicChildRef<
-  T extends IPureObject = IPureObject
-> extends BasicCompilationEntity<T> {
+export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   private __refId!: IChildRefPrivates["__refId"];
   private __refOptions: IChildRefPrivates["__refOptions"] = {};
 

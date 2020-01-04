@@ -7,16 +7,12 @@ import { WebpackConfig } from "./config";
 
 @Injectable()
 export class WebpackPlugins {
-  constructor(
-    protected path: Path,
-    protected fs: Fs,
-    protected config: WebpackConfig
-  ) {}
+  constructor(protected path: Path, protected fs: Fs, protected config: WebpackConfig) {}
 
   public createProgressPlugin(): Plugin {
     const buildingStatus = {
       percent: "0",
-      stamp: <number | null>null
+      stamp: <number | null>null,
     };
     return new ProgressPlugin((percentage, msg) => {
       const percent = (percentage * 100).toFixed(2);
@@ -27,11 +23,7 @@ export class WebpackPlugins {
       }
       const usage = stamp - buildingStatus.stamp;
       buildingStatus.percent = percent;
-      console.log(
-        `[${(usage / 1000).toFixed(2)}s] ${chalk.green(
-          buildingStatus.percent + "%"
-        )} ${msg}`
-      );
+      console.log(`[${(usage / 1000).toFixed(2)}s] ${chalk.green(buildingStatus.percent + "%")} ${msg}`);
       if (percent === "100.00") {
         buildingStatus.stamp = null;
         console.log(chalk.blue("[webpack] compile successfully\n"));

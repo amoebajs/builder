@@ -4,18 +4,10 @@ import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
-import {
-  IChildRefPluginOptions,
-  IInstanceCreateOptions
-} from "./entity-parser";
+import { IChildRefPluginOptions, IInstanceCreateOptions } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
-import {
-  IWebpackOptions,
-  WebpackBuild,
-  WebpackConfig,
-  WebpackPlugins
-} from "./webpack";
+import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 
 export interface IDirectiveDefine {
   module: string;
@@ -82,16 +74,14 @@ export class Builder {
     public readonly webpackConfig: WebpackConfig,
     public readonly webpackBuild: WebpackBuild,
     public readonly webpackPlugins: WebpackPlugins,
-    public readonly htmlBundle: HtmlBundle
+    public readonly htmlBundle: HtmlBundle,
   ) {}
 
   public get<T>(contract: InjectDIToken<T>): T {
     return this.injector.get(contract);
   }
 
-  public async createSource(
-    options: ISourceCreateOptions
-  ): Promise<ISourceCreateResult> {
+  public async createSource(options: ISourceCreateOptions): Promise<ISourceCreateResult> {
     const { configs, prettier: usePrettier = true } = options;
     const compName = configs.page.id || "App";
     const { sourceFile, dependencies } = await this._createComponentSource({
@@ -101,13 +91,13 @@ export class Builder {
       options: configs.page.options || {},
       components: mapComp(configs),
       directives: mapDire(configs),
-      children: mapChild(configs)
+      children: mapChild(configs),
     });
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
     const result: ISourceCreateResult = {
       sourceCode: "",
-      depsJSON: JSON.stringify(dependencies, null, "  ")
+      depsJSON: JSON.stringify(dependencies, null, "  "),
     };
     if (!usePrettier) {
       result.sourceCode = sourceString;
@@ -115,7 +105,7 @@ export class Builder {
     }
     result.sourceCode = prettier.format(sourceString, {
       printWidth: 120,
-      parser: "typescript"
+      parser: "typescript",
     });
     return result;
   }
@@ -124,31 +114,22 @@ export class Builder {
     return this.webpackBuild.buildSource(options);
   }
 
-  private _resolveType(
-    moduleName: string,
-    templateName: string,
-    type: "component" | "directive" | "root"
-  ) {
-    const target = this.globalMap[
-      type === "component" || type === "root" ? "getComponent" : "getDirective"
-    ](moduleName, templateName);
+  private _resolveType(moduleName: string, templateName: string, type: "component" | "directive" | "root") {
+    const target = this.globalMap[type === "component" || type === "root" ? "getComponent" : "getDirective"](
+      moduleName,
+      templateName,
+    );
     if (!target) {
-      throw new NotFoundError(
-        `${type} [${moduleName}.${templateName}] not found`
-      );
+      throw new NotFoundError(`${type} [${moduleName}.${templateName}] not found`);
     }
     return target;
   }
 
   private _resolveCreateOptions(
     type: "component" | "directive" | "root",
-    options: IRootComponentCreateOptions | IDirectiveCreateOptions
+    options: IRootComponentCreateOptions | IDirectiveCreateOptions,
   ): IInstanceCreateOptions<any> {
-    const entity = this._resolveType(
-      options.moduleName,
-      options.templateName,
-      type
-    );
+    const entity = this._resolveType(options.moduleName, options.templateName, type);
     const comps: IInstanceCreateOptions<any>[] = [];
     const direcs: IInstanceCreateOptions<any>[] = [];
     const childs: IChildRefPluginOptions[] = [];
@@ -156,13 +137,13 @@ export class Builder {
     if (type === "root") {
       comps.push(
         ...((<IRootComponentCreateOptions>options).components || []).map(i =>
-          this._resolveCreateOptions("component", i)
-        )
+          this._resolveCreateOptions("component", i),
+        ),
       );
       direcs.push(
         ...((<IRootComponentCreateOptions>options).directives || []).map(i =>
-          this._resolveCreateOptions("directive", i)
-        )
+          this._resolveCreateOptions("directive", i),
+        ),
       );
       childs.push(...((<IRootComponentCreateOptions>options).children || []));
       depts = this._resolveRootDepts(comps, direcs, depts, entity);
@@ -175,7 +156,7 @@ export class Builder {
       components: comps,
       directives: direcs,
       children: childs,
-      dependencies: depts
+      dependencies: depts,
     };
   }
 
@@ -183,40 +164,33 @@ export class Builder {
     comps: IInstanceCreateOptions<any>[],
     direcs: IInstanceCreateOptions<any>[],
     depts: { [x: string]: string | string[] },
-    entity: IMapEntry<any>
+    entity: IMapEntry<any>,
   ) {
     const arrs = [...comps, ...direcs];
     for (const iterator of arrs) {
       depts = {
         ...depts,
-        ...iterator.dependencies
+        ...iterator.dependencies,
       };
     }
     const moduleName = entity.moduleName!;
-    const moduleDepts = this.globalMap.getModule(moduleName).metadata.entity
-      .dependencies;
+    const moduleDepts = this.globalMap.getModule(moduleName).metadata.entity.dependencies;
     depts = {
       ...depts,
-      ...moduleDepts
+      ...moduleDepts,
     };
     return depts;
   }
 
-  private async _createComponentSource(
-    options: IRootComponentCreateOptions
-  ): Promise<ICompileResult> {
+  private async _createComponentSource(options: IRootComponentCreateOptions): Promise<ICompileResult> {
     const opts = this._resolveCreateOptions("root", options);
     const PROVIDER = this.globalMap.getProvider(opts.provider);
     const provider = this.get(PROVIDER);
     const instance = provider.createInstance(opts, provider);
-    const sourceFile = await provider.callCompilation(
-      opts.provider,
-      instance,
-      options.componentName
-    );
+    const sourceFile = await provider.callCompilation(opts.provider, instance, options.componentName);
     return {
       sourceFile,
-      dependencies: opts.dependencies || {}
+      dependencies: opts.dependencies || {},
     };
   }
 }
@@ -225,7 +199,7 @@ function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
   return (configs.page.children || []).map(i => ({
     childName: i.id,
     refComponent: i.ref,
-    options: i.options || {}
+    options: i.options || {},
   }));
 }
 
@@ -234,7 +208,7 @@ function mapComp(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
-    options: i.options || {}
+    options: i.options || {},
   }));
 }
 
@@ -243,6 +217,6 @@ function mapDire(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
-    options: i.options || {}
+    options: i.options || {},
   }));
 }

@@ -50,14 +50,10 @@ export class CssGridContainer extends ReactComponent {
     rootElement.attrs["style"] = this.helper.createObjectAttr({
       height: "100vh",
       display: "grid",
-      gridTemplateColumns: this.use_GridRowRepeat
-        ? this.calcColnmnsRepeat()
-        : this.calcColumnsSize(),
-      gridTemplateRows: this.use_GridColumnRepeat
-        ? this.calcRowsRepeat()
-        : this.calcRowsSize(),
+      gridTemplateColumns: this.use_GridRowRepeat ? this.calcColnmnsRepeat() : this.calcColumnsSize(),
+      gridTemplateRows: this.use_GridColumnRepeat ? this.calcRowsRepeat() : this.calcRowsSize(),
       gridRowGap: `${this.gridRowGap}px`,
-      gridColumnGap: `${this.gridColumnGap}px`
+      gridColumnGap: `${this.gridColumnGap}px`,
     });
     this.setState("rootElement", rootElement);
     this.initState();
@@ -65,10 +61,7 @@ export class CssGridContainer extends ReactComponent {
   }
 
   private initState() {
-    if (
-      this.useComponentState &&
-      typeof this.defaultComponentState === "object"
-    ) {
+    if (this.useComponentState && typeof this.defaultComponentState === "object") {
       const state = this.defaultComponentState || {};
       const field = ts.createProperty(
         [],
@@ -80,47 +73,35 @@ export class CssGridContainer extends ReactComponent {
           Object.keys(state).map(n =>
             ts.createPropertyAssignment(
               n,
-              resolveSyntaxInsert(typeof state[n], state[n], (_, __) =>
-                ts.createStringLiteral(String(state[n]))
-              )
-            )
+              resolveSyntaxInsert(typeof state[n], state[n], (_, __) => ts.createStringLiteral(String(state[n]))),
+            ),
           ),
-          true
-        )
+          true,
+        ),
       );
       this.addFields([field], "unshift");
     }
   }
 
   private calcColumnsSize(): string | number {
-    return this.gridTemplateColumnsSizes
-      .map(i => (typeof i === "number" ? `${i}px` : i))
-      .join(" ");
+    return this.gridTemplateColumnsSizes.map(i => (typeof i === "number" ? `${i}px` : i)).join(" ");
   }
 
   private calcRowsSize(): string | number {
-    return this.gridTemplateRowsSizes
-      .map(i => (typeof i === "number" ? `${i}px` : i))
-      .join(" ");
+    return this.gridTemplateRowsSizes.map(i => (typeof i === "number" ? `${i}px` : i)).join(" ");
   }
 
   private calcColnmnsRepeat(): string | number {
-    return `repeat(${
-      this.gridTemplateColumnsCount
-    }, ${this.gridTemplateColumnsFrs.map(i => `${i}fr`).join(" ")})`;
+    return `repeat(${this.gridTemplateColumnsCount}, ${this.gridTemplateColumnsFrs.map(i => `${i}fr`).join(" ")})`;
   }
 
   private calcRowsRepeat(): string | number {
-    return `repeat(${
-      this.gridTemplateRowsCount
-    }, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
+    return `repeat(${this.gridTemplateRowsCount}, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
   }
 
   public initExtends() {
     if (this.useComponentState) {
-      this.setExtendParent(
-        ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component])
-      );
+      this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component]));
     }
   }
 }

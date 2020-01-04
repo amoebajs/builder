@@ -6,6 +6,6 @@ import { ZentBaseCssDirective } from "./zent-base-css.directive";
   name: "ambjs-common-directive-module",
   displayName: "基础指令模块",
   provider: "react",
-  directives: [CustomClickDirective, ZentBaseCssDirective]
+  directives: [CustomClickDirective, ZentBaseCssDirective],
 })
 export class CommonDirectiveModule {}

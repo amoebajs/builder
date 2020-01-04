@@ -10,22 +10,13 @@ const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
 
 @Injectable()
 export class WebpackBuild {
-  constructor(
-    protected path: Path,
-    protected fs: Fs,
-    protected config: WebpackConfig
-  ) {}
+  constructor(protected path: Path, protected fs: Fs, protected config: WebpackConfig) {}
 
   public async buildSource(options: IWebpackOptions): Promise<void> {
     let promise = Promise.resolve(0);
     if (options.sandbox) {
       const sandbox = options.sandbox;
-      promise = writeDeptsFile(
-        this.fs,
-        this.path,
-        sandbox.rootPath!,
-        sandbox.dependencies
-      );
+      promise = writeDeptsFile(this.fs, this.path, sandbox.rootPath!, sandbox.dependencies);
     }
     return promise.then(
       () =>
@@ -39,7 +30,7 @@ export class WebpackBuild {
             }
             return resolve();
           });
-        })
+        }),
     );
   }
 }
@@ -48,13 +39,10 @@ export async function writeDeptsFile(
   fs: Fs,
   path: Path,
   rootPath: string,
-  dependencies: { [prop: string]: string } = {}
+  dependencies: { [prop: string]: string } = {},
 ) {
   return fs
-    .writeFile(
-      path.join(rootPath, "package.json"),
-      JSON.stringify({ dependencies }, null, "  ")
-    )
+    .writeFile(path.join(rootPath, "package.json"), JSON.stringify({ dependencies }, null, "  "))
     .then(() => callYarnInstall(rootPath));
 }
 
@@ -63,14 +51,12 @@ function callYarnInstall(sandboxPath: string): number | PromiseLike<number> {
     spawn(yarn, {
       env: { ...process.env },
       cwd: sandboxPath,
-      stdio: ["pipe", process.stdout, process.stderr]
+      stdio: ["pipe", process.stdout, process.stderr],
     }).on("exit", (code, signal) => {
       if (code === 0) {
         resolve(code);
       } else {
-        reject(
-          new Error(`child process exit with code ${code} [${signal || "-"}]`)
-        );
+        reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
       }
     });
   });

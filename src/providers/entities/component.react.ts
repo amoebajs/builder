@@ -29,11 +29,7 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
     this.render = new ReactRender(this);
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
-    this.setExtendParent(
-      ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
-        TYPES.PureComponent
-      ])
-    );
+    this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
   }
 
   protected async onPreRender() {
@@ -48,17 +44,10 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
           switch (element.type) {
             case "state":
             case "props":
-              attrs[key] = this.helper.resolvePropState(
-                element.expression,
-                element.type
-              );
+              attrs[key] = this.helper.resolvePropState(element.expression, element.type);
               break;
             case "literal":
-              attrs[key] = resolveSyntaxInsert(
-                element.syntaxType,
-                element.expression,
-                (_, v) => v.toString()
-              );
+              attrs[key] = resolveSyntaxInsert(element.syntaxType, element.expression, (_, v) => v.toString());
               break;
             default:
               break;
@@ -69,8 +58,8 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
         iterator.id,
         this.helper.createJsxElement(iterator.component, [], {
           ...attrs,
-          key: iterator.id
-        })
+          key: iterator.id,
+        }),
       );
     }
   }
@@ -92,15 +81,10 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
         // createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
         ts.createReturn(
           ts.createParen(
-            this.helper.createJsxElement(
-              root.name,
-              root.types,
-              { ...root.attrs, key: this.entityId },
-              children
-            )
-          )
-        )
-      ])
+            this.helper.createJsxElement(root.name, root.types, { ...root.attrs, key: this.entityId }, children),
+          ),
+        ),
+      ]),
     );
     this.addMethods([renderMethod]);
   }
@@ -119,7 +103,7 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
     this.setState("rootElement", {
       name: tagName,
       attrs,
-      types: []
+      types: [],
     });
   }
 }

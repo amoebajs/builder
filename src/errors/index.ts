@@ -3,9 +3,7 @@ import { IGlobalError } from "./contract";
 export * from "./contract";
 
 function getMessage(message: string | Error): string | undefined {
-  return typeof message === "string"
-    ? message
-    : (message && message.message) || "";
+  return typeof message === "string" ? message : (message && message.message) || "";
 }
 
 export class BasicError extends Error implements IGlobalError {

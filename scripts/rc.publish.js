@@ -5,5 +5,5 @@ run.default({
   ...config,
   rc: "alpha",
   useStamp: true,
-  debug: false
+  debug: false,
 });

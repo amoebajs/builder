@@ -11,6 +11,6 @@ module.exports = {
     types: "index.d.ts",
     scripts: undefined,
     nyc: undefined,
-    devDependencies: undefined
-  })
+    devDependencies: undefined,
+  }),
 };

@@ -22,11 +22,7 @@ export class CustomClickDirective extends ReactDirective {
 
   protected async onAttach() {
     try {
-      this.render.appendJsxAttribute(
-        this.host!,
-        this.attrName!,
-        ts.createJsxExpression(undefined, this.resolveExpr())
-      );
+      this.render.appendJsxAttribute(this.host!, this.attrName!, ts.createJsxExpression(undefined, this.resolveExpr()));
     } catch (error) {
       /** ignore */
     }
@@ -40,25 +36,12 @@ export class CustomClickDirective extends ReactDirective {
       return ts.createArrowFunction(
         [],
         [],
-        [
-          ts.createParameter(
-            [],
-            [],
-            undefined,
-            ts.createIdentifier(input),
-            undefined,
-            TYPES.Any,
-            undefined
-          )
-        ],
+        [ts.createParameter([], [], undefined, ts.createIdentifier(input), undefined, TYPES.Any, undefined)],
         undefined,
         undefined,
         ts.createParen(
           ts.createCall(
-            ts.createPropertyAccess(
-              ts.createThis(),
-              ts.createIdentifier(this.eventType)
-            ),
+            ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(this.eventType)),
             [],
             [
               ts.createObjectLiteral(
@@ -66,18 +49,15 @@ export class CustomClickDirective extends ReactDirective {
                   ts.createPropertyAssignment(
                     ts.createIdentifier(this.targetName),
                     others.length > 0
-                      ? ts.createPropertyAccess(
-                          ts.createIdentifier(start),
-                          others.join(".")
-                        )
-                      : ts.createIdentifier(start)
-                  )
+                      ? ts.createPropertyAccess(ts.createIdentifier(start), others.join("."))
+                      : ts.createIdentifier(start),
+                  ),
                 ],
-                false
-              )
-            ]
-          )
-        )
+                false,
+              ),
+            ],
+          ),
+        ),
       );
     }
     return undefined;
