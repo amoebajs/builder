@@ -65,5 +65,6 @@ typings/
 dist
 build
 scripts-build
+websdk-dist
 
 !src/build

@@ -6,3 +6,4 @@ export * from "./webpack";
 export * from "./global-map";
 export * from "./entity-parser";
 export * from "./entities";
+export * from "./prettier";

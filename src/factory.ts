@@ -14,6 +14,7 @@ import {
   WebpackBuild,
   WebpackConfig,
   WebpackPlugins,
+  Prettier,
 } from "./providers";
 import { CommonComponentModule, CommonDirectiveModule } from "./plugins";
 
@@ -42,6 +43,7 @@ export class Factory {
     this._initGlobalMap();
     this.useProvider(Fs);
     this.useProvider(Path);
+    this.useProvider(Prettier);
     this.useProvider(WebpackConfig);
     this.useProvider(WebpackBuild);
     this.useProvider(WebpackPlugins);

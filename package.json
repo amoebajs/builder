@@ -20,6 +20,7 @@
     "webpack:watch": "cross-env ENV_MODE=watch TS_PROJECT=tsconfig.scripts.json ts-node scripts/build.ts",
     "build:only": "cross-env TS_PROJECT=tsconfig.scripts.json npx ts-node scripts/compile.ts",
     "build": "yarn build:only && yarn webpack:build",
+    "build:sdk": "cross-env TS_PROJECT=tsconfig.scripts.json npx ts-node scripts/websdk.build.ts",
     "scripts:compile": "npx tsc --project tsconfig.scripts.json",
     "scripts:output": "yarn clear:scripts-build && yarn scripts:compile && yarn copy:scripts-yaml && yarn copy:scripts-src-assets",
     "scripts:source": "cd scripts-build && node scripts/compile",
