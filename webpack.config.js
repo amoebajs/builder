@@ -6,7 +6,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "websdk-dist"),
     filename: "index.js",
-    library: "@amoebajs/builder-websdk",
+    library: "BuilderSdk",
     libraryTarget: "commonjs",
   },
   mode: "production",
