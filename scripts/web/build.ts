@@ -1,8 +1,6 @@
 import webpack, { ProgressPlugin } from "webpack";
 import chalk from "chalk";
-import * as fs from "fs";
-import * as path from "path";
-const config = require("../webpack.config");
+const config = require("../../webpack.config");
 
 function createrPlugin() {
   const buildingStatus = {
@@ -28,24 +26,9 @@ function createrPlugin() {
 
 webpack({ ...config, plugins: [...config.plugins, createrPlugin()] }, (err, stats) => {
   if (err) {
-    console.log(err);
+    throw err;
   }
   if (stats.hasErrors()) {
-    console.log(stats.toString());
+    throw new Error(stats.toString());
   }
-  console.log("success");
-  const packagejson = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, "..", "package.json"), { encoding: "utf8" }).toString(),
-  );
-  packagejson.name += "-websdk";
-  packagejson.scripts = undefined;
-  packagejson.devDependencies = undefined;
-  fs.writeFileSync(
-    path.resolve(__dirname, "..", "websdk-dist", "package.json"),
-    JSON.stringify(packagejson, null, "  "),
-    {
-      encoding: "utf8",
-      flag: "w+",
-    },
-  );
 });
