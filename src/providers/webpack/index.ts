@@ -1,3 +1,3 @@
 export * from "./plugins";
 export * from "./config";
-export * from "./build";
+export * from "./builder/build.contract";

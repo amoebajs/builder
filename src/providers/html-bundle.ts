@@ -1,8 +1,8 @@
 import cheerio from "cheerio";
 import { BasicError } from "../errors";
 import { Injectable } from "../core/decorators";
-import { Path } from "./path";
-import { Fs } from "./fs";
+import { Path } from "./path/path.contract";
+import { Fs } from "./fs/fs.contract";
 
 export interface IHtmlEleMatch {
   match: string | RegExp;

@@ -27,6 +27,7 @@
     "scripts:webpack": "cd scripts-build && cross-env ENV_MODE=build node scripts/build",
     "scripts:start": "yarn scripts:source && yarn scripts:webpack",
     "scripts:restart": "yarn scripts:output && yarn scripts:run",
+    "pub:sdk": "cd websdk-dist && yarn publish --registry=https://registry.npmjs.org",
     "pub": "yarn copy:prepublish && yarn compile && node scripts/stable.publish.js",
     "rc": "yarn copy:prepublish && yarn compile && node scripts/rc.publish.js"
   },

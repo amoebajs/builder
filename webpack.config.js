@@ -1,7 +1,7 @@
 const path = require("path");
 
 module.exports = {
-  entry: ["./src/websdk.ts"],
+  entry: ["./src/index.websdk.ts"],
   output: {
     path: path.resolve(__dirname, "websdk-dist"),
     filename: "index.js",

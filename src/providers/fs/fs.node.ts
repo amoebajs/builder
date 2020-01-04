@@ -1,7 +1,8 @@
-import { Injectable } from "../core/decorators";
+import { Injectable } from "../../core/decorators";
+import { Fs } from "./fs.contract";
 
 @Injectable()
-export class Fs {
+export class FsNodeProvider implements Fs {
   public readFile(file: string | number | Buffer): Promise<string | Buffer> {
     return require("fs-extra").readFile(file);
   }

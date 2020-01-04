@@ -1,8 +1,8 @@
-import webpack from "webpack";
 import transformerFactory from "ts-import-plugin";
 import HtmlWebPackPlugin from "html-webpack-plugin";
+import { Plugin } from "webpack";
 import { Injectable } from "../../core/decorators";
-import { Path } from "../path";
+import { Path } from "../path/path.contract";
 
 export interface IWebpackTemplateScriptOptions {
   type: "inline-javascript" | "src-javascript";
@@ -52,7 +52,7 @@ export interface IWebpackOptions {
   sandbox?: Partial<IWebpackSandboxOptions>;
   mode?: "production" | "development";
   minimize?: boolean;
-  plugins?: webpack.Plugin[];
+  plugins?: Plugin[];
 }
 
 const defaultScripts: IWebpackTemplateScriptOptions[] = [];

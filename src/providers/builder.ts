@@ -1,13 +1,13 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { Path } from "./path";
+import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
 import { IChildRefPluginOptions, IInstanceCreateOptions } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
-import { Prettier } from "./prettier";
+import { Prettier } from "./prettier/prettier.contract";
 
 export interface IDirectiveDefine {
   module: string;
