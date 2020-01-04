@@ -1,15 +1,16 @@
 import webpack from "webpack";
 import { spawn } from "child_process";
-import { BasicError } from "../../errors";
-import { Injectable } from "../../core/decorators";
-import { Path } from "../path";
-import { Fs } from "../fs";
-import { IWebpackOptions, WebpackConfig } from "./config";
+import { BasicError } from "../../../errors";
+import { Injectable } from "../../../core/decorators";
+import { Path } from "../../path/path.contract";
+import { Fs } from "../../fs/fs.contract";
+import { IWebpackOptions, WebpackConfig } from "../config";
+import { WebpackBuild } from "./build.contract";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
 
 @Injectable()
-export class WebpackBuild {
+export class WebpackBuildNodeProvider implements WebpackBuild {
   constructor(protected path: Path, protected fs: Fs, protected config: WebpackConfig) {}
 
   public async buildSource(options: IWebpackOptions): Promise<void> {

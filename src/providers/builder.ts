@@ -1,13 +1,13 @@
 import ts from "typescript";
-import prettier from "prettier";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { Path } from "./path";
+import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
 import { IChildRefPluginOptions, IInstanceCreateOptions } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
+import { Prettier } from "./prettier/prettier.contract";
 
 export interface IDirectiveDefine {
   module: string;
@@ -70,10 +70,9 @@ export class Builder {
   constructor(
     protected readonly injector: Injector,
     protected readonly path: Path,
+    protected readonly prettier: Prettier,
     protected readonly globalMap: GlobalMap,
-    public readonly webpackConfig: WebpackConfig,
-    public readonly webpackBuild: WebpackBuild,
-    public readonly webpackPlugins: WebpackPlugins,
+    protected readonly webpackBuild: WebpackBuild,
     public readonly htmlBundle: HtmlBundle,
   ) {}
 
@@ -103,7 +102,7 @@ export class Builder {
       result.sourceCode = sourceString;
       return result;
     }
-    result.sourceCode = prettier.format(sourceString, {
+    result.sourceCode = this.prettier.format(sourceString, {
       printWidth: 120,
       parser: "typescript",
     });

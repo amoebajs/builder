@@ -19,6 +19,6 @@ export {
 } from "./core";
 
 export * from "./errors";
-export * from "./factory/node";
+export * from "./factory/web";
 export * from "./providers";
 export * from "./plugins";
