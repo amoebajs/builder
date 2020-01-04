@@ -1,5 +1,5 @@
 const path = require("path");
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+// const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 module.exports = {
   entry: ["./src/index.websdk.ts"],
@@ -33,5 +33,7 @@ module.exports = {
       },
     ],
   },
-  plugins: [new BundleAnalyzerPlugin()],
+  plugins: [
+    /* new BundleAnalyzerPlugin() */
+  ],
 };
