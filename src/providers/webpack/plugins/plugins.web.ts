@@ -4,7 +4,15 @@ import { WebpackPlugins } from "./plugins.contract";
 
 @Injectable()
 export class WebpackPluginsWebProvider implements WebpackPlugins {
+  public createTsImportPlugin(rules: any[]) {
+    throw new Error("Method not implemented.");
+  }
+
+  public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
+    throw new Error("Method not implemented.");
+  }
+
   public createProgressPlugin(): Plugin {
-    throw new Error("not implemented.");
+    throw new Error("Method not implemented.");
   }
 }

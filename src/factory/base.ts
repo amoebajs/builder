@@ -13,6 +13,8 @@ export class BaseFactory {
 
   public get builder() {
     this.parse();
+    // check if circular
+    // console.log(Array.from(this._di["map"]["values"]()).filter((i: any) => !i.fac));
     return this._di.get(Builder);
   }
 
@@ -35,7 +37,7 @@ export class BaseFactory {
 
   public useProvider(contract: InjectDIToken<any>, imple?: EntityConstructor<any>) {
     if (!this._completed) {
-      // console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      console.log(...(!imple ? [contract] : [contract, "-->", imple]));
       this._useProvider(contract, imple);
       this.__pre_providers.push([contract, imple]);
     }

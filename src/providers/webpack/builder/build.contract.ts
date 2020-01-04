@@ -1,5 +1,5 @@
 import { Injectable } from "../../../core/decorators";
-import { IWebpackOptions, WebpackConfig } from "../config";
+import { IWebpackOptions } from "../config";
 
 @Injectable()
 export abstract class WebpackBuild {

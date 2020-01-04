@@ -26,7 +26,7 @@ function createrPlugin() {
   });
 }
 
-webpack({ ...config, plugins: [createrPlugin()] }, (err, stats) => {
+webpack({ ...config, plugins: [...config.plugins, createrPlugin()] }, (err, stats) => {
   if (err) {
     console.log(err);
   }

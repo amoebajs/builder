@@ -72,9 +72,7 @@ export class Builder {
     protected readonly path: Path,
     protected readonly prettier: Prettier,
     protected readonly globalMap: GlobalMap,
-    public readonly webpackConfig: WebpackConfig,
-    public readonly webpackBuild: WebpackBuild,
-    public readonly webpackPlugins: WebpackPlugins,
+    protected readonly webpackBuild: WebpackBuild,
     public readonly htmlBundle: HtmlBundle,
   ) {}
 
