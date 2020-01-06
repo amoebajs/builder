@@ -1,8 +1,9 @@
 import ts from "typescript";
-import { Component, Group, Input } from "../../core/decorators";
+import { Component, Group, Input, Attach } from "../../core/decorators";
 import { DOMS, TYPES } from "../../utils";
 import { resolveSyntaxInsert } from "../../core/base";
 import { ReactComponent } from "../../providers";
+import { PropAttach } from "../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })
@@ -42,6 +43,18 @@ export class CssGridContainer extends ReactComponent {
 
   @Input({ displayName: "Grid列间隔(px)" })
   public gridColumnGap: number = 0;
+
+  @Attach({ displayName: "占据的行数" })
+  public childRowSpan: PropAttach<number> = new PropAttach(1);
+
+  @Attach({ displayName: "占据的列数" })
+  public childColumnSpan: PropAttach<number> = new PropAttach(1);
+
+  @Attach({ displayName: "行起点" })
+  public childRowStart: PropAttach<number> = new PropAttach(1);
+
+  @Attach({ displayName: "列起点" })
+  public childColumnStart: PropAttach<number> = new PropAttach(1);
 
   protected async onInit() {
     await super.onInit();

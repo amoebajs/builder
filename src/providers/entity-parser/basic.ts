@@ -14,6 +14,7 @@ import { BasicDirective } from "../../core/directive";
 import { createExportModifier, exists } from "../../utils";
 import { InvalidOperationError } from "../../errors";
 import { BasicChildRef } from "../entities";
+import { PropAttach } from "../../core/libs/attach.basic";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
@@ -271,14 +272,10 @@ export class BasicEntityProvider {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
-        options;
-        // const attach = attaches[key];
-        // const group = attach.group;
-        // if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(attach.name.value!)) {
-        //   (<any>model)[attach.realName] = options[group][attach.name.value!];
-        // } else if (options.hasOwnProperty(attach.name.value!)) {
-        //   (<any>model)[attach.realName] = options[attach.name.value!];
-        // }
+        const attach = attaches[key];
+        // invalid value or null value
+        if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
+        model[attach.name.value]["__options"] = options[key] || {};
       }
     }
   }
