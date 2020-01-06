@@ -5,7 +5,7 @@ import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core/decorators";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { WebpackPlugins, IWebpackTemplateStyleOptions, IWebpackTemplateScriptOptions } from "./plugins.contract";
+import { IWebpackTemplateScriptOptions, IWebpackTemplateStyleOptions, WebpackPlugins } from "./plugins.contract";
 
 const defaultScripts: IWebpackTemplateScriptOptions[] = [];
 
@@ -26,7 +26,7 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
 
   public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
     return new HtmlWebPackPlugin({
-      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "assets", "index.html"),
+      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.html"),
       title: options?.title ?? "Index",
       charset: options?.charset ?? "utf-8",
       styleList: (options?.styles ?? defaultStyleSheets)

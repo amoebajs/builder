@@ -5,13 +5,13 @@ import {
   Fs,
   HtmlBundle,
   Path,
+  Prettier,
   ReactComponent,
   ReactDirective,
   ReactEntityProvider,
   WebpackBuild,
   WebpackConfig,
   WebpackPlugins,
-  Prettier,
 } from "../providers";
 import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
 import { BaseFactory } from "./base";

@@ -7,6 +7,9 @@ page:
       name: zent-button
       id: ZentBtnDemoComponent
       options: {}
+    - module: ambjs-common-component-module
+      name: zent-input
+      id: ZentInputComponent
   directives:
     - module: ambjs-common-directive-module
       name: zent-base-css
@@ -21,6 +24,9 @@ page:
         targetName: zentBtn02Content
         expression: e => new Date().getTime()
   children:
+    - ref: ZentInputComponent
+      id: ZentInputComponentRef01
+      options: {}
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       options:

@@ -16,6 +16,7 @@ export {
   Input,
   Output,
   Attach,
+  createEntityId,
 } from "./core";
 
 export * from "./errors";

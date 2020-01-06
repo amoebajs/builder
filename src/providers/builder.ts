@@ -73,6 +73,8 @@ export class Builder {
     protected readonly prettier: Prettier,
     protected readonly globalMap: GlobalMap,
     protected readonly webpackBuild: WebpackBuild,
+    public webpackConfig: WebpackConfig,
+    public webpackPlugins: WebpackPlugins,
     public readonly htmlBundle: HtmlBundle,
   ) {}
 
