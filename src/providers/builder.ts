@@ -24,17 +24,15 @@ export interface IChildDefine {
   input?: { [name: string]: any };
 }
 
+export interface IPageDefine extends IComponentDefine {
+  attach?: { [name: string]: any };
+  directives?: IDirectiveDefine[];
+  children?: IChildDefine[];
+}
+
 export interface IPageCreateOptions {
   components?: IComponentDefine[];
-  page: {
-    module: string;
-    name: string;
-    id: string;
-    input?: { [name: string]: any };
-    attach?: { [name: string]: any };
-    directives?: IDirectiveDefine[];
-    children?: IChildDefine[];
-  };
+  page: IPageDefine;
 }
 
 export interface ISourceCreateOptions {
