@@ -64,7 +64,7 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map(),
     };
-    const model = this._initPropsContextInstance(template, input, context).setEntityId(id);
+    const model = this._initContextInstance(template, input, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -83,7 +83,7 @@ export class BasicEntityProvider {
     }
     for (const iterator of children) {
       model["__children"].push(
-        this._initPropsContextInstance(BasicChildRef, {}, context)
+        this._initContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
           .setRefOptions(iterator.input || {}),
@@ -93,7 +93,7 @@ export class BasicEntityProvider {
       model["__directives"].push(
         provider.attachDirective(
           model,
-          this._initPropsContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
+          this._initContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
             iterator.id,
           ),
         ),
@@ -135,7 +135,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onPropertiesInit<T extends any>(_: T) {}
+  protected onInputPropertiesInit<T extends any>(_: T) {}
 
   /** @override */
   protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
@@ -220,7 +220,7 @@ export class BasicEntityProvider {
     return createClass(!isExport, model.entityId, context);
   }
 
-  private _initPropsContextInstance<T extends BasicCompilationEntity>(
+  private _initContextInstance<T extends BasicCompilationEntity>(
     template: InjectDIToken<T>,
     options: { [prop: string]: any },
     context: IBasicCompilationContext,
@@ -238,10 +238,10 @@ export class BasicEntityProvider {
   }
 
   private _inputProperties<T extends any>(model: T, options: any): T {
-    const props = resolveInputProperties(Object.getPrototypeOf(model).constructor);
-    for (const key in props) {
-      if (props.hasOwnProperty(key)) {
-        const prop = props[key];
+    const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in inputs) {
+      if (inputs.hasOwnProperty(key)) {
+        const prop = inputs[key];
         const group = prop.group;
         if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(prop.name.value!)) {
           (<any>model)[prop.realName] = options[group][prop.name.value!];
@@ -250,7 +250,7 @@ export class BasicEntityProvider {
         }
       }
     }
-    this.onPropertiesInit(model);
+    this.onInputPropertiesInit(model);
     return model;
   }
 }
