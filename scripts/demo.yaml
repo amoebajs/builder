@@ -2,7 +2,7 @@ components:
   - module: ambjs-common-component-module
     name: zent-button
     id: ZentBtnDemoComponent
-    options: {}
+    input: {}
   - module: ambjs-common-component-module
     name: zent-input
     id: ZentInputComponent
@@ -10,19 +10,6 @@ page:
   module: ambjs-common-component-module
   name: css-grid-container
   id: "CssGridPageDemoRoot"
-  directives:
-    - module: ambjs-common-directive-module
-      name: zent-base-css
-      id: ZentBaseCssDemoDirective
-    - module: ambjs-common-directive-module
-      name: custom-click
-      id: CustomClickDemoDirective
-      options:
-        host: ZentBtnDemoCompRef02
-        eventType: setState
-        attrName: onClick
-        targetName: zentBtn02Content
-        expression: e => new Date().getTime()
   children:
     - ref: ZentInputComponent
       id: ZentInputComponentRef01
@@ -32,7 +19,7 @@ page:
         name: name
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
-      options:
+      input:
         loading:
           type: state
           expression: zentBtnLoading
@@ -49,7 +36,7 @@ page:
           expression: zentBtnType
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef02
-      options:
+      input:
         loading:
           type: literal
           syntaxType: boolean
@@ -65,7 +52,20 @@ page:
           type: literal
           syntaxType: string
           expression: normal
-  options:
+  directives:
+    - module: ambjs-common-directive-module
+      name: zent-base-css
+      id: ZentBaseCssDemoDirective
+    - module: ambjs-common-directive-module
+      name: custom-click
+      id: CustomClickDemoDirective
+      input:
+        host: ZentBtnDemoCompRef02
+        eventType: setState
+        attrName: onClick
+        targetName: zentBtn02Content
+        expression: e => new Date().getTime()
+  input:
     basic:
       useComponentState: true
       defaultComponentState:

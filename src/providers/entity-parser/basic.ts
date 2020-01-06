@@ -6,6 +6,7 @@ import {
   IConstructor,
   IFrameworkDepts,
   Injectable,
+  resolveAttachProperties,
   resolveInputProperties,
 } from "../../core/decorators";
 import { BasicCompilationEntity, IBasicCompilationContext, IBasicCompilationFinalContext } from "../../core/base";
@@ -35,8 +36,14 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   input?: { [prop: string]: any };
 }
 
-export interface IInstanceCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
+export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
+  attach?: { [prop: string]: any };
+}
+
+export interface IPropertiesOptions {
+  input?: { [prop: string]: any };
+  attach?: { [prop: string]: any };
 }
 
 @Injectable()
@@ -47,12 +54,13 @@ export class BasicEntityProvider {
     {
       template,
       input = {},
+      attach = {},
       components = [],
       directives = [],
       children = [],
       id,
       passContext,
-    }: IInstanceCreateOptions<T>,
+    }: IRootPageCreateOptions<T>,
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || {
@@ -64,7 +72,7 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map(),
     };
-    const model = this._initPropsContextInstance(template, input, context).setEntityId(id);
+    const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -83,7 +91,7 @@ export class BasicEntityProvider {
     }
     for (const iterator of children) {
       model["__children"].push(
-        this._initPropsContextInstance(BasicChildRef, {}, context)
+        this._initContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
           .setRefOptions(iterator.input || {}),
@@ -93,7 +101,7 @@ export class BasicEntityProvider {
       model["__directives"].push(
         provider.attachDirective(
           model,
-          this._initPropsContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
+          this._initContextInstance<BasicDirective>(iterator.template, { input: iterator.input }, context).setEntityId(
             iterator.id,
           ),
         ),
@@ -135,7 +143,14 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onPropertiesInit<T extends any>(_: T) {}
+  protected onInputPropertiesInit<T extends any>(_: T, options: IPropertiesOptions) {
+    if (options.input) {
+      this._inputProperties(_, options.input);
+    }
+    if (options.attach) {
+      this._attachProperties(_, options.attach);
+    }
+  }
 
   /** @override */
   protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
@@ -220,13 +235,13 @@ export class BasicEntityProvider {
     return createClass(!isExport, model.entityId, context);
   }
 
-  private _initPropsContextInstance<T extends BasicCompilationEntity>(
+  private _initContextInstance<T extends BasicCompilationEntity>(
     template: InjectDIToken<T>,
-    options: { [prop: string]: any },
+    options: IPropertiesOptions,
     context: IBasicCompilationContext,
   ): T {
-    const instance = this.injector.get(template);
-    const model = this._inputProperties(instance, options);
+    const model = this.injector.get(template);
+    this.onInputPropertiesInit(model, options);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -237,21 +252,35 @@ export class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: any): T {
-    const props = resolveInputProperties(Object.getPrototypeOf(model).constructor);
-    for (const key in props) {
-      if (props.hasOwnProperty(key)) {
-        const prop = props[key];
-        const group = prop.group;
-        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[group][prop.name.value!];
-        } else if (options.hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[prop.name.value!];
+  private _inputProperties<T extends any>(model: T, options: any) {
+    const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in inputs) {
+      if (inputs.hasOwnProperty(key)) {
+        const input = inputs[key];
+        const group = input.group;
+        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[group][input.name.value!];
+        } else if (options.hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[input.name.value!];
         }
       }
     }
-    this.onPropertiesInit(model);
-    return model;
+  }
+
+  private _attachProperties<T extends any>(model: T, options: any) {
+    const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in attaches) {
+      if (attaches.hasOwnProperty(key)) {
+        options;
+        // const attach = attaches[key];
+        // const group = attach.group;
+        // if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(attach.name.value!)) {
+        //   (<any>model)[attach.realName] = options[group][attach.name.value!];
+        // } else if (options.hasOwnProperty(attach.name.value!)) {
+        //   (<any>model)[attach.realName] = options[attach.name.value!];
+        // }
+      }
+    }
   }
 }
 

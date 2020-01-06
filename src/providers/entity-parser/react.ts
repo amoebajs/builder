@@ -1,9 +1,9 @@
 import ts from "typescript";
-import { BasicEntityProvider } from "./basic";
+import { BasicEntityProvider, IPropertiesOptions } from "./basic";
 import { ReactHelper } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
 import { REACT } from "../../utils";
-import { EntityConstructor, Injectable, resolveReactProps } from "../../core/decorators";
+import { EntityConstructor, Injectable } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";
 import { IBasicCompilationFinalContext } from "../../core";
@@ -43,10 +43,12 @@ export class ReactEntityProvider extends BasicEntityProvider {
     return super.createRootComponent(model, context, false);
   }
 
-  public resolveExtensionsMetadata(target: EntityConstructor<any>): { [name: string]: any } {
-    return {
-      props: resolveReactProps(target),
-    };
+  public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {
+    return super.resolveExtensionsMetadata(_);
+  }
+
+  protected onInputPropertiesInit(_: EntityConstructor<any>, __: IPropertiesOptions) {
+    return super.onInputPropertiesInit(_, __);
   }
 
   public attachDirective(parent: BasicComponent, target: BasicDirective): BasicDirective;
