@@ -23,11 +23,16 @@ import {
 } from "../providers";
 import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
 
-export class BaseFactory {
+export interface IFactoryOptions {
+  trace: boolean;
+}
+
+export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   private _completed = false;
   private _di = new DIContainer({ type: "native" });
   private _map = new GlobalMap();
 
+  private __trace = false;
   private __pre_providers: [any, any?][] = [];
   private __pre_entity_providers: [string, any][] = [];
   private __pre_modules: any[] = [];
@@ -39,10 +44,16 @@ export class BaseFactory {
     return this._di.get(Builder);
   }
 
-  constructor() {
+  constructor(options: Partial<O> = {}) {
+    this.initOptions(options);
     this.initProviders();
     this.initEntityProviders();
     this.initModules();
+  }
+
+  /** @override can be overrided */
+  protected initOptions(options: Partial<O>) {
+    if ((<O>options).trace !== void 0) this.__trace = (<O>options).trace;
   }
 
   /** @override can be overrided */
@@ -73,7 +84,9 @@ export class BaseFactory {
 
   public useProvider(contract: InjectDIToken<any>, imple?: EntityConstructor<any>) {
     if (!this._completed) {
-      console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      if (this.__trace) {
+        console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      }
       this._useProvider(contract, imple);
       this.__pre_providers.push([contract, imple]);
     }

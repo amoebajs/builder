@@ -1,12 +1,12 @@
 import { Fs, Path, WebpackBuild, WebpackPlugins, Prettier } from "../providers";
-import { BaseFactory } from "./base";
+import { BaseFactory, IFactoryOptions } from "./base";
 import { FsNodeProvider } from "../providers/fs/fs.node";
 import { PathNodeProvider } from "../providers/path/path.node";
 import { WebpackBuildNodeProvider } from "../providers/webpack/builder/build.node";
 import { WebpackPluginsNodeProvider } from "../providers/webpack/plugins/plugins.node";
 import { PrettierNodeProvider } from "../providers/prettier/prettier.node";
 
-export class Factory extends BaseFactory {
+export class Factory<O extends IFactoryOptions = IFactoryOptions> extends BaseFactory<O> {
   /** @override can be overrided */
   protected initProviders() {
     super.initProviders();
