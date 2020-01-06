@@ -15,10 +15,10 @@ export {
   Group,
   Input,
   Output,
-  Attach
+  Attach,
 } from "./core";
 
 export * from "./errors";
-export * from "./factory";
+export * from "./factory/node";
 export * from "./providers";
 export * from "./plugins";

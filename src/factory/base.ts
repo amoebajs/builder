@@ -1,29 +1,8 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
-import {
-  EntityConstructor,
-  IFrameworkDepts,
-  Injectable,
-  getInjectScope,
-  resolveDepts
-} from "./core/decorators";
-import {
-  BasicChildRef,
-  BasicEntityProvider,
-  Builder,
-  Fs,
-  GlobalMap,
-  HtmlBundle,
-  Path,
-  ReactComponent,
-  ReactDirective,
-  ReactEntityProvider,
-  WebpackBuild,
-  WebpackConfig,
-  WebpackPlugins
-} from "./providers";
-import { CommonComponentModule, CommonDirectiveModule } from "./plugins";
+import { EntityConstructor, IFrameworkDepts, Injectable, getInjectScope, resolveDepts } from "../core/decorators";
+import { GlobalMap, Builder, BasicEntityProvider } from "../providers";
 
-export class Factory {
+export class BaseFactory {
   private _completed = false;
   private _di = new DIContainer({ type: "native" });
   private _map = new GlobalMap();
@@ -34,6 +13,8 @@ export class Factory {
 
   public get builder() {
     this.parse();
+    // check if circular
+    // console.log(Array.from(this._di["map"]["values"]()).filter((i: any) => !i.fac));
     return this._di.get(Builder);
   }
 
@@ -46,36 +27,17 @@ export class Factory {
   /** @override can be overrided */
   protected initProviders() {
     this._initGlobalMap();
-    this.useProvider(Fs);
-    this.useProvider(Path);
-    this.useProvider(WebpackConfig);
-    this.useProvider(WebpackBuild);
-    this.useProvider(WebpackPlugins);
-    this.useProvider(HtmlBundle);
-    this.useProvider(Builder);
-    this.useProvider(BasicEntityProvider);
-    this.useProvider(BasicChildRef);
-    this.useProvider(ReactDirective);
-    this.useProvider(ReactComponent);
   }
 
   /** @override can be overrided */
-  protected initModules() {
-    this.useModule(CommonComponentModule);
-    this.useModule(CommonDirectiveModule);
-  }
+  protected initModules() {}
 
   /** @override can be overrided */
-  protected initEntityProviders() {
-    this.useEntityProvider("react", ReactEntityProvider);
-  }
+  protected initEntityProviders() {}
 
-  public useProvider(
-    contract: InjectDIToken<any>,
-    imple?: EntityConstructor<any>
-  ) {
+  public useProvider(contract: InjectDIToken<any>, imple?: EntityConstructor<any>) {
     if (!this._completed) {
-      // console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      console.log(...(!imple ? [contract] : [contract, "-->", imple]));
       this._useProvider(contract, imple);
       this.__pre_providers.push([contract, imple]);
     }
@@ -94,10 +56,7 @@ export class Factory {
     return this;
   }
 
-  public useEntityProvider<T extends typeof BasicEntityProvider>(
-    name: keyof IFrameworkDepts,
-    provider: T
-  ) {
+  public useEntityProvider<T extends typeof BasicEntityProvider>(name: keyof IFrameworkDepts, provider: T) {
     if (!this._completed) {
       this.__pre_entity_providers.push([name, provider]);
       this._map.useProvider(name, provider);
@@ -108,9 +67,7 @@ export class Factory {
 
   public removeProvider(contract: InjectDIToken<any>) {
     if (!this._completed) {
-      this.__pre_providers = this.__pre_providers.filter(
-        i => i[0] !== contract
-      );
+      this.__pre_providers = this.__pre_providers.filter(i => i[0] !== contract);
     }
     return this;
   }
@@ -122,13 +79,9 @@ export class Factory {
     return this;
   }
 
-  public removeEntityProvider<T extends typeof BasicEntityProvider>(
-    provider: T
-  ) {
+  public removeEntityProvider<T extends typeof BasicEntityProvider>(provider: T) {
     if (!this._completed) {
-      this.__pre_entity_providers = this.__pre_entity_providers.filter(
-        i => i[1] !== provider
-      );
+      this.__pre_entity_providers = this.__pre_entity_providers.filter(i => i[1] !== provider);
     }
     return this;
   }
@@ -152,9 +105,7 @@ export class Factory {
     if (this.__pre_entity_providers.length > 0) {
       const __pre_entity_providers = [...this.__pre_entity_providers];
       this.__pre_entity_providers = [];
-      __pre_entity_providers.forEach(md =>
-        this.useEntityProvider(<any>md[0], md[1])
-      );
+      __pre_entity_providers.forEach(md => this.useEntityProvider(<any>md[0], md[1]));
     }
     return this;
   }
@@ -188,7 +139,7 @@ export class Factory {
       token: contract,
       imp: imple || contract,
       depts: resolveDepts(imple || contract),
-      scope: getInjectScope(imple || contract) || InjectScope.Singleton
+      scope: getInjectScope(imple || contract) || InjectScope.Singleton,
     });
   }
 }

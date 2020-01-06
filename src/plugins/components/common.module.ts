@@ -6,6 +6,6 @@ import { ZentButtonComponent } from "./zent-button.component";
   name: "ambjs-common-component-module",
   displayName: "基础组件模块",
   provider: "react",
-  components: [CssGridContainer, ZentButtonComponent]
+  components: [CssGridContainer, ZentButtonComponent],
 })
 export class CommonComponentModule {}

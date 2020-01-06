@@ -21,7 +21,7 @@ export const REACT = {
   PureComponent: "PureComponent",
   StatelessComponent: "StatelessComponent",
   Fragment: "React.Fragment",
-  Render: "render"
+  Render: "render",
 };
 
 export interface IJsxAttrs {
@@ -35,63 +35,48 @@ export const IMPORTS = {
     [],
     [],
     ts.createImportClause(ts.createIdentifier(REACT.NS), undefined),
-    ts.createStringLiteral(REACT.PackageName)
-  )
+    ts.createStringLiteral(REACT.PackageName),
+  ),
 };
 
 export const GenericGen = {
   StatelessComponent(props?: ts.TypeNode) {
     return ts.createTypeReferenceNode(
-      ts.createQualifiedName(
-        ts.createIdentifier(REACT.NS),
-        ts.createIdentifier(REACT.StatelessComponent)
-      ),
-      [props || AnyType]
+      ts.createQualifiedName(ts.createIdentifier(REACT.NS), ts.createIdentifier(REACT.StatelessComponent)),
+      [props || AnyType],
     );
   },
   Component(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
     return ts.createExpressionWithTypeArguments(
       [props || AnyType, state || AnyType, ss || AnyType],
-      ts.createPropertyAccess(
-        ts.createIdentifier(REACT.NS),
-        ts.createIdentifier(REACT.Component)
-      )
+      ts.createPropertyAccess(ts.createIdentifier(REACT.NS), ts.createIdentifier(REACT.Component)),
     );
   },
   PureComponent(props?: ts.TypeNode, state?: ts.TypeNode, ss?: ts.TypeNode) {
     return ts.createExpressionWithTypeArguments(
       [props || AnyType, state || AnyType, ss || AnyType],
-      ts.createPropertyAccess(
-        ts.createIdentifier(REACT.NS),
-        ts.createIdentifier(REACT.PureComponent)
-      )
+      ts.createPropertyAccess(ts.createIdentifier(REACT.NS), ts.createIdentifier(REACT.PureComponent)),
     );
-  }
+  },
 };
 
 export const TYPES = {
   Any: AnyType,
   StatelessComponent: GenericGen.StatelessComponent(),
   Component: GenericGen.Component(),
-  PureComponent: GenericGen.PureComponent()
+  PureComponent: GenericGen.PureComponent(),
 };
 
 export const THIS = {
-  Props: ts.createPropertyAccess(
-    ts.createThis(),
-    ts.createIdentifier(REACT.Props)
-  ),
-  State: ts.createPropertyAccess(
-    ts.createThis(),
-    ts.createIdentifier(REACT.State)
-  )
+  Props: ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(REACT.Props)),
+  State: ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(REACT.State)),
 };
 
 export const DOMS = {
   Div: "div",
   Span: "span",
   Button: "button",
-  Br: "br"
+  Br: "br",
 };
 
 export function createExportModifier(isExport = false) {
@@ -102,34 +87,25 @@ export function createConstVariableStatement(
   name: string,
   isExport = false,
   typeNode?: ts.TypeNode,
-  initializer?: ts.Expression
+  initializer?: ts.Expression,
 ) {
   return ts.createVariableStatement(
     isExport ? [ts.createModifier(ts.SyntaxKind.ExportKeyword)] : [],
     ts.createVariableDeclarationList(
-      [
-        ts.createVariableDeclaration(
-          ts.createIdentifier(name),
-          typeNode,
-          initializer
-        )
-      ],
-      ts.NodeFlags.Const
-    )
+      [ts.createVariableDeclaration(ts.createIdentifier(name), typeNode, initializer)],
+      ts.NodeFlags.Const,
+    ),
   );
 }
 
 export function createThisAccess(name: string): string | ts.JsxExpression {
-  return ts.createJsxExpression(
-    undefined,
-    ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(name))
-  );
+  return ts.createJsxExpression(undefined, ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(name)));
 }
 
 export function createPublicArrow(
   name: string,
   params: ts.ParameterDeclaration[],
-  statements: ts.Statement[]
+  statements: ts.Statement[],
 ): ts.PropertyDeclaration {
   return ts.createProperty(
     [],
@@ -143,8 +119,8 @@ export function createPublicArrow(
       params,
       undefined,
       ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-      ts.createBlock(statements)
-    )
+      ts.createBlock(statements),
+    ),
   );
 }
 
@@ -155,7 +131,7 @@ export function createAnyParameter(name: string): ts.ParameterDeclaration {
     undefined,
     ts.createIdentifier(name),
     undefined,
-    ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword)
+    ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword),
   );
 }
 

@@ -1,28 +1,13 @@
-import {
-  EntityConstructor,
-  IBasicI18NContract,
-  IConstructor,
-  UnnamedPartial,
-  resolveParams
-} from "./base";
+import { EntityConstructor, IBasicI18NContract, IConstructor, UnnamedPartial, resolveParams } from "./base";
 
 export const DIRECTIVE_DEFINE = "ambjs::pipe_define";
 
-export function defineDirective(
-  target: EntityConstructor<any>,
-  metadata: IDirectiveContract
-) {
+export function defineDirective(target: EntityConstructor<any>, metadata: IDirectiveContract) {
   return Reflect.defineMetadata(DIRECTIVE_DEFINE, metadata, target);
 }
 
-export function resolveDirective(
-  target: EntityConstructor<any>,
-  defaults: Partial<IDirectiveContract> = {}
-) {
-  return (
-    <IDirectiveContract>Reflect.getMetadata(DIRECTIVE_DEFINE, target) ||
-    defaults
-  );
+export function resolveDirective(target: EntityConstructor<any>, defaults: Partial<IDirectiveContract> = {}) {
+  return <IDirectiveContract>Reflect.getMetadata(DIRECTIVE_DEFINE, target) || defaults;
 }
 
 export interface IDirectiveContract extends IBasicI18NContract {
@@ -37,13 +22,11 @@ const defaults: IDirectiveContract = {
   dependencies: {},
   description: null,
   i18nDescription: null,
-  i18nName: null
+  i18nName: null,
 };
 
 export function Directive(name: string): ClassDecorator;
-export function Directive(
-  params: UnnamedPartial<IDirectiveContract>
-): ClassDecorator;
+export function Directive(params: UnnamedPartial<IDirectiveContract>): ClassDecorator;
 export function Directive(define: any) {
   const decoParams = resolveParams<IDirectiveContract>(define);
   return function customDirective(target: IConstructor<any>) {
@@ -52,8 +35,8 @@ export function Directive(define: any) {
       ...decoParams,
       dependencies: {
         ...defaults.dependencies,
-        ...decoParams.dependencies
-      }
+        ...decoParams.dependencies,
+      },
     };
     defineDirective(target, options);
     return <any>target;

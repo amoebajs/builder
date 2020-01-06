@@ -41,47 +41,31 @@ export type IFrameworkStructure<T> = {
 export const defaultFrameworkDepts: IFrameworkDepts = {
   react: {
     react: "^16.12.0",
-    "react-dom": "^16.12.0"
-  }
+    "react-dom": "^16.12.0",
+  },
 };
 
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
   return getDependencies(target) || [];
 }
 
-export function defineScope(
-  target: EntityConstructor<any>,
-  scope: InjectScope
-) {
+export function defineScope(target: EntityConstructor<any>, scope: InjectScope) {
   return Reflect.defineMetadata(PROVIDER_SCOPE, scope, target);
 }
 
-export function resolveScope(
-  target: EntityConstructor<any>,
-  defaults: InjectScope = InjectScope.Singleton
-) {
+export function resolveScope(target: EntityConstructor<any>, defaults: InjectScope = InjectScope.Singleton) {
   return <InjectScope>Reflect.getMetadata(PROVIDER_SCOPE, target) || defaults;
 }
 
-export function defineModule(
-  target: EntityConstructor<any>,
-  metadata: IModuleContract
-) {
+export function defineModule(target: EntityConstructor<any>, metadata: IModuleContract) {
   return Reflect.defineMetadata(MODULE_DEFINE, metadata, target);
 }
 
-export function resolveModule(
-  target: EntityConstructor<any>,
-  defaults: Partial<IModuleContract> = {}
-) {
-  return (
-    <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults
-  );
+export function resolveModule(target: EntityConstructor<any>, defaults: Partial<IModuleContract> = {}) {
+  return <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults;
 }
 
-export function resolveParams<T extends IBasicI18NContract>(
-  params: string | { [prop: string]: any }
-): Partial<T> {
+export function resolveParams<T extends IBasicI18NContract>(params: string | { [prop: string]: any }): Partial<T> {
   let decoParams: Partial<T> = {};
   if (typeof params === "string") decoParams.name = params;
   else if (typeof params === "object") decoParams = <any>{ ...params };
@@ -91,13 +75,9 @@ export function resolveParams<T extends IBasicI18NContract>(
 export function setDisplayI18NMeta(
   target: IDescriptionMeta | IWeakDescriptionMeta | undefined | null,
   key: string,
-  mode: "displayValue" | "value" = "displayValue"
+  mode: "displayValue" | "value" = "displayValue",
 ) {
-  if (
-    target &&
-    target.i18n[key] === void 0 &&
-    (<IDescriptionMeta>target)[mode] !== null
-  ) {
+  if (target && target.i18n[key] === void 0 && (<IDescriptionMeta>target)[mode] !== null) {
     target.i18n[key] = (<IDescriptionMeta>target)[mode];
   }
   return target;

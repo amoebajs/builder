@@ -6,9 +6,7 @@ import { ReactComponent } from "./component.react";
 import { Injectable } from "../../core/decorators";
 
 @Injectable(InjectScope.New)
-export abstract class ReactDirective<
-  T extends IPureObject = IPureObject
-> extends BasicDirective<T> {
+export abstract class ReactDirective<T extends IPureObject = IPureObject> extends BasicDirective<T> {
   private readonly __parentId!: string;
   private readonly __parentRef!: ReactComponent;
   protected helper = new ReactHelper();

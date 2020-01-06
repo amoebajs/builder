@@ -1,9 +1,4 @@
-import {
-  EntityConstructor,
-  IModuleContract,
-  defaultFrameworkDepts,
-  defineModule
-} from "./base";
+import { EntityConstructor, IModuleContract, defaultFrameworkDepts, defineModule } from "./base";
 
 const defaults: IModuleContract = {
   name: null,
@@ -11,7 +6,7 @@ const defaults: IModuleContract = {
   provider: "react",
   components: [],
   directives: [],
-  dependencies: { react: "^16.12.0", "react-dom": "^16.12.0" }
+  dependencies: { react: "^16.12.0", "react-dom": "^16.12.0" },
 };
 
 export function Module(define: Partial<IModuleContract> = {}) {
@@ -21,7 +16,7 @@ export function Module(define: Partial<IModuleContract> = {}) {
     if (fwkDepts) {
       options.dependencies = {
         ...fwkDepts,
-        ...options.dependencies
+        ...options.dependencies,
       };
     }
     defineModule(target, options);

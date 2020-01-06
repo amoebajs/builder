@@ -1,11 +1,5 @@
 import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
-import {
-  EntityConstructor,
-  IBasicI18NContract,
-  UnnamedPartial,
-  resolveParams,
-  setDisplayI18NMeta
-} from "./base";
+import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_OUTPUT_DEFINE = "ambjs::property_output_define";
@@ -17,15 +11,7 @@ export interface IOutputPropertyContract extends IPropertyGroupContract {
 }
 
 export interface IInputPropertyContract extends IOutputPropertyContract {
-  type:
-    | "object"
-    | "string"
-    | "number"
-    | "boolean"
-    | (string | number)[]
-    | number[]
-    | string[]
-    | null;
+  type: "object" | "string" | "number" | "boolean" | (string | number)[] | number[] | string[] | null;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -42,20 +28,18 @@ const defaultGroup: IPropertyGroupContract = {
   displayName: null,
   description: null,
   i18nDescription: null,
-  i18nName: null
+  i18nName: null,
 };
 
 export function Group(name: string): ClassDecorator;
-export function Group(
-  params: UnnamedPartial<IPropertyGroupContract>
-): ClassDecorator;
+export function Group(params: UnnamedPartial<IPropertyGroupContract>): ClassDecorator;
 export function Group(params: any) {
   const decoParams = resolveParams<IPropertyGroupContract>(params);
   if (!params.name) throw new Error("property group name can't be empty");
   return function propGroupFactory(target: any) {
     definePropertyGroup(target, {
       ...defaultGroup,
-      ...decoParams
+      ...decoParams,
     });
   };
 }
@@ -67,21 +51,19 @@ const defaultInput: IInputPropertyContract = {
   type: null,
   description: null,
   i18nDescription: null,
-  i18nName: null
+  i18nName: null,
 };
 
 export function Input(): PropertyDecorator;
 export function Input(name: string): PropertyDecorator;
-export function Input(
-  params: Partial<IInputPropertyContract>
-): PropertyDecorator;
+export function Input(params: Partial<IInputPropertyContract>): PropertyDecorator;
 export function Input(params?: any) {
   const decoParams = resolveParams<IInputPropertyContract>(params);
   return function propInputFactory(target: any, propertyKey: string) {
     defineBasicProperty(target.constructor, {
       ...defaultInput,
       ...decoParams,
-      realName: propertyKey
+      realName: propertyKey,
     });
   };
 }
@@ -93,14 +75,12 @@ const defaultOutput: IInputPropertyContract = {
   type: null,
   description: null,
   i18nDescription: null,
-  i18nName: null
+  i18nName: null,
 };
 
 export function Output(): PropertyDecorator;
 export function Output(name: string): PropertyDecorator;
-export function Output(
-  params: Partial<IOutputPropertyContract>
-): PropertyDecorator;
+export function Output(params: Partial<IOutputPropertyContract>): PropertyDecorator;
 export function Output(params?: any) {
   const decoParams = resolveParams<IOutputPropertyContract>(params);
   return function propOutputFactory(target: any, propertyKey: string) {
@@ -109,18 +89,16 @@ export function Output(params?: any) {
       {
         ...defaultOutput,
         ...decoParams,
-        realName: propertyKey
+        realName: propertyKey,
       },
-      PROP_OUTPUT_DEFINE
+      PROP_OUTPUT_DEFINE,
     );
   };
 }
 
 export function Attach(): PropertyDecorator;
 export function Attach(name: string): PropertyDecorator;
-export function Attach(
-  params: Partial<IAttachPropertyContract>
-): PropertyDecorator;
+export function Attach(params: Partial<IAttachPropertyContract>): PropertyDecorator;
 export function Attach(params?: any) {
   const decoParams = resolveParams<IAttachPropertyContract>(params);
   return function propAttachFactory(target: any, propertyKey: string) {
@@ -129,9 +107,9 @@ export function Attach(params?: any) {
       {
         ...defaultOutput,
         ...decoParams,
-        realName: propertyKey
+        realName: propertyKey,
       },
-      PROP_ATTACH_DEFINE
+      PROP_ATTACH_DEFINE,
     );
   };
 }
@@ -139,52 +117,43 @@ export function Attach(params?: any) {
 export function defineBasicProperty(
   target: EntityConstructor<any>,
   metadata: REALNAME<IInputPropertyContract>,
-  metakey = PROP_INPUT_DEFINE
+  metakey = PROP_INPUT_DEFINE,
 ) {
   const propName = !metadata.name ? metadata.realName : metadata.name;
   const nameMeta = {
     value: propName,
     displayValue: metadata.displayName || null,
-    i18n: metadata.i18nName ?? {}
+    i18n: metadata.i18nName ?? {},
   };
   const groupMeta = metadata.group || null;
   const descMeta = !!metadata.description
     ? {
         value: metadata.description,
-        i18n: metadata.i18nDescription ?? {}
+        i18n: metadata.i18nDescription ?? {},
       }
     : null;
-  const typeMeta = getTypeOfMeta(
-    Reflect.getMetadata("design:type", target.prototype, metadata.realName)
-  );
+  const typeMeta = getTypeOfMeta(Reflect.getMetadata("design:type", target.prototype, metadata.realName));
   const data: IPropertyBase = {
     realName: metadata.realName,
     name: nameMeta,
     group: groupMeta,
     description: descMeta,
-    type: typeMeta
+    type: typeMeta,
   };
   setDisplayI18NMeta(data.name, "zh-CN");
   setDisplayI18NMeta(data.description, "zh-CN", "value");
-  return Reflect.defineMetadata(
-    metakey,
-    { ...resolveInputProperties(target), [getGroupNameMeta(data)]: data },
-    target
-  );
+  return Reflect.defineMetadata(metakey, { ...resolveInputProperties(target), [getGroupNameMeta(data)]: data }, target);
 }
 
 export function resolveInputProperty(
   target: EntityConstructor<any>,
   name: string,
-  defaults: Partial<IInputPropertyContract> = {}
+  defaults: Partial<IInputPropertyContract> = {},
 ) {
   return resolveInputProperties(target)[name] || defaults;
 }
 
-export function definePropertyGroup(
-  target: EntityConstructor<any>,
-  metadata: IPropertyGroupContract
-) {
+export function definePropertyGroup(target: EntityConstructor<any>, metadata: IPropertyGroupContract) {
   return Reflect.defineMetadata(
     PROP_GROUP_DEFINE,
     {
@@ -193,50 +162,34 @@ export function definePropertyGroup(
         name: {
           value: metadata.name!,
           displayValue: metadata.displayName || null,
-          i18n: metadata.i18nName ?? {}
+          i18n: metadata.i18nName ?? {},
         },
         description: !metadata.description
           ? {
               value: metadata.description,
-              i18n: metadata.i18nDescription ?? {}
+              i18n: metadata.i18nDescription ?? {},
             }
-          : null
-      }
+          : null,
+      },
     },
-    target
+    target,
   );
 }
 
 export function resolveInputProperties(target: EntityConstructor<any>) {
-  return (
-    <{ [prop: string]: IPropertyBase }>(
-      Reflect.getMetadata(PROP_INPUT_DEFINE, target)
-    ) || {}
-  );
+  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
 }
 
 export function resolveOutputProperties(target: EntityConstructor<any>) {
-  return (
-    <{ [prop: string]: IPropertyBase }>(
-      Reflect.getMetadata(PROP_OUTPUT_DEFINE, target)
-    ) || {}
-  );
+  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_OUTPUT_DEFINE, target) || {};
 }
 
 export function resolveAttachProperties(target: EntityConstructor<any>) {
-  return (
-    <{ [prop: string]: IPropertyBase }>(
-      Reflect.getMetadata(PROP_ATTACH_DEFINE, target)
-    ) || {}
-  );
+  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_ATTACH_DEFINE, target) || {};
 }
 
 export function resolvePropertyGroups(target: EntityConstructor<any>) {
-  return (
-    <{ [prop: string]: IPropertyGroupBase }>(
-      Reflect.getMetadata(PROP_GROUP_DEFINE, target)
-    ) || {}
-  );
+  return <{ [prop: string]: IPropertyGroupBase }>Reflect.getMetadata(PROP_GROUP_DEFINE, target) || {};
 }
 
 function getGroupNameMeta(data: IPropertyBase) {
@@ -244,11 +197,5 @@ function getGroupNameMeta(data: IPropertyBase) {
 }
 
 function getTypeOfMeta(typeRef: any) {
-  return typeRef === Number
-    ? "number"
-    : typeRef === String
-    ? "string"
-    : typeRef === Boolean
-    ? "boolean"
-    : "object";
+  return typeRef === Number ? "number" : typeRef === String ? "string" : typeRef === Boolean ? "boolean" : "object";
 }

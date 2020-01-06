@@ -16,7 +16,7 @@ export class ZentButtonComponent extends ReactComponent {
         type: helper.resolvePropState("type", { defaultValue: "default" }),
         size: helper.resolvePropState("size", { defaultValue: "medium" }),
         htmlType: helper.resolvePropState("htmlType", {
-          defaultValue: "button"
+          defaultValue: "button",
         }),
         block: helper.resolvePropState("block", { defaultValue: false }),
         disabled: helper.resolvePropState("disabled", { defaultValue: false }),
@@ -24,16 +24,14 @@ export class ZentButtonComponent extends ReactComponent {
         outline: helper.resolvePropState("outline", { defaultValue: false }),
         bordered: helper.resolvePropState("bordered", {
           defaultValue: true,
-          defaultCheck: "??"
+          defaultCheck: "??",
         }),
         href: helper.resolvePropState("href"),
         target: helper.resolvePropState("target", { defaultValue: "" }),
         download: helper.resolvePropState("download"),
-        onClick: helper.resolvePropState("onClick")
-      }
+        onClick: helper.resolvePropState("onClick"),
+      },
     });
-    this.setState("rootChildren", [
-      ts.createJsxExpression(undefined, helper.resolvePropState("content"))
-    ]);
+    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.resolvePropState("content"))]);
   }
 }

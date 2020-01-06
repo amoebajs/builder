@@ -12,7 +12,7 @@ import {
   resolveInputProperties,
   resolveModule,
   resolveOutputProperties,
-  resolvePropertyGroups
+  resolvePropertyGroups,
 } from "../core/decorators";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";
@@ -54,18 +54,12 @@ export class GlobalMap {
   public readonly maps: IGlobalMap = { modules: {} };
   public readonly providers: Partial<IFrameworkStructure<any>> = {};
 
-  public useProvider(
-    name: keyof IFrameworkDepts,
-    provider: typeof BasicEntityProvider
-  ) {
+  public useProvider(name: keyof IFrameworkDepts, provider: typeof BasicEntityProvider) {
     this.providers[name] = provider;
     return this;
   }
 
-  public useModule(
-    mdname: EntityConstructor<any>,
-    register: (injectable: InjectDIToken<any>) => InjectDIToken<any>
-  ) {
+  public useModule(mdname: EntityConstructor<any>, register: (injectable: InjectDIToken<any>) => InjectDIToken<any>) {
     const metadata = resolveModule(mdname);
     const moduleName = metadata.name || "[unnamed]";
     const thisModule: IModuleEntry<any> = (this.maps.modules[moduleName] = {
@@ -75,7 +69,7 @@ export class GlobalMap {
       components: {},
       directives: {},
       provider: metadata.provider,
-      metadata: <any>{ entity: metadata }
+      metadata: <any>{ entity: metadata },
     });
     if (metadata.components) {
       metadata.components.forEach(i => {
@@ -87,7 +81,7 @@ export class GlobalMap {
           moduleName,
           value: register(i),
           provider: metadata.provider,
-          metadata: <any>{ entity: meta }
+          metadata: <any>{ entity: meta },
         };
       });
     }
@@ -101,7 +95,7 @@ export class GlobalMap {
           moduleName,
           value: register(i),
           provider: metadata.provider,
-          metadata: <any>{ entity: meta }
+          metadata: <any>{ entity: meta },
         };
       });
     }
@@ -121,28 +115,25 @@ export class GlobalMap {
   }
 
   public getProvider(name: keyof IFrameworkDepts): typeof BasicEntityProvider {
-    if (!this.providers[name])
-      throw new BasicError(`provider for [${name}] is not provided.`);
+    if (!this.providers[name]) throw new BasicError(`provider for [${name}] is not provided.`);
     return this.providers[name];
   }
 
-  public initMetadatas(
-    resolver: (provider: typeof BasicEntityProvider) => BasicEntityProvider
-  ) {
+  public initMetadatas(resolver: (provider: typeof BasicEntityProvider) => BasicEntityProvider) {
     for (const key in this.maps.modules) {
       if (this.maps.modules.hasOwnProperty(key)) {
         const thisModule = this.maps.modules[key];
         const provider = resolver(this.getProvider(<any>thisModule.provider));
         thisModule.metadata = {
           ...getMetadata(thisModule.value, provider),
-          ...thisModule.metadata
+          ...thisModule.metadata,
         };
         for (const key in thisModule.components) {
           if (thisModule.components.hasOwnProperty(key)) {
             const thisComp = thisModule.components[key];
             thisComp.metadata = {
               ...getMetadata(thisComp.value, provider),
-              ...thisComp.metadata
+              ...thisComp.metadata,
             };
           }
         }
@@ -151,7 +142,7 @@ export class GlobalMap {
             const thisDire = thisModule.directives[key];
             thisDire.metadata = {
               ...getMetadata(thisDire.value, provider),
-              ...thisDire.metadata
+              ...thisDire.metadata,
             };
           }
         }
@@ -160,16 +151,13 @@ export class GlobalMap {
   }
 }
 
-export function getMetadata(
-  mdname: EntityConstructor<any>,
-  provider?: BasicEntityProvider
-): IMetadataGroup {
+export function getMetadata(mdname: EntityConstructor<any>, provider?: BasicEntityProvider): IMetadataGroup {
   const result: IMetadataGroup = {
     entity: <any>{},
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
     outputs: resolveOutputProperties(mdname),
-    attaches: resolveAttachProperties(mdname)
+    attaches: resolveAttachProperties(mdname),
   };
   if (!!provider) {
     result.entityExtensions = provider!.resolveExtensionsMetadata(mdname);

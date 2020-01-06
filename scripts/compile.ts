@@ -4,9 +4,7 @@ import jsyaml from "js-yaml";
 import chalk from "chalk";
 import { Factory } from "../src";
 
-const demoConf = jsyaml.load(
-  fs.readFileSync(path.resolve(__dirname, "demo.yaml")).toString()
-);
+const demoConf = jsyaml.load(fs.readFileSync(path.resolve(__dirname, "demo.yaml")).toString());
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -25,10 +23,10 @@ builder
   .createSource({ configs: demoConf })
   .then(({ sourceCode, depsJSON }) => {
     fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceCode, {
-      encoding: "utf8"
+      encoding: "utf8",
     });
     fs.writeFileSync(path.resolve(outDir, "dependencies.json"), depsJSON, {
-      encoding: "utf8"
+      encoding: "utf8",
     });
     console.log("emit ---> " + path.resolve(outDir, "main.tsx"));
   })
