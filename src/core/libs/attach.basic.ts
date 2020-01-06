@@ -1,7 +1,9 @@
-export class AttachProperty<T extends { [prop: string]: any } = {}> {
-  constructor(private _options: T) {}
+export class PropAttach<T extends any = unknown> {
+  private _options: { [id: string]: T } = {};
 
-  public get<K extends keyof T>(entityId: K): T[K] {
-    return this._options[entityId];
+  constructor(private _default?: T) {}
+
+  public get(entityId: string): T | null {
+    return this._options[entityId] || null;
   }
 }

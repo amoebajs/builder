@@ -76,12 +76,12 @@ page:
     gridTemplateColumnsCount: 2
     gridTemplateRowsFrs: [1, 2]
   attach:
-    gridRowStart:
+    childRowStart:
       - id: ZentBtnDemoCompRef01
         value: 1
       - id: ZentBtnDemoCompRef02
         value: 2
-    gridColumnStart:
+    childColumnStart:
       - id: ZentBtnDemoCompRef01
         value: 1
       - id: ZentBtnDemoCompRef02

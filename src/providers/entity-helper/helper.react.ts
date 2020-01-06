@@ -1,33 +1,14 @@
 import ts from "typescript";
-import { PropertyRef, ReactVbRef, resolveSyntaxInsert } from "../base";
+import { InjectScope } from "@bonbons/di";
+import { Primitive } from "utility-types";
+import { resolveSyntaxInsert } from "../../core/base";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
-import { Primitive } from "utility-types";
-import { create } from "domain";
-import { type } from "os";
+import { Injectable } from "../../core/decorators";
 
+@Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
-  public getRef(name: string): ReactVbRef | null;
-  public getRef(name: string): PropertyRef | null;
-  public getRef(name: string) {
-    const ref = super.getRef(name);
-    if (ref instanceof ReactVbRef) {
-      return ref;
-    }
-    return null;
-  }
-
-  public resolveRef(name: string): ts.Expression | null {
-    const ref = this.getRef(name);
-    if (ref) {
-      if (ref.type === "props") {
-        return ts.createPropertyAccess(ts.createThis(), ref["expression"]);
-      }
-    }
-    return super.resolveRef(name);
-  }
-
   public createObjectAttr(value: { [prop: string]: number | string | boolean | ts.Expression }) {
     const kvs: [string, string | number | boolean | ts.Expression][] = Object.keys(value).map(k => [k, value[k]]);
     return ts.createObjectLiteral(
