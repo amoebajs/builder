@@ -5,7 +5,7 @@ import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core/decorators";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { WebpackPlugins, IWebpackTemplateStyleOptions, IWebpackTemplateScriptOptions } from "./plugins.contract";
+import { IWebpackTemplateScriptOptions, IWebpackTemplateStyleOptions, WebpackPlugins } from "./plugins.contract";
 
 const defaultScripts: IWebpackTemplateScriptOptions[] = [];
 

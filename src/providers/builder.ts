@@ -16,6 +16,8 @@ export interface IDirectiveDefine {
   options?: { [name: string]: any };
 }
 
+export interface IComponentDefine extends IDirectiveDefine {}
+
 export interface IChildDefine {
   ref: string;
   id: string;
@@ -23,13 +25,13 @@ export interface IChildDefine {
 }
 
 export interface IPageCreateOptions {
+  components?: IComponentDefine[];
   page: {
     module: string;
     name: string;
     id: string;
     options?: { [name: string]: any };
     attach?: { [name: string]: any };
-    components?: IDirectiveDefine[];
     directives?: IDirectiveDefine[];
     children?: IChildDefine[];
   };
@@ -47,10 +49,12 @@ export interface IDirectiveCreateOptions {
   options: { [prop: string]: any };
 }
 
+export interface IComponentCreateOptions extends IDirectiveCreateOptions {}
+
 export type IChildCreateOptions = IChildRefPluginOptions;
 
-export interface IRootComponentCreateOptions extends IDirectiveCreateOptions {
-  components?: IDirectiveCreateOptions[];
+export interface IRootComponentCreateOptions extends IComponentCreateOptions {
+  components?: IComponentCreateOptions[];
   directives?: IDirectiveCreateOptions[];
   children?: IChildCreateOptions[];
 }
@@ -73,6 +77,8 @@ export class Builder {
     protected readonly prettier: Prettier,
     protected readonly globalMap: GlobalMap,
     protected readonly webpackBuild: WebpackBuild,
+    public readonly webpackConfig: WebpackConfig,
+    public readonly webpackPlugins: WebpackPlugins,
     public readonly htmlBundle: HtmlBundle,
   ) {}
 
@@ -202,8 +208,8 @@ function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
   }));
 }
 
-function mapComp(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
-  return (configs.page.components || []).map(i => ({
+function mapComp(configs: IPageCreateOptions): IComponentCreateOptions[] {
+  return (configs.components || []).map(i => ({
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
