@@ -1,11 +1,12 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { BasicComponent, IInnerComponent } from "../../core/component";
+import { IInnerComponent } from "../../core/component";
 import {
   EntityConstructor,
   IConstructor,
   IFrameworkDepts,
   Injectable,
+  resolveAttachProperties,
   resolveInputProperties,
 } from "../../core/decorators";
 import { BasicCompilationEntity, IBasicCompilationContext, IBasicCompilationFinalContext } from "../../core/base";
@@ -13,6 +14,7 @@ import { BasicDirective } from "../../core/directive";
 import { createExportModifier, exists } from "../../utils";
 import { InvalidOperationError } from "../../errors";
 import { BasicChildRef } from "../entities";
+import { PropAttach } from "../../core/libs/attach.basic";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
@@ -35,8 +37,14 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   input?: { [prop: string]: any };
 }
 
-export interface IInstanceCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
+export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
+  attach?: { [prop: string]: any };
+}
+
+export interface IPropertiesOptions {
+  input?: { [prop: string]: any };
+  attach?: { [prop: string]: any };
 }
 
 @Injectable()
@@ -47,12 +55,13 @@ export class BasicEntityProvider {
     {
       template,
       input = {},
+      attach = {},
       components = [],
       directives = [],
       children = [],
       id,
       passContext,
-    }: IInstanceCreateOptions<T>,
+    }: IRootPageCreateOptions<T>,
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || {
@@ -64,7 +73,7 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map(),
     };
-    const model = this._initPropsContextInstance(template, input, context).setEntityId(id);
+    const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -83,7 +92,7 @@ export class BasicEntityProvider {
     }
     for (const iterator of children) {
       model["__children"].push(
-        this._initPropsContextInstance(BasicChildRef, {}, context)
+        this._initContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
           .setRefOptions(iterator.input || {}),
@@ -93,7 +102,7 @@ export class BasicEntityProvider {
       model["__directives"].push(
         provider.attachDirective(
           model,
-          this._initPropsContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
+          this._initContextInstance<BasicDirective>(iterator.template, { input: iterator.input }, context).setEntityId(
             iterator.id,
           ),
         ),
@@ -102,12 +111,25 @@ export class BasicEntityProvider {
     return model;
   }
 
-  public async callCompilation(provider: keyof IFrameworkDepts, model: BasicComponent, name: string, unExport = false) {
-    await model["onInit"]();
-    await model["onComponentsEmitted"]();
-    await model["onPreRender"]();
-    await model["onRender"]();
-    await model["onPostRender"]();
+  public async callCompilation(
+    provider: keyof IFrameworkDepts,
+    model: IInnerComponent,
+    name: string,
+    unExport = false,
+  ) {
+    await model.onInit();
+    await model.onComponentsPreRender();
+    await model.onComponentsRender();
+    await model.onComponentsPostRender();
+    await model.onChildrenPreRender();
+    await model.onChildrenRender();
+    await model.onChildrenPostRender();
+    await model.onDirectivesPreAttach();
+    await model.onDirectivesAttach();
+    await model.onDirectivesPostAttach();
+    await model.onPreRender();
+    await model.onRender();
+    await model.onPostRender();
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
@@ -130,15 +152,22 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  public attachDirective<T extends BasicDirective, P extends BasicComponent>(parent: P, target: T) {
+  public attachDirective<T extends BasicDirective, P extends IInnerComponent>(parent: P, target: T) {
     return target;
   }
 
   /** @override */
-  protected onPropertiesInit<T extends any>(_: T) {}
+  protected onInputPropertiesInit<T extends any>(_: T, options: IPropertiesOptions) {
+    if (options.input) {
+      this._inputProperties(_, options.input);
+    }
+    if (options.attach) {
+      this._attachProperties(_, options.attach);
+    }
+  }
 
   /** @override */
-  protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
+  protected onCompilationCall(model: IInnerComponent, _context: IBasicCompilationContext) {
     const context: IBasicCompilationFinalContext = {
       extendParent: null,
       implementParents: [],
@@ -201,32 +230,36 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onImportsUpdate(model: BasicComponent, imports: ts.ImportDeclaration[], init: ts.ImportDeclaration[] = []) {
+  protected onImportsUpdate(
+    model: IInnerComponent,
+    imports: ts.ImportDeclaration[],
+    init: ts.ImportDeclaration[] = [],
+  ) {
     imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
     return init;
   }
 
   /** @override */
-  protected onStatementsEmitted(model: BasicComponent, statements: ts.Statement[]): ts.Statement[] {
+  protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]): ts.Statement[] {
     return statements;
   }
 
   /** @override */
   protected createRootComponent(
-    model: BasicComponent,
+    model: IInnerComponent,
     context: IBasicCompilationFinalContext,
     isExport = true,
   ): ts.ClassDeclaration {
     return createClass(!isExport, model.entityId, context);
   }
 
-  private _initPropsContextInstance<T extends BasicCompilationEntity>(
+  private _initContextInstance<T extends BasicCompilationEntity>(
     template: InjectDIToken<T>,
-    options: { [prop: string]: any },
+    options: IPropertiesOptions,
     context: IBasicCompilationContext,
   ): T {
-    const instance = this.injector.get(template);
-    const model = this._inputProperties(instance, options);
+    const model = this.injector.get(template);
+    this.onInputPropertiesInit(model, options);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -237,21 +270,31 @@ export class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: any): T {
-    const props = resolveInputProperties(Object.getPrototypeOf(model).constructor);
-    for (const key in props) {
-      if (props.hasOwnProperty(key)) {
-        const prop = props[key];
-        const group = prop.group;
-        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[group][prop.name.value!];
-        } else if (options.hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[prop.name.value!];
+  private _inputProperties<T extends any>(model: T, options: any) {
+    const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in inputs) {
+      if (inputs.hasOwnProperty(key)) {
+        const input = inputs[key];
+        const group = input.group;
+        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[group][input.name.value!];
+        } else if (options.hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[input.name.value!];
         }
       }
     }
-    this.onPropertiesInit(model);
-    return model;
+  }
+
+  private _attachProperties<T extends any>(model: T, options: any) {
+    const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in attaches) {
+      if (attaches.hasOwnProperty(key)) {
+        const attach = attaches[key];
+        // invalid value or null value
+        if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
+        model[attach.name.value]["__options"] = options[key] || {};
+      }
+    }
   }
 }
 

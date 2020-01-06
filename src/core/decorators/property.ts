@@ -1,16 +1,13 @@
+import { InjectDIToken } from "@bonbons/di";
 import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
-export const PROP_OUTPUT_DEFINE = "ambjs::property_output_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
 export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
 
-export interface IOutputPropertyContract extends IPropertyGroupContract {
+export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
-}
-
-export interface IInputPropertyContract extends IOutputPropertyContract {
   type: "object" | "string" | "number" | "boolean" | (string | number)[] | number[] | string[] | null;
 }
 
@@ -60,7 +57,7 @@ export function Input(params: Partial<IInputPropertyContract>): PropertyDecorato
 export function Input(params?: any) {
   const decoParams = resolveParams<IInputPropertyContract>(params);
   return function propInputFactory(target: any, propertyKey: string) {
-    defineBasicProperty(target.constructor, {
+    defineInputProperty(target.constructor, {
       ...defaultInput,
       ...decoParams,
       realName: propertyKey,
@@ -78,47 +75,45 @@ const defaultOutput: IInputPropertyContract = {
   i18nName: null,
 };
 
-export function Output(): PropertyDecorator;
-export function Output(name: string): PropertyDecorator;
-export function Output(params: Partial<IOutputPropertyContract>): PropertyDecorator;
-export function Output(params?: any) {
-  const decoParams = resolveParams<IOutputPropertyContract>(params);
-  return function propOutputFactory(target: any, propertyKey: string) {
-    defineBasicProperty(
-      target.constructor,
-      {
-        ...defaultOutput,
-        ...decoParams,
-        realName: propertyKey,
-      },
-      PROP_OUTPUT_DEFINE,
-    );
-  };
-}
-
 export function Attach(): PropertyDecorator;
 export function Attach(name: string): PropertyDecorator;
 export function Attach(params: Partial<IAttachPropertyContract>): PropertyDecorator;
 export function Attach(params?: any) {
   const decoParams = resolveParams<IAttachPropertyContract>(params);
   return function propAttachFactory(target: any, propertyKey: string) {
-    defineBasicProperty(
-      target.constructor,
-      {
-        ...defaultOutput,
-        ...decoParams,
-        realName: propertyKey,
-      },
-      PROP_ATTACH_DEFINE,
-    );
+    defineAttachProperty(target.constructor, {
+      ...defaultOutput,
+      ...decoParams,
+      realName: propertyKey,
+    });
   };
 }
 
-export function defineBasicProperty(
-  target: EntityConstructor<any>,
-  metadata: REALNAME<IInputPropertyContract>,
-  metakey = PROP_INPUT_DEFINE,
-) {
+export function defineInputProperty(target: EntityConstructor<any>, metadata: REALNAME<IInputPropertyContract>) {
+  const data = createBasicMeta(metadata, target);
+  return Reflect.defineMetadata(
+    PROP_INPUT_DEFINE,
+    {
+      ...resolveInputProperties(target),
+      [getGroupNameMeta(data)]: data,
+    },
+    target,
+  );
+}
+
+export function defineAttachProperty(target: EntityConstructor<any>, metadata: REALNAME<IInputPropertyContract>) {
+  const data = createBasicMeta(metadata, target);
+  return Reflect.defineMetadata(
+    PROP_ATTACH_DEFINE,
+    {
+      ...resolveAttachProperties(target),
+      [getGroupNameMeta(data)]: data,
+    },
+    target,
+  );
+}
+
+function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: InjectDIToken<any>) {
   const propName = !metadata.name ? metadata.realName : metadata.name;
   const nameMeta = {
     value: propName,
@@ -142,7 +137,7 @@ export function defineBasicProperty(
   };
   setDisplayI18NMeta(data.name, "zh-CN");
   setDisplayI18NMeta(data.description, "zh-CN", "value");
-  return Reflect.defineMetadata(metakey, { ...resolveInputProperties(target), [getGroupNameMeta(data)]: data }, target);
+  return data;
 }
 
 export function resolveInputProperty(
@@ -178,10 +173,6 @@ export function definePropertyGroup(target: EntityConstructor<any>, metadata: IP
 
 export function resolveInputProperties(target: EntityConstructor<any>) {
   return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
-}
-
-export function resolveOutputProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_OUTPUT_DEFINE, target) || {};
 }
 
 export function resolveAttachProperties(target: EntityConstructor<any>) {

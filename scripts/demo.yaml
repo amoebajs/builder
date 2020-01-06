@@ -2,7 +2,7 @@ components:
   - module: ambjs-common-component-module
     name: zent-button
     id: ZentBtnDemoComponent
-    options: {}
+    input: {}
 page:
   module: ambjs-common-component-module
   name: css-grid-container
@@ -10,7 +10,7 @@ page:
   children:
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
-      options:
+      input:
         loading:
           type: state
           expression: zentBtnLoading
@@ -27,7 +27,7 @@ page:
           expression: zentBtnType
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef02
-      options:
+      input:
         loading:
           type: literal
           syntaxType: boolean
@@ -50,13 +50,13 @@ page:
     - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective
-      options:
+      input:
         host: ZentBtnDemoCompRef02
         eventType: setState
         attrName: onClick
         targetName: zentBtn02Content
         expression: e => new Date().getTime()
-  options:
+  input:
     basic:
       useComponentState: true
       defaultComponentState:
@@ -67,12 +67,12 @@ page:
     gridTemplateColumnsCount: 2
     gridTemplateRowsFrs: [1, 2]
   attach:
-    gridRowStart:
+    childRowStart:
       - id: ZentBtnDemoCompRef01
         value: 1
       - id: ZentBtnDemoCompRef02
         value: 2
-    gridColumnStart:
+    childColumnStart:
       - id: ZentBtnDemoCompRef01
         value: 1
       - id: ZentBtnDemoCompRef02

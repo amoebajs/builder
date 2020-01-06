@@ -3,7 +3,12 @@ import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
-import { IChildRefPluginOptions, IInstanceCreateOptions } from "./entity-parser";
+import {
+  IChildRefPluginOptions,
+  IComponentPluginOptions,
+  IDirectivePluginOptions,
+  IRootPageCreateOptions,
+} from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
@@ -57,6 +62,7 @@ export interface IRootComponentCreateOptions extends IComponentCreateOptions {
   components?: IComponentCreateOptions[];
   directives?: IDirectiveCreateOptions[];
   children?: IChildCreateOptions[];
+  attach: { [prop: string]: any };
 }
 
 export interface ISourceCreateResult {
@@ -94,6 +100,7 @@ export class Builder {
       templateName: configs.page.name,
       componentName: compName,
       input: configs.page.input || {},
+      attach: configs.page.attach || {},
       components: mapComp(configs),
       directives: mapDire(configs),
       children: mapChild(configs),
@@ -130,34 +137,33 @@ export class Builder {
     return target;
   }
 
+  private _resolveCreateOptions(type: "component", options: IComponentCreateOptions): IComponentPluginOptions<any>;
+  private _resolveCreateOptions(type: "directive", options: IDirectiveCreateOptions): IDirectivePluginOptions<any>;
+  private _resolveCreateOptions(type: "root", options: IRootComponentCreateOptions): IRootPageCreateOptions<any>;
   private _resolveCreateOptions(
     type: "component" | "directive" | "root",
-    options: IRootComponentCreateOptions | IDirectiveCreateOptions,
-  ): IInstanceCreateOptions<any> {
+    options: IRootComponentCreateOptions | IDirectiveCreateOptions | IComponentCreateOptions,
+  ): IComponentPluginOptions<any> | IDirectivePluginOptions<any> | IRootPageCreateOptions<any> {
     const entity = this._resolveType(options.moduleName, options.templateName, type);
-    const comps: IInstanceCreateOptions<any>[] = [];
-    const direcs: IInstanceCreateOptions<any>[] = [];
+    const comps: IComponentPluginOptions<any>[] = [];
+    const direcs: IDirectivePluginOptions<any>[] = [];
     const childs: IChildRefPluginOptions[] = [];
     let depts = { ...entity.metadata.entity.dependencies };
+    let attaches = {};
     if (type === "root") {
-      comps.push(
-        ...((<IRootComponentCreateOptions>options).components || []).map(i =>
-          this._resolveCreateOptions("component", i),
-        ),
-      );
-      direcs.push(
-        ...((<IRootComponentCreateOptions>options).directives || []).map(i =>
-          this._resolveCreateOptions("directive", i),
-        ),
-      );
-      childs.push(...((<IRootComponentCreateOptions>options).children || []));
+      const opts = <IRootComponentCreateOptions>options;
+      comps.push(...(opts.components || []).map(i => this._resolveCreateOptions("component", i)));
+      direcs.push(...(opts.directives || []).map(i => this._resolveCreateOptions("directive", i)));
+      childs.push(...(opts.children || []));
       depts = this._resolveRootDepts(comps, direcs, depts, entity);
+      attaches = opts.attach || {};
     }
     return {
       id: options.componentName,
       provider: <any>entity.provider!,
       template: entity.value,
       input: options.input,
+      attach: attaches,
       components: comps,
       directives: direcs,
       children: childs,
@@ -166,8 +172,8 @@ export class Builder {
   }
 
   private _resolveRootDepts(
-    comps: IInstanceCreateOptions<any>[],
-    direcs: IInstanceCreateOptions<any>[],
+    comps: IRootPageCreateOptions<any>[],
+    direcs: IRootPageCreateOptions<any>[],
     depts: { [x: string]: string | string[] },
     entity: IMapEntry<any>,
   ) {

@@ -1,25 +1,28 @@
 import ts from "typescript";
-import { BasicEntityProvider } from "./basic";
-import { ReactHelper } from "../../core/libs";
-import { BasicComponent } from "../../core/component";
+import { Injector } from "@bonbons/di";
+import { BasicEntityProvider, IPropertiesOptions } from "./basic";
+import { IInnerComponent } from "../../core/component";
 import { REACT } from "../../utils";
-import { EntityConstructor, Injectable, resolveReactProps } from "../../core/decorators";
+import { EntityConstructor, Injectable } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";
 import { IBasicCompilationFinalContext } from "../../core";
+import { ReactHelper } from "../entity-helper";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
-  protected helper = new ReactHelper();
+  constructor(injector: Injector, protected readonly helper: ReactHelper) {
+    super(injector);
+  }
 
-  protected onImportsUpdate(model: BasicComponent, imports: ts.ImportDeclaration[]) {
+  protected onImportsUpdate(model: IInnerComponent, imports: ts.ImportDeclaration[]) {
     return super.onImportsUpdate(model, imports, [
       this.helper.createImport("react", REACT.NS),
       this.helper.createImport("react-dom", REACT.DomNS),
     ]);
   }
 
-  protected onStatementsEmitted(model: BasicComponent, statements: ts.Statement[]) {
+  protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]) {
     return [
       ...statements,
       ts.createExpressionStatement(
@@ -39,26 +42,21 @@ export class ReactEntityProvider extends BasicEntityProvider {
     ];
   }
 
-  protected createRootComponent(model: BasicComponent, context: IBasicCompilationFinalContext): ts.ClassDeclaration {
+  protected createRootComponent(model: IInnerComponent, context: IBasicCompilationFinalContext): ts.ClassDeclaration {
     return super.createRootComponent(model, context, false);
   }
 
-  public resolveExtensionsMetadata(target: EntityConstructor<any>): { [name: string]: any } {
-    return {
-      props: resolveReactProps(target),
-    };
+  public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {
+    return super.resolveExtensionsMetadata(_);
   }
 
-  public attachDirective(parent: BasicComponent, target: BasicDirective): BasicDirective;
+  protected onInputPropertiesInit(_: EntityConstructor<any>, __: IPropertiesOptions) {
+    return super.onInputPropertiesInit(_, __);
+  }
+
+  public attachDirective(parent: IInnerComponent, target: BasicDirective): BasicDirective;
   public attachDirective(parent: ReactComponent, target: ReactDirective): ReactDirective;
-  public attachDirective(parent: ReactComponent, target: ReactDirective) {
-    Object.defineProperty(target, "__parentId", {
-      enumerable: true,
-      configurable: false,
-      get() {
-        return parent.entityId;
-      },
-    });
+  public attachDirective(parent: IInnerComponent | ReactComponent, target: ReactDirective) {
     Object.defineProperty(target, "__parentRef", {
       enumerable: true,
       configurable: false,

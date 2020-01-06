@@ -2,9 +2,9 @@ import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { IPureObject, resolveSyntaxInsert } from "../../core/base";
 import { IJsxAttrs, REACT, TYPES } from "../../utils";
-import { ReactHelper, ReactRender } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
+import { ReactHelper, ReactRender } from "../entity-helper";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -21,19 +21,21 @@ type TY = IBasicReactContainerState<{}>;
 @Injectable(InjectScope.New)
 export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
-  protected helper = new ReactHelper();
-  protected render!: ReactRender;
+
+  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
+    super();
+    render["parentRef"] = this;
+  }
 
   protected async onInit() {
     await super.onInit();
-    this.render = new ReactRender(this);
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
   }
 
-  protected async onPreRender() {
-    await super.onPreRender();
+  protected async onChildrenPostRender() {
+    await super.onChildrenPostRender();
     const children = this.getChildren();
     for (const iterator of children) {
       const options = iterator.options || {};
@@ -78,10 +80,17 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
       [],
       undefined,
       ts.createBlock([
-        // createConstVariableStatement(REACT.Props, false, undefined, THIS.Props),
         ts.createReturn(
           ts.createParen(
-            this.helper.createJsxElement(root.name, root.types, { ...root.attrs, key: this.entityId }, children),
+            this.helper.createJsxElement(
+              root.name,
+              root.types,
+              {
+                ...root.attrs,
+                key: this.entityId,
+              },
+              children,
+            ),
           ),
         ),
       ]),
