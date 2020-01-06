@@ -1,22 +1,4 @@
-export {
-  IDirective,
-  BasicDirective,
-  IComponent,
-  BasicComponent,
-  IChildRef,
-  BasicHelper,
-  ReactHelper,
-  ReactRender,
-  EntityConstructor,
-  Component,
-  Directive,
-  Injectable,
-  Module,
-  Group,
-  Input,
-  Attach,
-} from "./core";
-
+export * from "./core/index.public";
 export * from "./errors";
 export * from "./factory/node";
 export * from "./providers";

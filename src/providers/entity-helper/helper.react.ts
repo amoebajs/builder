@@ -1,8 +1,11 @@
 import ts from "typescript";
-import { resolveSyntaxInsert } from "../base";
+import { InjectScope } from "@bonbons/di";
+import { resolveSyntaxInsert } from "../../core/base";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
+import { Injectable } from "../../core/decorators";
 
+@Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
   public createObjectAttr(value: { [prop: string]: number | string | boolean | ts.Expression }) {
     const kvs: [string, string | number | boolean | ts.Expression][] = Object.keys(value).map(k => [k, value[k]]);

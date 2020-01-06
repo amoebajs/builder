@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { BasicComponent, IInnerComponent } from "../../core/component";
+import { IInnerComponent } from "../../core/component";
 import {
   EntityConstructor,
   IConstructor,
@@ -111,12 +111,25 @@ export class BasicEntityProvider {
     return model;
   }
 
-  public async callCompilation(provider: keyof IFrameworkDepts, model: BasicComponent, name: string, unExport = false) {
-    await model["onInit"]();
-    await model["onComponentsEmitted"]();
-    await model["onPreRender"]();
-    await model["onRender"]();
-    await model["onPostRender"]();
+  public async callCompilation(
+    provider: keyof IFrameworkDepts,
+    model: IInnerComponent,
+    name: string,
+    unExport = false,
+  ) {
+    await model.onInit();
+    await model.onComponentsPreRender();
+    await model.onComponentsRender();
+    await model.onComponentsPostRender();
+    await model.onChildrenPreRender();
+    await model.onChildrenRender();
+    await model.onChildrenPostRender();
+    await model.onDirectivesPreAttach();
+    await model.onDirectivesAttach();
+    await model.onDirectivesPostAttach();
+    await model.onPreRender();
+    await model.onRender();
+    await model.onPostRender();
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
@@ -139,7 +152,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  public attachDirective<T extends BasicDirective, P extends BasicComponent>(parent: P, target: T) {
+  public attachDirective<T extends BasicDirective, P extends IInnerComponent>(parent: P, target: T) {
     return target;
   }
 
@@ -154,7 +167,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
+  protected onCompilationCall(model: IInnerComponent, _context: IBasicCompilationContext) {
     const context: IBasicCompilationFinalContext = {
       extendParent: null,
       implementParents: [],
@@ -217,19 +230,23 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onImportsUpdate(model: BasicComponent, imports: ts.ImportDeclaration[], init: ts.ImportDeclaration[] = []) {
+  protected onImportsUpdate(
+    model: IInnerComponent,
+    imports: ts.ImportDeclaration[],
+    init: ts.ImportDeclaration[] = [],
+  ) {
     imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
     return init;
   }
 
   /** @override */
-  protected onStatementsEmitted(model: BasicComponent, statements: ts.Statement[]): ts.Statement[] {
+  protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]): ts.Statement[] {
     return statements;
   }
 
   /** @override */
   protected createRootComponent(
-    model: BasicComponent,
+    model: IInnerComponent,
     context: IBasicCompilationFinalContext,
     isExport = true,
   ): ts.ClassDeclaration {

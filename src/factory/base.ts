@@ -1,6 +1,27 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
-import { EntityConstructor, IFrameworkDepts, Injectable, getInjectScope, resolveDepts } from "../core/decorators";
-import { GlobalMap, Builder, BasicEntityProvider } from "../providers";
+import {
+  EntityConstructor,
+  IFrameworkDepts,
+  Injectable,
+  getInjectScope,
+  resolveDepts,
+  IConstructor,
+} from "../core/decorators";
+import {
+  ReactComponent,
+  GlobalMap,
+  Builder,
+  BasicEntityProvider,
+  WebpackConfig,
+  HtmlBundle,
+  BasicChildRef,
+  ReactDirective,
+  ReactEntityProvider,
+  BasicHelper,
+  ReactHelper,
+  ReactRender,
+} from "../providers";
+import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
 
 export class BaseFactory {
   private _completed = false;
@@ -27,13 +48,28 @@ export class BaseFactory {
   /** @override can be overrided */
   protected initProviders() {
     this._initGlobalMap();
+    this.useProvider(WebpackConfig);
+    this.useProvider(HtmlBundle);
+    this.useProvider(Builder);
+    this.useProvider(BasicEntityProvider);
+    this.useProvider(BasicChildRef);
+    this.useProvider(ReactDirective);
+    this.useProvider(ReactComponent);
+    this.useProvider(BasicHelper);
+    this.useProvider(ReactHelper);
+    this.useProvider(ReactRender);
   }
 
   /** @override can be overrided */
-  protected initModules() {}
+  protected initModules() {
+    this.useModule(CommonComponentModule);
+    this.useModule(CommonDirectiveModule);
+  }
 
   /** @override can be overrided */
-  protected initEntityProviders() {}
+  protected initEntityProviders() {
+    this.useEntityProvider("react", ReactEntityProvider);
+  }
 
   public useProvider(contract: InjectDIToken<any>, imple?: EntityConstructor<any>) {
     if (!this._completed) {
@@ -56,7 +92,7 @@ export class BaseFactory {
     return this;
   }
 
-  public useEntityProvider<T extends typeof BasicEntityProvider>(name: keyof IFrameworkDepts, provider: T) {
+  public useEntityProvider<T extends BasicEntityProvider>(name: keyof IFrameworkDepts, provider: IConstructor<T>) {
     if (!this._completed) {
       this.__pre_entity_providers.push([name, provider]);
       this._map.useProvider(name, provider);

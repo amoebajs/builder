@@ -1,19 +1,4 @@
-import {
-  BasicChildRef,
-  BasicEntityProvider,
-  Builder,
-  Fs,
-  HtmlBundle,
-  Path,
-  ReactComponent,
-  ReactDirective,
-  ReactEntityProvider,
-  WebpackBuild,
-  WebpackConfig,
-  WebpackPlugins,
-  Prettier,
-} from "../providers";
-import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
+import { Fs, Path, WebpackBuild, WebpackPlugins, Prettier } from "../providers";
 import { BaseFactory } from "./base";
 import { FsNodeProvider } from "../providers/fs/fs.node";
 import { PathNodeProvider } from "../providers/path/path.node";
@@ -28,27 +13,7 @@ export class Factory extends BaseFactory {
     this.useProvider(Fs, FsNodeProvider);
     this.useProvider(Path, PathNodeProvider);
     this.useProvider(Prettier, PrettierNodeProvider);
-    this.useProvider(WebpackConfig);
     this.useProvider(WebpackBuild, WebpackBuildNodeProvider);
     this.useProvider(WebpackPlugins, WebpackPluginsNodeProvider);
-    this.useProvider(HtmlBundle);
-    this.useProvider(Builder);
-    this.useProvider(BasicEntityProvider);
-    this.useProvider(BasicChildRef);
-    this.useProvider(ReactDirective);
-    this.useProvider(ReactComponent);
-  }
-
-  /** @override can be overrided */
-  protected initModules() {
-    super.initModules();
-    this.useModule(CommonComponentModule);
-    this.useModule(CommonDirectiveModule);
-  }
-
-  /** @override can be overrided */
-  protected initEntityProviders() {
-    super.initEntityProviders();
-    this.useEntityProvider("react", ReactEntityProvider);
   }
 }
