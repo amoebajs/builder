@@ -6,6 +6,7 @@ import {
   IConstructor,
   IFrameworkDepts,
   Injectable,
+  resolveAttachProperties,
   resolveInputProperties,
 } from "../../core/decorators";
 import { BasicCompilationEntity, IBasicCompilationContext, IBasicCompilationFinalContext } from "../../core/base";
@@ -146,6 +147,9 @@ export class BasicEntityProvider {
     if (options.input) {
       this._inputProperties(_, options.input);
     }
+    if (options.attach) {
+      this._attachProperties(_, options.attach);
+    }
   }
 
   /** @override */
@@ -252,13 +256,29 @@ export class BasicEntityProvider {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
-        const prop = inputs[key];
-        const group = prop.group;
-        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[group][prop.name.value!];
-        } else if (options.hasOwnProperty(prop.name.value!)) {
-          (<any>model)[prop.realName] = options[prop.name.value!];
+        const input = inputs[key];
+        const group = input.group;
+        if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[group][input.name.value!];
+        } else if (options.hasOwnProperty(input.name.value!)) {
+          (<any>model)[input.realName] = options[input.name.value!];
         }
+      }
+    }
+  }
+
+  private _attachProperties<T extends any>(model: T, options: any) {
+    const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
+    for (const key in attaches) {
+      if (attaches.hasOwnProperty(key)) {
+        options;
+        // const attach = attaches[key];
+        // const group = attach.group;
+        // if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(attach.name.value!)) {
+        //   (<any>model)[attach.realName] = options[group][attach.name.value!];
+        // } else if (options.hasOwnProperty(attach.name.value!)) {
+        //   (<any>model)[attach.realName] = options[attach.name.value!];
+        // }
       }
     }
   }

@@ -2,15 +2,11 @@ import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
-export const PROP_OUTPUT_DEFINE = "ambjs::property_output_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
 export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
 
-export interface IOutputPropertyContract extends IPropertyGroupContract {
+export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
-}
-
-export interface IInputPropertyContract extends IOutputPropertyContract {
   type: "object" | "string" | "number" | "boolean" | (string | number)[] | number[] | string[] | null;
 }
 
@@ -77,24 +73,6 @@ const defaultOutput: IInputPropertyContract = {
   i18nDescription: null,
   i18nName: null,
 };
-
-export function Output(): PropertyDecorator;
-export function Output(name: string): PropertyDecorator;
-export function Output(params: Partial<IOutputPropertyContract>): PropertyDecorator;
-export function Output(params?: any) {
-  const decoParams = resolveParams<IOutputPropertyContract>(params);
-  return function propOutputFactory(target: any, propertyKey: string) {
-    defineBasicProperty(
-      target.constructor,
-      {
-        ...defaultOutput,
-        ...decoParams,
-        realName: propertyKey,
-      },
-      PROP_OUTPUT_DEFINE,
-    );
-  };
-}
 
 export function Attach(): PropertyDecorator;
 export function Attach(name: string): PropertyDecorator;
@@ -178,10 +156,6 @@ export function definePropertyGroup(target: EntityConstructor<any>, metadata: IP
 
 export function resolveInputProperties(target: EntityConstructor<any>) {
   return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
-}
-
-export function resolveOutputProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_OUTPUT_DEFINE, target) || {};
 }
 
 export function resolveAttachProperties(target: EntityConstructor<any>) {

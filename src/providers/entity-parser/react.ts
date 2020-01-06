@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { BasicEntityProvider } from "./basic";
+import { BasicEntityProvider, IPropertiesOptions } from "./basic";
 import { ReactHelper } from "../../core/libs";
 import { BasicComponent } from "../../core/component";
 import { REACT } from "../../utils";
@@ -44,7 +44,11 @@ export class ReactEntityProvider extends BasicEntityProvider {
   }
 
   public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {
-    return {};
+    return super.resolveExtensionsMetadata(_);
+  }
+
+  protected onInputPropertiesInit(_: EntityConstructor<any>, __: IPropertiesOptions) {
+    return super.onInputPropertiesInit(_, __);
   }
 
   public attachDirective(parent: BasicComponent, target: BasicDirective): BasicDirective;
