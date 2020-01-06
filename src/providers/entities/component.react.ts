@@ -24,11 +24,11 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
-    render["parentRef"] = this;
   }
 
   protected async onInit() {
     await super.onInit();
+    this.render["parentRef"] = this;
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
