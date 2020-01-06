@@ -13,7 +13,7 @@ export interface IDirectiveDefine {
   module: string;
   name: string;
   id: string;
-  options?: { [name: string]: any };
+  input?: { [name: string]: any };
 }
 
 export interface IComponentDefine extends IDirectiveDefine {}
@@ -21,7 +21,7 @@ export interface IComponentDefine extends IDirectiveDefine {}
 export interface IChildDefine {
   ref: string;
   id: string;
-  options?: { [name: string]: any };
+  input?: { [name: string]: any };
 }
 
 export interface IPageCreateOptions {
@@ -30,7 +30,7 @@ export interface IPageCreateOptions {
     module: string;
     name: string;
     id: string;
-    options?: { [name: string]: any };
+    input?: { [name: string]: any };
     attach?: { [name: string]: any };
     directives?: IDirectiveDefine[];
     children?: IChildDefine[];
@@ -46,7 +46,7 @@ export interface IDirectiveCreateOptions {
   moduleName: string;
   templateName: string;
   componentName: string;
-  options: { [prop: string]: any };
+  input: { [prop: string]: any };
 }
 
 export interface IComponentCreateOptions extends IDirectiveCreateOptions {}
@@ -93,7 +93,7 @@ export class Builder {
       moduleName: configs.page.module,
       templateName: configs.page.name,
       componentName: compName,
-      options: configs.page.options || {},
+      input: configs.page.input || {},
       components: mapComp(configs),
       directives: mapDire(configs),
       children: mapChild(configs),
@@ -157,7 +157,7 @@ export class Builder {
       id: options.componentName,
       provider: <any>entity.provider!,
       template: entity.value,
-      options: options.options,
+      input: options.input,
       components: comps,
       directives: direcs,
       children: childs,
@@ -204,7 +204,7 @@ function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
   return (configs.page.children || []).map(i => ({
     childName: i.id,
     refComponent: i.ref,
-    options: i.options || {},
+    input: i.input || {},
   }));
 }
 
@@ -213,7 +213,7 @@ function mapComp(configs: IPageCreateOptions): IComponentCreateOptions[] {
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
-    options: i.options || {},
+    input: i.input || {},
   }));
 }
 
@@ -222,6 +222,6 @@ function mapDire(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
-    options: i.options || {},
+    input: i.input || {},
   }));
 }

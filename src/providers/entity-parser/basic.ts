@@ -17,7 +17,7 @@ import { BasicChildRef } from "../entities";
 export interface IChildRefPluginOptions {
   refComponent: string;
   childName: string;
-  options: { [prop: string]: any };
+  input: { [prop: string]: any };
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
@@ -32,7 +32,7 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   id: string;
   provider: keyof IFrameworkDepts;
   template: T;
-  options?: { [prop: string]: any };
+  input?: { [prop: string]: any };
 }
 
 export interface IInstanceCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
@@ -46,7 +46,7 @@ export class BasicEntityProvider {
   public createInstance<T extends IConstructor<IInnerComponent>>(
     {
       template,
-      options = {},
+      input = {},
       components = [],
       directives = [],
       children = [],
@@ -64,7 +64,7 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map(),
     };
-    const model = this._initPropsContextInstance(template, options, context).setEntityId(id);
+    const model = this._initPropsContextInstance(template, input, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -72,7 +72,7 @@ export class BasicEntityProvider {
             id: iterator.id,
             provider: iterator.provider,
             template: iterator.template,
-            options: iterator.options,
+            input: iterator.input,
             components: iterator.components,
             directives: iterator.directives,
             passContext: context,
@@ -86,18 +86,16 @@ export class BasicEntityProvider {
         this._initPropsContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
-          .setRefOptions(iterator.options || {}),
+          .setRefOptions(iterator.input || {}),
       );
     }
     for (const iterator of directives) {
       model["__directives"].push(
         provider.attachDirective(
           model,
-          this._initPropsContextInstance<BasicDirective>(
-            iterator.template,
-            iterator.options || {},
-            context,
-          ).setEntityId(iterator.id),
+          this._initPropsContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
+            iterator.id,
+          ),
         ),
       );
     }
