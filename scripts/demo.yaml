@@ -3,18 +3,13 @@ components:
     name: zent-button
     id: ZentBtnDemoComponent
     options: {}
+  - module: ambjs-common-component-module
+    name: zent-input
+    id: ZentInputComponent
 page:
   module: ambjs-common-component-module
   name: css-grid-container
   id: "CssGridPageDemoRoot"
-  components:
-    - module: ambjs-common-component-module
-      name: zent-button
-      id: ZentBtnDemoComponent
-      options: {}
-    - module: ambjs-common-component-module
-      name: zent-input
-      id: ZentInputComponent
   directives:
     - module: ambjs-common-directive-module
       name: zent-base-css
@@ -31,7 +26,10 @@ page:
   children:
     - ref: ZentInputComponent
       id: ZentInputComponentRef01
-      options: {}
+      options:
+        label: 名称：
+        required: true
+        name: name
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       options:
@@ -67,19 +65,6 @@ page:
           type: literal
           syntaxType: string
           expression: normal
-  directives:
-    - module: ambjs-common-directive-module
-      name: zent-base-css
-      id: ZentBaseCssDemoDirective
-    - module: ambjs-common-directive-module
-      name: custom-click
-      id: CustomClickDemoDirective
-      options:
-        host: ZentBtnDemoCompRef02
-        eventType: setState
-        attrName: onClick
-        targetName: zentBtn02Content
-        expression: e => new Date().getTime()
   options:
     basic:
       useComponentState: true

@@ -16,6 +16,11 @@ export class ZentInputComponent extends ReactComponent {
         name: helper.resolvePropState("name", { defaultValue: this.entityId }),
         required: helper.resolvePropState("required"),
         defaultValue: helper.resolvePropState("defaultValue"),
+        props: helper.resolvePropState("placeholder", {
+          defaultValue: {
+            placeholder: "请输入",
+          },
+        }),
       },
     });
   }
