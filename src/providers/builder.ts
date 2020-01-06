@@ -3,7 +3,12 @@ import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
-import { IChildRefPluginOptions, IInstanceCreateOptions } from "./entity-parser";
+import {
+  IChildRefPluginOptions,
+  IComponentPluginOptions,
+  IDirectivePluginOptions,
+  IRootPageCreateOptions,
+} from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
@@ -130,13 +135,16 @@ export class Builder {
     return target;
   }
 
+  private _resolveCreateOptions(type: "component", options: IComponentCreateOptions): IComponentPluginOptions<any>;
+  private _resolveCreateOptions(type: "directive", options: IDirectiveCreateOptions): IDirectivePluginOptions<any>;
+  private _resolveCreateOptions(type: "root", options: IDirectiveCreateOptions): IRootPageCreateOptions<any>;
   private _resolveCreateOptions(
     type: "component" | "directive" | "root",
     options: IRootComponentCreateOptions | IDirectiveCreateOptions,
-  ): IInstanceCreateOptions<any> {
+  ): IComponentPluginOptions<any> | IDirectivePluginOptions<any> | IRootPageCreateOptions<any> {
     const entity = this._resolveType(options.moduleName, options.templateName, type);
-    const comps: IInstanceCreateOptions<any>[] = [];
-    const direcs: IInstanceCreateOptions<any>[] = [];
+    const comps: IComponentPluginOptions<any>[] = [];
+    const direcs: IDirectivePluginOptions<any>[] = [];
     const childs: IChildRefPluginOptions[] = [];
     let depts = { ...entity.metadata.entity.dependencies };
     if (type === "root") {
@@ -166,8 +174,8 @@ export class Builder {
   }
 
   private _resolveRootDepts(
-    comps: IInstanceCreateOptions<any>[],
-    direcs: IInstanceCreateOptions<any>[],
+    comps: IRootPageCreateOptions<any>[],
+    direcs: IRootPageCreateOptions<any>[],
     depts: { [x: string]: string | string[] },
     entity: IMapEntry<any>,
   ) {

@@ -13,6 +13,7 @@ import {
   resolveModule,
   resolveOutputProperties,
   resolvePropertyGroups,
+  resolveProps,
 } from "../core/decorators";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";
@@ -23,6 +24,7 @@ export interface IMetadataGroup {
   inputs: { [name: string]: any };
   outputs: { [name: string]: any };
   attaches: { [name: string]: any };
+  props: { [name: string]: any };
   groups: { [name: string]: any };
   entityExtensions?: Partial<
     IFrameworkStructure<{
@@ -158,6 +160,7 @@ export function getMetadata(mdname: EntityConstructor<any>, provider?: BasicEnti
     inputs: resolveInputProperties(mdname),
     outputs: resolveOutputProperties(mdname),
     attaches: resolveAttachProperties(mdname),
+    props: resolveProps(mdname),
   };
   if (!!provider) {
     result.entityExtensions = provider!.resolveExtensionsMetadata(mdname);

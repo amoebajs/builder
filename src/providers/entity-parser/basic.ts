@@ -35,8 +35,14 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   input?: { [prop: string]: any };
 }
 
-export interface IInstanceCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
+export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
+  attach?: { [prop: string]: any };
+}
+
+export interface IPropertiesOptions {
+  input?: { [prop: string]: any };
+  attach?: { [prop: string]: any };
 }
 
 @Injectable()
@@ -47,12 +53,13 @@ export class BasicEntityProvider {
     {
       template,
       input = {},
+      attach = {},
       components = [],
       directives = [],
       children = [],
       id,
       passContext,
-    }: IInstanceCreateOptions<T>,
+    }: IRootPageCreateOptions<T>,
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || {
@@ -64,7 +71,7 @@ export class BasicEntityProvider {
       imports: new Map(),
       classes: new Map(),
     };
-    const model = this._initContextInstance(template, input, context).setEntityId(id);
+    const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -93,7 +100,7 @@ export class BasicEntityProvider {
       model["__directives"].push(
         provider.attachDirective(
           model,
-          this._initContextInstance<BasicDirective>(iterator.template, iterator.input || {}, context).setEntityId(
+          this._initContextInstance<BasicDirective>(iterator.template, { input: iterator.input }, context).setEntityId(
             iterator.id,
           ),
         ),
@@ -135,7 +142,11 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onInputPropertiesInit<T extends any>(_: T) {}
+  protected onInputPropertiesInit<T extends any>(_: T, options: IPropertiesOptions) {
+    if (options.input) {
+      this._inputProperties(_, options.input);
+    }
+  }
 
   /** @override */
   protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
@@ -222,11 +233,11 @@ export class BasicEntityProvider {
 
   private _initContextInstance<T extends BasicCompilationEntity>(
     template: InjectDIToken<T>,
-    options: { [prop: string]: any },
+    options: IPropertiesOptions,
     context: IBasicCompilationContext,
   ): T {
-    const instance = this.injector.get(template);
-    const model = this._inputProperties(instance, options);
+    const model = this.injector.get(template);
+    this.onInputPropertiesInit(model, options);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -237,7 +248,7 @@ export class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: any): T {
+  private _inputProperties<T extends any>(model: T, options: any) {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
@@ -250,8 +261,6 @@ export class BasicEntityProvider {
         }
       }
     }
-    this.onInputPropertiesInit(model);
-    return model;
   }
 }
 
