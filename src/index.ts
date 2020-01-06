@@ -14,7 +14,6 @@ export {
   Module,
   Group,
   Input,
-  Output,
   Attach,
 } from "./core";
 
