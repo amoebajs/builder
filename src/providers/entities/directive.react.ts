@@ -11,6 +11,10 @@ export abstract class ReactDirective<T extends IPureObject = IPureObject> extend
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
-    render["parentRef"] = this.__parentRef;
+  }
+
+  protected async onInit() {
+    await super.onInit();
+    this.render["parentRef"] = this.__parentRef;
   }
 }
