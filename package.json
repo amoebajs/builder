@@ -7,12 +7,12 @@
   "contributors": [
     "bigmogician <bigmogician@outlook.com>"
   ],
-  "license": "GNU AGPLv3",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "clear:dist": "npx rimraf dist",
     "clear:sdk-dist": "npx rimraf websdk-dist",
     "clear:scripts-build": "npx rimraf scripts-build",
-    "copy:scripts-yaml": "npx copy scripts/*.yaml scripts-build/scripts",
+    "copy:scripts-yaml": "npx copy scripts/**/*.yaml scripts-build/scripts",
     "copy:scripts-src-assets": "npx copy src/assets/**/*.* scripts-build/src/assets",
     "copy:assets": "npx copy src/assets/**/*.* dist/assets",
     "copy:prepublish": "yarn clear:dist && npx copy README.md dist && npx copy LICENSE dist",

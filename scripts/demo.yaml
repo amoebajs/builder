@@ -13,29 +13,11 @@ page:
   children:
     - ref: ZentFormComponent
       id: ZentFormComponentRef01
-      input:
-        layout:
-          type: literal
-          syntaxType: string
-          expression: horizontal
-      children:
-        - ref: ZentInputComponent
-          id: ZentInputComponentRef01
-          input:
-            label: 名称：
-            required: true
-            name: name
-            placeholder: 请输入名称
-        - ref: ZentBtnDemoComponent
-          id: ZentBtnDemoCompRef099
-          input:
-            content:
-              type: literal
-              syntaxType: string
-              expression: 确定
+      props:
+        layout: vertical
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
-      input:
+      props:
         loading:
           type: state
           expression: zentBtnLoading
@@ -52,7 +34,7 @@ page:
           expression: zentBtnType
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef02
-      input:
+      props:
         loading:
           type: literal
           syntaxType: boolean

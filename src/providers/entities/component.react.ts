@@ -38,11 +38,11 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
     await super.onChildrenPostRender();
     const children = this.getChildren();
     for (const child of children) {
-      const options = child.options || {};
+      const props = child.props || {};
       const attrs: IJsxAttrs = {};
-      for (const key in options) {
-        if (options.hasOwnProperty(key)) {
-          const element = options[key];
+      for (const key in props) {
+        if (props.hasOwnProperty(key)) {
+          const element = props[key];
           switch (element.type) {
             case "state":
             case "props":

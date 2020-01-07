@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { IInnerComponent } from "../../core/component";
+import { IInnerComponent, callComponentLifecycle } from "../../core/component";
 import {
   EntityConstructor,
   IConstructor,
@@ -19,7 +19,7 @@ import { PropAttach } from "../../core/libs/attach.basic";
 export interface IChildRefPluginOptions {
   refComponent: string;
   childName: string;
-  input: { [prop: string]: any };
+  props: { [prop: string]: any };
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
@@ -95,7 +95,7 @@ export class BasicEntityProvider {
         this._initContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
-          .setRefOptions(iterator.input || {}),
+          .setRefOptions(iterator.props || {}),
       );
     }
     for (const iterator of directives) {
@@ -117,19 +117,7 @@ export class BasicEntityProvider {
     name: string,
     unExport = false,
   ) {
-    await model.onInit();
-    await model.onComponentsPreRender();
-    await model.onComponentsRender();
-    await model.onComponentsPostRender();
-    await model.onChildrenPreRender();
-    await model.onChildrenRender();
-    await model.onChildrenPostRender();
-    await model.onDirectivesPreAttach();
-    await model.onDirectivesAttach();
-    await model.onDirectivesPostAttach();
-    await model.onPreRender();
-    await model.onRender();
-    await model.onPostRender();
+    await callComponentLifecycle(model);
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
