@@ -57,6 +57,38 @@ export class ReactHelper extends BasicHelper {
     return literal;
   }
 
+  /**
+   * @param chain property access chain e.g. userInfo.name
+   */
+  public createPropertyAccess(chain: string) {
+    const identifiers = chain.split(".");
+    let propertyAccess: ts.Expression = ts.createIdentifier(identifiers[0]);
+    const len = identifiers.length;
+    let i = 1;
+    while (i < len) {
+      propertyAccess = ts.createPropertyAccess(propertyAccess, ts.createIdentifier(identifiers[i]));
+      i++;
+    }
+    return propertyAccess;
+  }
+
+  /**
+   * @param chain property access chain e.g. userInfo.name
+   * @param params default is []
+   */
+  public createMethodCall(chain: string | ts.Expression, params?: ts.Expression[]) {
+    const propertyAccess = is.string(chain) ? this.createPropertyAccess(chain) : chain;
+    return this.createFunctionCall(propertyAccess, params);
+  }
+
+  /**
+   * @param name name of function or ts.Expression
+   * @param params default is []
+   */
+  public createFunctionCall(name: string | ts.Expression, params: ts.Expression[] = []) {
+    return ts.createCall(is.string(name) ? ts.createIdentifier(name) : name, undefined, params);
+  }
+
   public createJsxElement(
     tagName: string,
     types: ts.TypeNode[],

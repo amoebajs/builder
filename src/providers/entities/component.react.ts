@@ -37,8 +37,8 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   protected async onChildrenPostRender() {
     await super.onChildrenPostRender();
     const children = this.getChildren();
-    for (const iterator of children) {
-      const options = iterator.options || {};
+    for (const child of children) {
+      const options = child.options || {};
       const attrs: IJsxAttrs = {};
       for (const key in options) {
         if (options.hasOwnProperty(key)) {
@@ -57,10 +57,10 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
         }
       }
       this.addRootChildren(
-        iterator.id,
-        this.helper.createJsxElement(iterator.component, [], {
+        child.id,
+        this.helper.createJsxElement(child.component, [], {
           ...attrs,
-          key: iterator.id,
+          key: child.id,
         }),
       );
     }

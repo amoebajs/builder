@@ -4,19 +4,35 @@ components:
     id: ZentBtnDemoComponent
     input: {}
   - module: ambjs-common-component-module
-    name: zent-input
-    id: ZentInputComponent
+    name: zent-form
+    id: ZentFormComponent
 page:
   module: ambjs-common-component-module
   name: css-grid-container
   id: "CssGridPageDemoRoot"
   children:
-    - ref: ZentInputComponent
-      id: ZentInputComponentRef01
-      options:
-        label: 名称：
-        required: true
-        name: name
+    - ref: ZentFormComponent
+      id: ZentFormComponentRef01
+      input:
+        layout:
+          type: literal
+          syntaxType: string
+          expression: horizontal
+      children:
+        - ref: ZentInputComponent
+          id: ZentInputComponentRef01
+          input:
+            label: 名称：
+            required: true
+            name: name
+            placeholder: 请输入名称
+        - ref: ZentBtnDemoComponent
+          id: ZentBtnDemoCompRef099
+          input:
+            content:
+              type: literal
+              syntaxType: string
+              expression: 确定
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       input:

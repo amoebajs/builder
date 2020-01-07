@@ -178,6 +178,28 @@ export class BasicEntityProvider {
       classes: [],
     };
     const classPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
+    // for (const [key, scopes] of Object.entries(_context)) {
+    //   for (const [scopeName, scope] of scopes.entries()) {
+    //     // 组件作用域在当前SourceFile中
+    //     if (scope.type === "component" && scopeName !== model["entityId"]) {
+    //       if (key === "imports") {
+    //         context[key].push(...(<ts.ImportDeclaration[]>scope.items));
+    //       } else {
+    //         const target = classPreList.find(([id]) => id === scopeName);
+    //         if (!target) {
+    //           classPreList.push([scopeName, { [key]: scope.items }]);
+    //         } else {
+    //           if (key === "extendParent") {
+    //           } else if (!target[1][key]) {
+    //             target[1][currentKey] = <any>value.items;
+    //           } else {
+    //             target[1][currentKey]!.push(...(<any>value.items));
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
     for (const key in _context) {
       if (_context.hasOwnProperty(key)) {
         const currentKey: keyof IBasicCompilationFinalContext = <any>key;
