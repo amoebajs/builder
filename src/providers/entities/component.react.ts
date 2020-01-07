@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
-import { IPureObject, resolveSyntaxInsert } from "../../core/base";
+import { IPureObject } from "../../core/base";
 import { IJsxAttrs, REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
@@ -108,13 +108,15 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
       types: [],
     });
   }
-  protected addReactUseState(name: string, defaultValue: any) {
-    const useState = ts.createCall(ts.createIdentifier("useState"), undefined, [
-      resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
-        is.array(defaultValue)
-          ? this.helper.createArrayLiteral(defaultValue)
-          : this.helper.createObjectLiteral(defaultValue),
-      ),
+  protected addReactUseState(name: string, defaultValue: unknown) {
+    let genericType: undefined | ts.TypeNode;
+    if (is.object(defaultValue)) {
+      genericType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+    } else if (is.array(defaultValue)) {
+      genericType = ts.createArrayTypeNode(ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+    }
+    const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
+      this.helper.createLiteral(defaultValue),
     ]);
     const declare = ts.createVariableDeclaration(
       ts.createArrayBindingPattern([
