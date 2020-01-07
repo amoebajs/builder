@@ -16,12 +16,16 @@ if (!fs.existsSync(buildSrcFolder)) fs.mkdirSync(buildSrcFolder);
 
 const outDir = path.resolve(process.cwd(), "build", "src");
 
+const startTime = new Date().getTime();
+
 // new Factory().builder
 const builder = new Factory().builder;
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
   .createSource({ configs: demoConf })
   .then(({ sourceCode, depsJSON }) => {
+    const endTime = new Date().getTime() - startTime;
+    console.log("cost : " + endTime + "ms");
     fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceCode, {
       encoding: "utf8",
     });

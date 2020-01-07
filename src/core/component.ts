@@ -28,6 +28,102 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
 
 export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}
 
+export async function callOnInit(model: IInnerComponent) {
+  for (const iterator of model.__components) {
+    await iterator.onInit();
+  }
+  for (const iterator of model.__children) {
+    await iterator.onInit();
+  }
+  for (const iterator of model.__directives) {
+    await iterator.onInit();
+  }
+  await model.onInit();
+}
+
+export async function callOnComponentsPreRender(model: IInnerComponent) {
+  for (const iterator of model.__components) {
+    await iterator.onPreRender();
+  }
+  await model.onComponentsPreRender();
+}
+
+export async function callOnComponentsRender(model: IInnerComponent) {
+  for (const iterator of model.__components) {
+    await iterator.onRender();
+  }
+  await model.onComponentsRender();
+}
+
+export async function callOnComponentsPostRender(model: IInnerComponent) {
+  for (const iterator of model.__components) {
+    await iterator.onPostRender();
+  }
+  await model.onComponentsPostRender();
+}
+
+export async function callOnChildrenPreEmit(model: IInnerComponent) {
+  for (const iterator of model.__children) {
+    await iterator.onPreEmit();
+  }
+  await model.onChildrenPreRender();
+}
+
+export async function callOnChildrenEmit(model: IInnerComponent) {
+  for (const iterator of model.__children) {
+    await iterator.onEmit();
+  }
+  await model.onChildrenRender();
+}
+
+export async function callOnChildrenPostEmit(model: IInnerComponent) {
+  for (const iterator of model.__children) {
+    await iterator.onPostEmit();
+  }
+  await model.onChildrenPostRender();
+}
+
+export async function callOnDirectivesPreAttach(model: IInnerComponent) {
+  for (const iterator of model.__directives) {
+    await iterator.onPreAttach();
+  }
+  await model.onDirectivesPreAttach();
+}
+
+export async function callOnDirectivesAttach(model: IInnerComponent) {
+  for (const iterator of model.__directives) {
+    await iterator.onAttach();
+  }
+  await model.onDirectivesAttach();
+}
+
+export async function callOnDirectivesPostAttach(model: IInnerComponent) {
+  for (const iterator of model.__directives) {
+    await iterator.onPostAttach();
+  }
+  await model.onDirectivesPostAttach();
+}
+
+export async function callComponentRenderLifecycle(model: IInnerComponent) {
+  await model.onPreRender();
+  await model.onRender();
+  await model.onPostRender();
+}
+
+export async function callComponentLifecycle(model: IInnerComponent) {
+  await callOnInit(model);
+  await callOnComponentsPreRender(model);
+  await callOnComponentsRender(model);
+  await callOnComponentsPostRender(model);
+  await callOnChildrenPreEmit(model);
+  await callOnChildrenEmit(model);
+  await callOnChildrenPostEmit(model);
+  await callOnDirectivesPreAttach(model);
+  await callOnDirectivesAttach(model);
+  await callOnDirectivesPostAttach(model);
+  await callComponentRenderLifecycle(model);
+}
+
 export abstract class BasicComponent<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   private __rendered: boolean = false;
   private readonly __children: IChildRef[] = [];
@@ -54,95 +150,44 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   //#region hooks
 
   /** @override */
-  protected async onInit(): Promise<void> {
-    for (const iterator of this.__components) {
-      await iterator.onInit();
-    }
-    for (const iterator of this.__directives) {
-      await iterator.onInit();
-    }
-    for (const iterator of this.__children) {
-      await iterator.onInit();
-    }
-  }
+  protected async onInit(): Promise<void> {}
 
   /** @override */
-  protected async onComponentsPreRender(): Promise<void> {
-    for (const iterator of this.__components) {
-      await iterator.onPreRender();
-    }
-  }
+  protected async onComponentsPreRender(): Promise<void> {}
 
   /** @override */
-  protected async onComponentsRender(): Promise<void> {
-    for (const iterator of this.__components) {
-      await iterator.onRender();
-    }
-  }
+  protected async onComponentsRender(): Promise<void> {}
 
   /** @override */
-  protected async onComponentsPostRender(): Promise<void> {
-    for (const iterator of this.__components) {
-      await iterator.onPostRender();
-    }
-  }
+  protected async onComponentsPostRender(): Promise<void> {}
 
   /** @override */
-  protected async onChildrenPreRender(): Promise<void> {
-    for (const iterator of this.__children) {
-      await iterator.onPreEmit();
-    }
-  }
+  protected async onChildrenPreRender(): Promise<void> {}
 
   /** @override */
-  protected async onChildrenRender(): Promise<void> {
-    for (const iterator of this.__children) {
-      await iterator.onEmit();
-    }
-  }
+  protected async onChildrenRender(): Promise<void> {}
 
   /** @override */
-  protected async onChildrenPostRender(): Promise<void> {
-    for (const iterator of this.__children) {
-      await iterator.onPostEmit();
-    }
-  }
+  protected async onChildrenPostRender(): Promise<void> {}
 
   /** @override */
-  protected async onDirectivesPreAttach(): Promise<void> {
-    for (const iterator of this.__directives) {
-      await iterator.onPreAttach();
-    }
-  }
+  protected async onDirectivesPreAttach(): Promise<void> {}
 
   /** @override */
-  protected async onDirectivesAttach(): Promise<void> {
-    for (const iterator of this.__directives) {
-      await iterator.onAttach();
-    }
-  }
+  protected async onDirectivesAttach(): Promise<void> {}
 
   /** @override */
-  protected async onDirectivesPostAttach(): Promise<void> {
-    for (const iterator of this.__directives) {
-      await iterator.onPostAttach();
-    }
-  }
+  protected async onDirectivesPostAttach(): Promise<void> {}
 
   /** @override */
-  protected async onPreRender(): Promise<void> {
-    return Promise.resolve();
-  }
+  protected async onPreRender(): Promise<void> {}
 
   /** @override */
-  protected async onRender(): Promise<void> {
-    return Promise.resolve();
-  }
+  protected async onRender(): Promise<void> {}
 
   /** @override */
   protected async onPostRender(): Promise<void> {
     this.__rendered = true;
-    return Promise.resolve();
   }
 
   //#endregion
