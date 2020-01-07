@@ -24,14 +24,17 @@ type EntityType = "directive" | "component" | "childref" | "entity";
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
   type: TYPE;
-  items: ENTITY;
+  container: ENTITY;
 }
 
 type ScopeMap<T> = {
   [key in keyof T]: Map<string | symbol, IScopeStructure<EntityType, T[key]>>;
 };
 
-export type IBasicCompilationContext = ScopeMap<IBasicCompilationFinalContext>;
+export type IBasicCompilationContext = Map<
+  string | symbol,
+  IScopeStructure<EntityType, Partial<IBasicCompilationFinalContext>>
+>;
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
@@ -177,43 +180,39 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   //#endregion
 
   private __addChildElements<A extends any>(
-    target: keyof IBasicCompilationContext,
+    target: keyof IBasicCompilationFinalContext,
     args: A[],
     type: IBasicComponentAppendType,
   ) {
-    const host: Map<string | symbol, IScopeStructure<EntityType, any>> = this.__context[target];
-    let container = host.get(this.__scope);
-    if (!container) {
-      host.set(
+    let context = this.__context.get(this.__scope);
+    if (!context) {
+      this.__context.set(
         this.__scope,
-        (container = {
+        (context = {
           scope: this.__scope,
           type: this.__etype,
-          items: [],
+          container: {},
         }),
       );
     }
     if (target === "extendParent") {
-      container.items = args[0];
-      host.set(this.__scope, container);
+      context.container[<"extendParent">target] = args[0];
       return;
     }
     if (type === "reset") {
-      container.items = args;
-      host.set(this.__scope, container);
+      context.container[target] = <any>args;
     } else {
-      const oldValues = container.items || [];
+      const oldValues = context.container[target] || [];
       const newValues = [...oldValues];
       newValues[type](...args);
-      container.items = newValues;
-      host.set(this.__scope, container);
+      context.container[target] = <any>newValues;
     }
   }
 
-  private __getChildElements<K extends keyof IBasicCompilationContext>(
+  private __getChildElements<K extends keyof IBasicCompilationFinalContext>(
     target: K,
-  ): MapValueType<IBasicCompilationContext[K]> {
-    return this.__context[target].get(this.__scope)?.items as any;
+  ): IBasicCompilationFinalContext[K] {
+    return this.__context.get(this.__scope)?.container[target] as any;
   }
 }
 
