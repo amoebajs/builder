@@ -7,7 +7,7 @@
   "contributors": [
     "bigmogician <bigmogician@outlook.com>"
   ],
-  "license": "GNU AGPLv3",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "clear:dist": "npx rimraf dist",
     "clear:sdk-dist": "npx rimraf websdk-dist",
