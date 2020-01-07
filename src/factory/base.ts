@@ -1,12 +1,38 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
-import { EntityConstructor, IFrameworkDepts, Injectable, getInjectScope, resolveDepts } from "../core/decorators";
-import { GlobalMap, Builder, BasicEntityProvider } from "../providers";
+import {
+  EntityConstructor,
+  IFrameworkDepts,
+  Injectable,
+  getInjectScope,
+  resolveDepts,
+  IConstructor,
+} from "../core/decorators";
+import {
+  ReactComponent,
+  GlobalMap,
+  Builder,
+  BasicEntityProvider,
+  WebpackConfig,
+  HtmlBundle,
+  BasicChildRef,
+  ReactDirective,
+  ReactEntityProvider,
+  BasicHelper,
+  ReactHelper,
+  ReactRender,
+} from "../providers";
+import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
 
-export class BaseFactory {
+export interface IFactoryOptions {
+  trace: boolean;
+}
+
+export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   private _completed = false;
   private _di = new DIContainer({ type: "native" });
   private _map = new GlobalMap();
 
+  private __trace = false;
   private __pre_providers: [any, any?][] = [];
   private __pre_entity_providers: [string, any][] = [];
   private __pre_modules: any[] = [];
@@ -18,26 +44,49 @@ export class BaseFactory {
     return this._di.get(Builder);
   }
 
-  constructor() {
+  constructor(options: Partial<O> = {}) {
+    this.initOptions(options);
     this.initProviders();
     this.initEntityProviders();
     this.initModules();
   }
 
   /** @override can be overrided */
-  protected initProviders() {
-    this._initGlobalMap();
+  protected initOptions(options: Partial<O>) {
+    if ((<O>options).trace !== void 0) this.__trace = (<O>options).trace;
   }
 
   /** @override can be overrided */
-  protected initModules() {}
+  protected initProviders() {
+    this._initGlobalMap();
+    this.useProvider(WebpackConfig);
+    this.useProvider(HtmlBundle);
+    this.useProvider(Builder);
+    this.useProvider(BasicEntityProvider);
+    this.useProvider(BasicChildRef);
+    this.useProvider(ReactDirective);
+    this.useProvider(ReactComponent);
+    this.useProvider(BasicHelper);
+    this.useProvider(ReactHelper);
+    this.useProvider(ReactRender);
+  }
 
   /** @override can be overrided */
-  protected initEntityProviders() {}
+  protected initModules() {
+    this.useModule(CommonComponentModule);
+    this.useModule(CommonDirectiveModule);
+  }
+
+  /** @override can be overrided */
+  protected initEntityProviders() {
+    this.useEntityProvider("react", ReactEntityProvider);
+  }
 
   public useProvider(contract: InjectDIToken<any>, imple?: EntityConstructor<any>) {
     if (!this._completed) {
-      console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      if (this.__trace) {
+        console.log(...(!imple ? [contract] : [contract, "-->", imple]));
+      }
       this._useProvider(contract, imple);
       this.__pre_providers.push([contract, imple]);
     }
@@ -56,7 +105,7 @@ export class BaseFactory {
     return this;
   }
 
-  public useEntityProvider<T extends typeof BasicEntityProvider>(name: keyof IFrameworkDepts, provider: T) {
+  public useEntityProvider<T extends BasicEntityProvider>(name: keyof IFrameworkDepts, provider: IConstructor<T>) {
     if (!this._completed) {
       this.__pre_entity_providers.push([name, provider]);
       this._map.useProvider(name, provider);

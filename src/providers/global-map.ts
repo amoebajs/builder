@@ -11,7 +11,6 @@ import {
   resolveDirective,
   resolveInputProperties,
   resolveModule,
-  resolveOutputProperties,
   resolvePropertyGroups,
   resolveProps,
 } from "../core/decorators";
@@ -22,7 +21,6 @@ import { InjectDIToken } from "@bonbons/di";
 export interface IMetadataGroup {
   entity: IDirectiveContract | IComponentContract | IModuleContract;
   inputs: { [name: string]: any };
-  outputs: { [name: string]: any };
   attaches: { [name: string]: any };
   props: { [name: string]: any };
   groups: { [name: string]: any };
@@ -158,7 +156,6 @@ export function getMetadata(mdname: EntityConstructor<any>, provider?: BasicEnti
     entity: <any>{},
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
-    outputs: resolveOutputProperties(mdname),
     attaches: resolveAttachProperties(mdname),
     props: resolveProps(mdname),
   };
