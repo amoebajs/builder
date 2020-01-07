@@ -22,6 +22,10 @@ export class ReactEntityProvider extends BasicEntityProvider {
     ]);
   }
 
+  protected emitFunctionTemplate(others: IBasicCompilationFinalContext) {
+    return others;
+  }
+
   protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]) {
     return [
       ...statements,
@@ -42,7 +46,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
     ];
   }
 
-  protected createRootComponent(model: IInnerComponent, context: IBasicCompilationFinalContext): ts.ClassDeclaration {
+  protected createRootComponent(model: IInnerComponent, context: IBasicCompilationFinalContext) {
     return super.createRootComponent(model, context, false);
   }
 

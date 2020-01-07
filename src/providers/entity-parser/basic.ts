@@ -2,6 +2,7 @@ import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { IInnerComponent, callComponentLifecycle } from "../../core/component";
 import {
+  Directive,
   EntityConstructor,
   IConstructor,
   IFrameworkDepts,
@@ -113,7 +114,12 @@ export class BasicEntityProvider {
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
-    const statements = this.onStatementsEmitted(model, [...imports, ...context.classes, classApp]);
+    const statements = this.onStatementsEmitted(model, [
+      ...imports,
+      ...context.classes,
+      ...context.functions,
+      classApp,
+    ]);
     const sourceFile = ts.createSourceFile("temp.tsx", "", ts.ScriptTarget.ES2017, undefined, ts.ScriptKind.TSX);
     return ts.updateSourceFileNode(
       sourceFile,
@@ -156,30 +162,50 @@ export class BasicEntityProvider {
       methods: [],
       imports: [],
       classes: [],
+      functions: [],
+      statements: [],
     };
     const classPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
+    const functionPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
     const _contexts = Array.from(_context.entries());
     for (const [scope, group] of _contexts) {
       if (group.type === "component" && scope !== model["entityId"]) {
         const { imports = [], ...others } = group.container;
         context.imports.push(...imports);
-        classPreList.push([scope, others]);
-      }
-      if (group.type === "directive" || scope == model["entityId"]) {
+
+        const classTemplate = this.emitClassTemplate(others);
+        classTemplate && classPreList.push([scope, classTemplate]);
+
+        const functionTemplate = this.emitFunctionTemplate(others);
+        functionTemplate && functionPreList.push([scope, functionTemplate]);
+      } else if (group.type === "directive" || scope == model["entityId"]) {
         const { extendParent, ...others } = group.container;
         if (extendParent !== void 0) {
           context.extendParent = extendParent;
         }
-        for (const key in others) {
-          if (others.hasOwnProperty(key)) {
-            const element = (<any>others)[key];
-            (<any>context)[key].push(...(<any[]>element));
-          }
+        for (const [key, elements] of Object.entries(others)) {
+          (<any>context)[key]!.push(...(<ts.Node[]>elements));
         }
       }
     }
-    context.classes = classPreList.map(([scope, ctx]) =>
-      createClass(true, scope.toString(), {
+    context.classes = classPreList
+      .filter(i => !!i)
+      .map(([scope, ctx]) =>
+        createClass(true, scope.toString(), {
+          extendParent: null,
+          implementParents: [],
+          fields: [],
+          properties: [],
+          methods: [],
+          imports: [],
+          classes: [],
+          functions: [],
+          statements: [],
+          ...ctx,
+        }),
+      );
+    context.functions = functionPreList.map(([scope, ctx]) =>
+      createFunction(scope.toString(), {
         extendParent: null,
         implementParents: [],
         fields: [],
@@ -187,10 +213,24 @@ export class BasicEntityProvider {
         methods: [],
         imports: [],
         classes: [],
+        functions: [],
+        statements: [],
         ...ctx,
       }),
     );
     return context;
+  }
+
+  protected emitClassTemplate(
+    _context: Partial<IBasicCompilationFinalContext>,
+  ): Partial<IBasicCompilationFinalContext> | null {
+    return null;
+  }
+
+  protected emitFunctionTemplate(
+    _context: Partial<IBasicCompilationFinalContext>,
+  ): Partial<IBasicCompilationFinalContext> | null {
+    return null;
   }
 
   /** @override */
@@ -209,12 +249,8 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected createRootComponent(
-    model: IInnerComponent,
-    context: IBasicCompilationFinalContext,
-    isExport = true,
-  ): ts.ClassDeclaration {
-    return createClass(!isExport, model.entityId, context);
+  protected createRootComponent(model: IInnerComponent, context: IBasicCompilationFinalContext, isExport = true) {
+    return createFunction(model.entityId, context, isExport);
   }
 
   private _initContextInstance<T extends BasicCompilationEntity>(
@@ -270,6 +306,19 @@ function createClass(unExport: boolean, name: string, context: IBasicCompilation
     [],
     exists([context.extendParent!, ...context.implementParents]),
     exists([...context.fields, ...context.properties, ...context.methods]),
+  );
+}
+
+function createFunction(name: string, context: IBasicCompilationFinalContext, _isExport = false) {
+  return ts.createFunctionDeclaration(
+    undefined,
+    undefined,
+    undefined,
+    name,
+    undefined,
+    [ts.createParameter(undefined, undefined, undefined, "props")],
+    undefined,
+    ts.createBlock(context.statements),
   );
 }
 

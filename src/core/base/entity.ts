@@ -6,17 +6,22 @@ import { BasicError } from "../../errors";
 export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
 
 export interface IBasicCompilationFinalContext {
+  // all level
   imports: ts.ImportDeclaration[];
+
+  // class level
   extendParent: ts.HeritageClause | null;
   implementParents: ts.HeritageClause[];
   fields: ts.PropertyDeclaration[];
   properties: ts.PropertyDeclaration[];
   methods: ts.MethodDeclaration[];
-  classes: ts.ClassDeclaration[];
-}
 
-export interface IFunctionCompilationContext extends IBasicCompilationFinalContext {
-  statements?: ts.Statement[];
+  // page level and function level
+  classes: ts.ClassDeclaration[];
+  functions: ts.FunctionDeclaration[];
+
+  // function level
+  statements: ts.Statement[];
 }
 
 type EntityType = "directive" | "component" | "childref" | "entity";
@@ -175,6 +180,14 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
 
   protected getExtendParent() {
     return this.__getChildElements("extendParent") || null;
+  }
+
+  protected addStatements(arg: ts.Statement[], type: IBasicComponentAppendType = "push") {
+    return this.__addChildElements("statements", arg, type);
+  }
+
+  protected getStatements() {
+    return this.__getChildElements("statements");
   }
 
   //#endregion

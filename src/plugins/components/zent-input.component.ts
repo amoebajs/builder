@@ -12,11 +12,11 @@ export class ZentInputComponent extends ReactComponent {
       ...this.getState("rootElement"),
       name: COMPONENT_NAME,
       attrs: {
-        label: helper.resolvePropState("label", { defaultValue: "标签：" }),
-        name: helper.resolvePropState("name", { defaultValue: this.entityId }),
-        required: helper.resolvePropState("required"),
-        defaultValue: helper.resolvePropState("defaultValue"),
-        props: helper.resolvePropState("placeholder", {
+        label: helper.createReactPropsAccess("label", { defaultValue: "标签：" }),
+        name: helper.createReactPropsAccess("name", { defaultValue: this.entityId }),
+        required: helper.createReactPropsAccess("required"),
+        defaultValue: helper.createReactPropsAccess("defaultValue"),
+        props: helper.createReactPropsAccess("placeholder", {
           defaultValue: {
             placeholder: "请输入",
           },

@@ -13,25 +13,25 @@ export class ZentButtonComponent extends ReactComponent {
       ...this.getState("rootElement"),
       name: ButtonRefName,
       attrs: {
-        type: helper.resolvePropState("type", { defaultValue: "default" }),
-        size: helper.resolvePropState("size", { defaultValue: "medium" }),
-        htmlType: helper.resolvePropState("htmlType", {
+        type: helper.createReactPropsAccess("type", { defaultValue: "default" }),
+        size: helper.createReactPropsAccess("size", { defaultValue: "medium" }),
+        htmlType: helper.createReactPropsAccess("htmlType", {
           defaultValue: "button",
         }),
-        block: helper.resolvePropState("block", { defaultValue: false }),
-        disabled: helper.resolvePropState("disabled", { defaultValue: false }),
-        loading: helper.resolvePropState("loading", { defaultValue: false }),
-        outline: helper.resolvePropState("outline", { defaultValue: false }),
-        bordered: helper.resolvePropState("bordered", {
+        block: helper.createReactPropsAccess("block", { defaultValue: false }),
+        disabled: helper.createReactPropsAccess("disabled", { defaultValue: false }),
+        loading: helper.createReactPropsAccess("loading", { defaultValue: false }),
+        outline: helper.createReactPropsAccess("outline", { defaultValue: false }),
+        bordered: helper.createReactPropsAccess("bordered", {
           defaultValue: true,
-          defaultCheck: "??",
+          checkOperatorForDefaultValue: "??",
         }),
-        href: helper.resolvePropState("href"),
-        target: helper.resolvePropState("target", { defaultValue: "" }),
-        download: helper.resolvePropState("download"),
-        onClick: helper.resolvePropState("onClick"),
+        href: helper.createReactPropsAccess("href"),
+        target: helper.createReactPropsAccess("target", { defaultValue: "" }),
+        download: helper.createReactPropsAccess("download"),
+        onClick: helper.createReactPropsAccess("onClick"),
       },
     });
-    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.resolvePropState("content"))]);
+    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.createReactPropsAccess("content"))]);
   }
 }
