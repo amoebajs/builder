@@ -64,15 +64,7 @@ export class BasicEntityProvider {
     }: IRootPageCreateOptions<T>,
     provider: BasicEntityProvider,
   ) {
-    const context: IBasicCompilationContext = passContext || {
-      extendParent: new Map(),
-      implementParents: new Map(),
-      fields: new Map(),
-      properties: new Map(),
-      methods: new Map(),
-      imports: new Map(),
-      classes: new Map(),
-    };
+    const context: IBasicCompilationContext = passContext || new Map();
     const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
@@ -166,38 +158,22 @@ export class BasicEntityProvider {
       classes: [],
     };
     const classPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
-    for (const key in _context) {
-      if (_context.hasOwnProperty(key)) {
-        const currentKey: keyof IBasicCompilationFinalContext = <any>key;
-        const item = _context[currentKey];
-        const scopesArr = Array.from(<IterableIterator<string | symbol>>item.keys());
-        for (const scope of scopesArr) {
-          const value = item.get(scope)!;
-          // 组件作用域在当前SourceFile中
-          if (value.type === "component" && scope !== model["entityId"]) {
-            if (currentKey === "imports") {
-              (<any>context)[key].push(...(<any[]>value.items));
-            } else {
-              const target = classPreList.find(([id, _]) => id === scope);
-              if (!target) {
-                classPreList.push([scope, { [currentKey]: <any>value.items }]);
-              } else {
-                if (currentKey === "extendParent") {
-                } else if (!target[1][currentKey]) {
-                  target[1][currentKey] = <any>value.items;
-                } else {
-                  target[1][currentKey]!.push(...(<any>value.items));
-                }
-              }
-            }
-          }
-          // 指令作用域在当前Class中
-          if (value.type === "directive" || scope == model["entityId"]) {
-            if (currentKey === "extendParent") {
-              context[currentKey] = <any>value.items;
-            } else {
-              (<any>context)[key].push(...(<any[]>value.items));
-            }
+    const _contexts = Array.from(_context.entries());
+    for (const [scope, group] of _contexts) {
+      if (group.type === "component" && scope !== model["entityId"]) {
+        const { imports = [], ...others } = group.container;
+        context.imports.push(...imports);
+        classPreList.push([scope, others]);
+      }
+      if (group.type === "directive" || scope == model["entityId"]) {
+        const { extendParent, ...others } = group.container;
+        if (extendParent !== void 0) {
+          context.extendParent = extendParent;
+        }
+        for (const key in others) {
+          if (others.hasOwnProperty(key)) {
+            const element = (<any>others)[key];
+            (<any>context)[key].push(...(<any[]>element));
           }
         }
       }
