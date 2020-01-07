@@ -1,8 +1,10 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { Primitive } from "utility-types";
 import { resolveSyntaxInsert } from "../../core/base";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
+import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 
 @Injectable(InjectScope.Singleton)
@@ -18,6 +20,41 @@ export class ReactHelper extends BasicHelper {
       ),
       true,
     );
+  }
+
+  public createObjectLiteral(object: Record<string, unknown>) {
+    const keys = Object.keys(object);
+    const properties = keys.map(key => {
+      const value = object[key];
+      let expr: ts.Expression;
+      if (is.stringOrNumberOrBoolean(value)) {
+        expr = resolveSyntaxInsert(typeof value, value);
+      } else if (is.array(value)) {
+        expr = this.createArrayLiteral(value);
+      } else {
+        expr = this.createObjectLiteral(value as Record<string, Primitive>);
+      }
+      const property = ts.createPropertyAssignment(key, expr);
+      return property;
+    });
+    const literal = ts.createObjectLiteral(properties, true);
+    return literal;
+  }
+
+  public createArrayLiteral(array: unknown[]) {
+    const elements = array.map(item => {
+      let expr: ts.Expression;
+      if (is.stringOrNumberOrBoolean(item)) {
+        expr = resolveSyntaxInsert(typeof item, item);
+      } else if (is.array(item)) {
+        expr = this.createArrayLiteral(item);
+      } else {
+        expr = this.createObjectLiteral(item as Record<string, Primitive>);
+      }
+      return expr;
+    });
+    const literal = ts.createArrayLiteral(elements, true);
+    return literal;
   }
 
   public createJsxElement(
@@ -78,7 +115,9 @@ export class ReactHelper extends BasicHelper {
       expr = ts.createBinary(
         expr,
         defaultCheck === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => ts.createStringLiteral(String(defaultValue))),
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
+          is.array(defaultValue) ? this.createArrayLiteral(defaultValue) : this.createObjectLiteral(defaultValue),
+        ),
       );
     }
     return expr;

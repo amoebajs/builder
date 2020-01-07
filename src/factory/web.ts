@@ -1,4 +1,4 @@
-import { Fs, Path, WebpackBuild, WebpackPlugins, Prettier } from "../providers";
+import { Fs, Path, Prettier, WebpackBuild, WebpackPlugins } from "../providers";
 import { BaseFactory, IFactoryOptions } from "./base";
 import { FsWebProvider } from "../providers/fs/fs.web";
 import { PathWebProvider } from "../providers/path/path.web";
