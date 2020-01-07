@@ -55,6 +55,26 @@ page:
       name: zent-base-css
       id: ZentBaseCssDemoDirective
     - module: ambjs-common-directive-module
+      name: zent-input
+      id: zentInputDirective
+      input:
+        formId: ZentFormComponentRef01
+        name: 字段1
+        relatedFieldName: 字段2
+        required: true
+    - module: ambjs-common-directive-module
+      name: zent-select
+      id: zentInputDirective
+      input:
+        formId: ZentFormComponentRef01
+        name: 字段2
+        required: true
+        data:
+          - value: 1
+            text: Option 1
+          - value: 2
+            text: Option 2
+    - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective
       input:

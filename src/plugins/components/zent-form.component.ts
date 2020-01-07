@@ -1,3 +1,4 @@
+import ts from "typescript";
 import { Component, Input } from "../../core/decorators";
 import { ReactComponent } from "../../providers";
 import { IJsxAttrs } from "../../utils";
@@ -29,9 +30,6 @@ export class ZentFormComponent extends ReactComponent {
         form: helper.createMethodCall("Form.useForm", [helper.createPropertyAccess("FormStrategy.View")]),
       },
     });
-    // this.setState(
-    //   "rootChildren",
-    //   this.fields.map(options => helper.createJsxElement(options.type, [], options.props)),
-    // );
+    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.resolvePropState("children"))]);
   }
 }

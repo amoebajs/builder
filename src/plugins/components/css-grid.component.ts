@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { Component, Group, Input, Attach } from "../../core/decorators";
+import { Attach, Component, Group, Input } from "../../core/decorators";
 import { DOMS, TYPES } from "../../utils";
 import { resolveSyntaxInsert } from "../../core/base";
 import { ReactComponent } from "../../providers";
