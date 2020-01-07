@@ -1,11 +1,11 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { Primitive } from "utility-types";
 import { resolveSyntaxInsert } from "../../core/base";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
-import { Injectable } from "../../core/decorators";
 import { is } from "../../utils/is";
-import { Primitive } from "utility-types";
+import { Injectable } from "../../core/decorators";
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
