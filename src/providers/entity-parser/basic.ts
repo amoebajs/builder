@@ -19,7 +19,7 @@ import { PropAttach } from "../../core/libs/attach.basic";
 export interface IChildRefPluginOptions {
   refComponent: string;
   childName: string;
-  input: { [prop: string]: any };
+  props: { [prop: string]: any };
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
@@ -95,7 +95,7 @@ export class BasicEntityProvider {
         this._initContextInstance(BasicChildRef, {}, context)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
-          .setRefOptions(iterator.input || {}),
+          .setRefOptions(iterator.props || {}),
       );
     }
     for (const iterator of directives) {

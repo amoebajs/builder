@@ -26,7 +26,7 @@ export interface IComponentDefine extends IDirectiveDefine {}
 export interface IChildDefine {
   ref: string;
   id: string;
-  input?: { [name: string]: any };
+  props?: { [name: string]: any };
 }
 
 export interface IPageDefine extends IComponentDefine {
@@ -208,7 +208,7 @@ function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
   return (configs.page.children || []).map(i => ({
     childName: i.id,
     refComponent: i.ref,
-    input: i.input || {},
+    props: i.props || {},
   }));
 }
 

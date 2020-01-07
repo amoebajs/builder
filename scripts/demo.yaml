@@ -13,13 +13,13 @@ page:
   children:
     - ref: ZentInputComponent
       id: ZentInputComponentRef01
-      options:
+      props:
         label: 名称：
         required: true
         name: name
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
-      input:
+      props:
         loading:
           type: state
           expression: zentBtnLoading
@@ -36,7 +36,7 @@ page:
           expression: zentBtnType
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef02
-      input:
+      props:
         loading:
           type: literal
           syntaxType: boolean
