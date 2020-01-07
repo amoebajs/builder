@@ -11,7 +11,7 @@ import {
   resolveDirective,
   resolveInputProperties,
   resolveModule,
-  resolveOutputProperties,
+  // resolveOutputProperties,
   resolvePropertyGroups,
   resolveProps,
 } from "../core/decorators";
