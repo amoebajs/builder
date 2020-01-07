@@ -26,7 +26,7 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
 
   public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
     return new HtmlWebPackPlugin({
-      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "assets", "index.html"),
+      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.html"),
       title: options?.title ?? "Index",
       charset: options?.charset ?? "utf-8",
       styleList: (options?.styles ?? defaultStyleSheets)

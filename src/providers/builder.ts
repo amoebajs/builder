@@ -26,20 +26,18 @@ export interface IComponentDefine extends IDirectiveDefine {}
 export interface IChildDefine {
   ref: string;
   id: string;
-  input?: { [name: string]: any };
+  props?: { [name: string]: any };
+}
+
+export interface IPageDefine extends IComponentDefine {
+  attach?: { [name: string]: any };
+  directives?: IDirectiveDefine[];
+  children?: IChildDefine[];
 }
 
 export interface IPageCreateOptions {
   components?: IComponentDefine[];
-  page: {
-    module: string;
-    name: string;
-    id: string;
-    input?: { [name: string]: any };
-    attach?: { [name: string]: any };
-    directives?: IDirectiveDefine[];
-    children?: IChildDefine[];
-  };
+  page: IPageDefine;
 }
 
 export interface ISourceCreateOptions {
@@ -210,7 +208,7 @@ function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
   return (configs.page.children || []).map(i => ({
     childName: i.id,
     refComponent: i.ref,
-    input: i.input || {},
+    props: i.props || {},
   }));
 }
 

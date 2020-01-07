@@ -28,6 +28,12 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
 
 export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}
 
+export interface IChildElement {
+  component: string;
+  id: string;
+  props: { [prop: string]: any };
+}
+
 export async function callOnInit(model: IInnerComponent) {
   for (const iterator of model.__components) {
     await iterator.onInit();
@@ -134,11 +140,11 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
     return this.__rendered;
   }
 
-  protected getChildren() {
+  protected getChildren(): IChildElement[] {
     return this.__children.map(i => ({
       component: i.componentRef,
       id: i.entityId,
-      options: i.__refOptions,
+      props: { ...i.__refOptions },
     }));
   }
 
