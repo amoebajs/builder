@@ -15,6 +15,10 @@ export interface IBasicCompilationFinalContext {
   classes: ts.ClassDeclaration[];
 }
 
+export interface IFunctionCompilationContext extends IBasicCompilationFinalContext {
+  statements?: ts.Statement[];
+}
+
 type EntityType = "directive" | "component" | "childref" | "entity";
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
