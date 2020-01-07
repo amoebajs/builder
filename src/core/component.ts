@@ -1,17 +1,10 @@
 import { IInnerDirective as IDirective } from "./directive";
-import {
-  BasicCompilationEntity,
-  IEwsEntity,
-  IEwsEntityPrivates,
-  IEwsEntityProtectedHooks,
-  IPureObject
-} from "./base";
+import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
 import { IInnerChildRef as IChildRef } from "./child-ref";
 
 export interface IComponent extends IEwsEntity {}
 
 export interface IComponentProtectedHooks extends IEwsEntityProtectedHooks {
-  onComponentsEmitted(): Promise<void>;
   onComponentsPreRender(): Promise<void>;
   onComponentsRender(): Promise<void>;
   onComponentsPostRender(): Promise<void>;
@@ -33,14 +26,9 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
   readonly __directives: IDirective[];
 }
 
-export interface IInnerComponent
-  extends IComponent,
-    IComponentPrivates,
-    IComponentProtectedHooks {}
+export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}
 
-export abstract class BasicComponent<
-  T extends IPureObject = IPureObject
-> extends BasicCompilationEntity<T> {
+export abstract class BasicComponent<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   private __rendered: boolean = false;
   private readonly __children: IChildRef[] = [];
   private readonly __components: IInnerComponent[] = [];
@@ -54,7 +42,7 @@ export abstract class BasicComponent<
     return this.__children.map(i => ({
       component: i.componentRef,
       id: i.entityId,
-      options: i.__refOptions
+      options: i.__refOptions,
     }));
   }
 
@@ -76,13 +64,6 @@ export abstract class BasicComponent<
     for (const iterator of this.__children) {
       await iterator.onInit();
     }
-  }
-
-  /** @override */
-  protected async onComponentsEmitted() {
-    await this.onComponentsPreRender();
-    await this.onComponentsRender();
-    await this.onComponentsPostRender();
   }
 
   /** @override */
@@ -150,31 +131,19 @@ export abstract class BasicComponent<
 
   /** @override */
   protected async onPreRender(): Promise<void> {
-    await this.onChildrenPreRender();
-    await this.onChildrenRender();
-    await this.onChildrenPostRender();
+    return Promise.resolve();
   }
 
   /** @override */
   protected async onRender(): Promise<void> {
-    await this.onDirectivesPreAttach();
-    await this.onDirectivesAttach();
-    await this.onDirectivesPostAttach();
     return Promise.resolve();
   }
 
   /** @override */
   protected async onPostRender(): Promise<void> {
     this.__rendered = true;
+    return Promise.resolve();
   }
-
-  //#endregion
-
-  //#region  pretected methods
-
-  //#endregion
-
-  //#region private methods
 
   //#endregion
 }

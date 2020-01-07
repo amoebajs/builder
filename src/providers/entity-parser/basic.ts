@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { BasicComponent, IInnerComponent } from "../../core/component";
+import { IInnerComponent } from "../../core/component";
 import {
   EntityConstructor,
   IConstructor,
@@ -14,6 +14,7 @@ import { BasicDirective } from "../../core/directive";
 import { createExportModifier, exists } from "../../utils";
 import { InvalidOperationError } from "../../errors";
 import { BasicChildRef } from "../entities";
+import { PropAttach } from "../../core/libs/attach.basic";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
@@ -110,12 +111,25 @@ export class BasicEntityProvider {
     return model;
   }
 
-  public async callCompilation(provider: keyof IFrameworkDepts, model: BasicComponent, name: string, unExport = false) {
-    await model["onInit"]();
-    await model["onComponentsEmitted"]();
-    await model["onPreRender"]();
-    await model["onRender"]();
-    await model["onPostRender"]();
+  public async callCompilation(
+    provider: keyof IFrameworkDepts,
+    model: IInnerComponent,
+    name: string,
+    unExport = false,
+  ) {
+    await model.onInit();
+    await model.onComponentsPreRender();
+    await model.onComponentsRender();
+    await model.onComponentsPostRender();
+    await model.onChildrenPreRender();
+    await model.onChildrenRender();
+    await model.onChildrenPostRender();
+    await model.onDirectivesPreAttach();
+    await model.onDirectivesAttach();
+    await model.onDirectivesPostAttach();
+    await model.onPreRender();
+    await model.onRender();
+    await model.onPostRender();
     const context = this.onCompilationCall(model, model["__context"]);
     const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
@@ -138,7 +152,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  public attachDirective<T extends BasicDirective, P extends BasicComponent>(parent: P, target: T) {
+  public attachDirective<T extends BasicDirective, P extends IInnerComponent>(parent: P, target: T) {
     return target;
   }
 
@@ -153,7 +167,7 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onCompilationCall(model: BasicComponent, _context: IBasicCompilationContext) {
+  protected onCompilationCall(model: IInnerComponent, _context: IBasicCompilationContext) {
     const context: IBasicCompilationFinalContext = {
       extendParent: null,
       implementParents: [],
@@ -216,19 +230,23 @@ export class BasicEntityProvider {
   }
 
   /** @override */
-  protected onImportsUpdate(model: BasicComponent, imports: ts.ImportDeclaration[], init: ts.ImportDeclaration[] = []) {
+  protected onImportsUpdate(
+    model: IInnerComponent,
+    imports: ts.ImportDeclaration[],
+    init: ts.ImportDeclaration[] = [],
+  ) {
     imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
     return init;
   }
 
   /** @override */
-  protected onStatementsEmitted(model: BasicComponent, statements: ts.Statement[]): ts.Statement[] {
+  protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]): ts.Statement[] {
     return statements;
   }
 
   /** @override */
   protected createRootComponent(
-    model: BasicComponent,
+    model: IInnerComponent,
     context: IBasicCompilationFinalContext,
     isExport = true,
   ): ts.ClassDeclaration {
@@ -271,14 +289,10 @@ export class BasicEntityProvider {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
-        options;
-        // const attach = attaches[key];
-        // const group = attach.group;
-        // if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(attach.name.value!)) {
-        //   (<any>model)[attach.realName] = options[group][attach.name.value!];
-        // } else if (options.hasOwnProperty(attach.name.value!)) {
-        //   (<any>model)[attach.realName] = options[attach.name.value!];
-        // }
+        const attach = attaches[key];
+        // invalid value or null value
+        if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
+        model[attach.name.value]["__options"] = options[key] || {};
       }
     }
   }

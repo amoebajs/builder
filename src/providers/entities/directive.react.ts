@@ -1,19 +1,20 @@
 import { InjectScope } from "@bonbons/di";
 import { IPureObject } from "../../core/base";
 import { BasicDirective } from "../../core/directive";
-import { ReactHelper, ReactRender } from "../../core/libs";
 import { ReactComponent } from "./component.react";
 import { Injectable } from "../../core/decorators";
+import { ReactHelper, ReactRender } from "../entity-helper";
 
 @Injectable(InjectScope.New)
 export abstract class ReactDirective<T extends IPureObject = IPureObject> extends BasicDirective<T> {
-  private readonly __parentId!: string;
   private readonly __parentRef!: ReactComponent;
-  protected helper = new ReactHelper();
-  protected render!: ReactRender;
+
+  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
+    super();
+  }
 
   protected async onInit() {
     await super.onInit();
-    this.render = new ReactRender(this.__parentRef);
+    this.render["parentRef"] = this.__parentRef;
   }
 }
