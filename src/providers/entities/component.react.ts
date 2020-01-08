@@ -6,7 +6,6 @@ import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
 import capitalize from "lodash/capitalize";
-import { is } from "../../utils/is";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -121,16 +120,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     });
   }
   protected addReactUseState(name: string, defaultValue: unknown, type?: string) {
-    let genericType: undefined | ts.TypeNode;
-    if (type) {
-      genericType = ts.createTypeReferenceNode(type, undefined);
-    } else {
-      if (is.object(defaultValue)) {
-        genericType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
-      } else if (is.array(defaultValue)) {
-        genericType = ts.createArrayTypeNode(ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-      }
-    }
+    const genericType = type ? ts.createTypeReferenceNode(type, undefined) : TYPES.Any;
     const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
       this.helper.createLiteral(defaultValue),
     ]);

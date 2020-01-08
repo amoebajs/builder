@@ -14,8 +14,6 @@ export interface IFormFieldOptions {
 
 @Component({ name: "zent-form", dependencies: { zent: "^7.1.0" } })
 export class ZentFormComponent extends ReactComponent {
-  protected propType = "Partial<IFormProps<any, any>>";
-
   @Input("fields")
   fields: IFormFieldOptions[] = [];
 
@@ -23,7 +21,7 @@ export class ZentFormComponent extends ReactComponent {
     await super.onInit();
     const COMPONENT_NAME = "Form";
     const helper = this.helper;
-    this.addImports([helper.createImport("zent", [COMPONENT_NAME, "FormStrategy", "IFormProps"])]);
+    this.addImports([helper.createImport("zent", [COMPONENT_NAME, "FormStrategy"])]);
     this.setState("rootElement", {
       ...this.getState("rootElement"),
       name: COMPONENT_NAME,

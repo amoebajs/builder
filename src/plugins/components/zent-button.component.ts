@@ -4,13 +4,11 @@ import { ReactComponent } from "../../providers";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
 export class ZentButtonComponent extends ReactComponent {
-  protected propType = "IButtonProps";
-
   protected async onInit() {
     await super.onInit();
     const ButtonRefName = "Button";
     const helper = this.helper;
-    this.addImports([helper.createImport("zent", [ButtonRefName, "IButtonProps"])]);
+    this.addImports([helper.createImport("zent", [ButtonRefName])]);
     this.setState("rootElement", {
       ...this.getState("rootElement"),
       name: ButtonRefName,
