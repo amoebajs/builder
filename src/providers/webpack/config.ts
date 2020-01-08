@@ -1,7 +1,7 @@
 import { Plugin } from "webpack";
 import { Injectable } from "../../core/decorators";
 import { Path } from "../path/path.contract";
-import { WebpackPlugins, IWebpackTemplateOptions } from "./plugins/plugins.contract";
+import { IWebpackTemplateOptions, WebpackPlugins } from "./plugins/plugins.contract";
 
 export interface IWebpackEntryOptions {
   app: string;
@@ -33,6 +33,14 @@ export interface IWebpackOptions {
   minimize?: boolean;
   plugins?: Plugin[];
 }
+
+export const defaultTransformers = [
+  {
+    libraryName: "zent",
+    libraryDirectory: "es",
+    style: (n: string) => n.replace("zent/es", "zent/css") + ".css",
+  },
+];
 
 @Injectable()
 export class WebpackConfig {
@@ -79,16 +87,7 @@ export class WebpackConfig {
                   compilerOptions: { module: "es2015" },
                   getCustomTransformers: () => ({
                     before: [
-                      this.plugins.createTsImportPlugin(
-                        options.typescript?.importPlugins ?? [
-                          {
-                            libraryName: "zent",
-                            libraryDirectory: "es",
-                            resolveContext: nodeModules,
-                            style: (n: string) => n.replace("zent/es", "zent/css") + ".css",
-                          },
-                        ],
-                      ),
+                      this.plugins.createTsImportPlugin(options.typescript?.importPlugins ?? defaultTransformers),
                     ],
                   }),
                 },
