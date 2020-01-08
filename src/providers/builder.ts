@@ -1,4 +1,5 @@
 import ts from "typescript";
+import TransformerFactory from "ts-import-plugin";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
@@ -11,7 +12,7 @@ import {
 } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
-import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
+import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins, defaultTransformers } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
 
 export interface IDirectiveDefine {
@@ -40,8 +41,19 @@ export interface IPageCreateOptions {
   page: IPageDefine;
 }
 
+export interface ISourceCreateTranspileOptions {
+  enabled: boolean;
+  beforeTransformer: any[];
+  afterTransformer: any[];
+  importPlugins: any[];
+  jsx: "react" | "preserve" | false;
+  module: "commonjs" | "es2015";
+  target: "es5" | "es2015" | "es2016";
+}
+
 export interface ISourceCreateOptions {
   prettier?: boolean;
+  transpile?: Partial<ISourceCreateTranspileOptions>;
   configs: IPageCreateOptions;
 }
 
@@ -91,7 +103,8 @@ export class Builder {
   }
 
   public async createSource(options: ISourceCreateOptions): Promise<ISourceCreateResult> {
-    const { configs, prettier: usePrettier = true } = options;
+    const { configs, prettier: usePrettier = true, transpile = { enabled: false } } = options;
+    const parser = !transpile.enabled ? "typescript" : "babel";
     const compName = configs.page.id || "App";
     const { sourceFile, dependencies } = await this._createComponentSource({
       moduleName: configs.page.module,
@@ -106,17 +119,18 @@ export class Builder {
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
     const result: ISourceCreateResult = {
-      sourceCode: "",
+      sourceCode: sourceString,
       depsJSON: JSON.stringify(dependencies, null, "  "),
     };
-    if (!usePrettier) {
-      result.sourceCode = sourceString;
-      return result;
+    if (parser !== "typescript") {
+      transpileModule(<any>transpile, result);
     }
-    result.sourceCode = this.prettier.format(sourceString, {
-      printWidth: 120,
-      parser: "typescript",
-    });
+    if (usePrettier) {
+      result.sourceCode = this.prettier.format(result.sourceCode, {
+        printWidth: 120,
+        parser: parser,
+      });
+    }
     return result;
   }
 
@@ -202,6 +216,29 @@ export class Builder {
       dependencies: opts.dependencies || {},
     };
   }
+}
+
+function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, result: ISourceCreateResult) {
+  const {
+    target = "es2015",
+    module: mode = "es2015",
+    jsx = false,
+    beforeTransformer = [],
+    afterTransformer = [],
+    importPlugins,
+  } = transpile;
+  result.sourceCode = ts.transpileModule(result.sourceCode, {
+    transformers: {
+      before: [...beforeTransformer, TransformerFactory(importPlugins ?? defaultTransformers)],
+      after: afterTransformer,
+    },
+    compilerOptions: {
+      jsx: jsx === "react" ? ts.JsxEmit.React : jsx === "preserve" ? ts.JsxEmit.Preserve : undefined,
+      target:
+        target === "es5" ? ts.ScriptTarget.ES5 : target === "es2015" ? ts.ScriptTarget.ES2015 : ts.ScriptTarget.ES2016,
+      module: mode === "commonjs" ? ts.ModuleKind.CommonJS : ts.ModuleKind.ES2015,
+    },
+  }).outputText;
 }
 
 function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
