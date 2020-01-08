@@ -20,20 +20,63 @@ export interface IDescriptionMeta extends IWeakDescriptionMeta {
   displayValue: string | null;
 }
 
-export type PropertyType =
-  | "object"
-  | "string"
-  | "number"
-  | "boolean"
-  | (string | number)[]
-  | number[]
-  | string[]
-  | null;
+export type IBasicLiteralType = string | boolean | number | object;
+
+export interface IEntityRefExpression {
+  id: string;
+  value: string;
+}
+
+export type TypeLiteralMeta = "object" | "string" | "number" | "boolean" | "enums";
+
+export interface IMetaType {
+  meta: TypeLiteralMeta;
+  allows: (string | number)[] | number[] | string[] | null;
+  constructor: any;
+}
 
 export interface IPropertyGroupBase extends IUnitBase {}
 
 export interface IPropertyBase extends IUnitBase {
   realName: string;
   group: string | null;
-  type: PropertyType | null;
+  type: IMetaType;
 }
+
+/**
+ * 基本可扩展参数结构体
+ */
+export interface ITypedSyntaxExpression<E extends unknown = never, P extends unknown = unknown> {
+  type: E;
+  syntaxType?: TypeLiteralMeta;
+  expression: P;
+}
+
+/**
+ * 基本可扩展参数结构体的字典类型
+ */
+export interface ITypedSyntaxExpressionMap<E extends unknown = never, P extends unknown = unknown> {
+  [name: string]: ITypedSyntaxExpression<E, P>;
+}
+
+/**
+ * 基本可扩展参数结构体（包含group）的字典类型
+ */
+export interface ITypedSyntaxExpressionGroupMap<E extends unknown = never, P extends unknown = unknown> {
+  [groupOrName: string]: ITypedSyntaxExpressionMap<E, P> | ITypedSyntaxExpression<E, P>;
+}
+
+/** 组件、指令输入参数字典类型：字面量 */
+export type IComponentInputMap = ITypedSyntaxExpressionGroupMap<"literal", IBasicLiteralType>;
+
+/** 指令的输入参数字典类型：指令引用 */
+export type IDirectiveInputDirectiveRefMap = ITypedSyntaxExpressionGroupMap<"directiveRef", IEntityRefExpression>;
+
+/** 指令的输入参数字典类型：字面量+指令引用 */
+export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRefMap;
+
+/** 组件的附加参数字典类型：child附加列表 */
+export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
+
+/** child的prop参数字典类型：字面量+状态 */
+export type IChildPropMap = ITypedSyntaxExpressionMap<"literal" | "state">;
