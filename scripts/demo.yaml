@@ -14,7 +14,7 @@ page:
         loading:
           type: state
           expression: zentBtnLoading
-        content:
+        children:
           type: literal
           syntaxType: string
           expression: BUTTON01
@@ -32,7 +32,7 @@ page:
           type: literal
           syntaxType: boolean
           expression: false
-        content:
+        children:
           type: state
           expression: zentBtn02Content
         size:
@@ -42,7 +42,7 @@ page:
         type:
           type: literal
           syntaxType: string
-          expression: normal
+          expression: primary
   directives:
     - module: ambjs-common-directive-module
       name: zent-base-css

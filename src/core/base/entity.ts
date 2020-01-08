@@ -21,6 +21,7 @@ export interface IBasicCompilationFinalContext {
   functions: ts.FunctionDeclaration[];
 
   // function level
+  parameters: ts.ParameterDeclaration[];
   statements: ts.Statement[];
 }
 
@@ -188,6 +189,14 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
 
   protected getStatements() {
     return this.__getChildElements("statements");
+  }
+
+  protected addParameters(arg: ts.ParameterDeclaration[], type: IBasicComponentAppendType = "push") {
+    return this.__addChildElements("parameters", arg, type);
+  }
+
+  protected getParameters() {
+    return this.__getChildElements("parameters");
   }
 
   //#endregion
