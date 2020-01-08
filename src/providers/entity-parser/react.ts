@@ -12,7 +12,15 @@ import { ReactHelper } from "../entity-helper";
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
   constructor(injector: Injector, protected readonly helper: ReactHelper) {
-    super(injector);
+    super(injector, helper);
+  }
+
+  protected createRootComponent(
+    model: IInnerComponent,
+    context: IBasicCompilationFinalContext,
+    isExport = true,
+  ): ts.Statement {
+    return this.helper.createFunction(!isExport, model.entityId, context);
   }
 
   protected onImportsUpdate(model: IInnerComponent, imports: ts.ImportDeclaration[]) {
@@ -20,6 +28,10 @@ export class ReactEntityProvider extends BasicEntityProvider {
       this.helper.createImport("react", REACT.NS),
       this.helper.createImport("react-dom", REACT.DomNS),
     ]);
+  }
+
+  protected emitFunctionComponentContext(context: Partial<IBasicCompilationFinalContext>) {
+    return context;
   }
 
   protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]) {
@@ -40,10 +52,6 @@ export class ReactEntityProvider extends BasicEntityProvider {
         ),
       ),
     ];
-  }
-
-  protected createRootComponent(model: IInnerComponent, context: IBasicCompilationFinalContext): ts.ClassDeclaration {
-    return super.createRootComponent(model, context, false);
   }
 
   public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {

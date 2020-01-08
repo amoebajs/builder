@@ -2,6 +2,7 @@ import ts from "typescript";
 import { Directive, Input } from "../../core/decorators";
 import { ReactDirective } from "../../providers";
 import { TYPES } from "../../utils";
+import capitalize from "lodash/capitalize";
 
 @Directive({ name: "custom-click" })
 export class CustomClickDirective extends ReactDirective {
@@ -41,19 +42,17 @@ export class CustomClickDirective extends ReactDirective {
         undefined,
         ts.createParen(
           ts.createCall(
-            ts.createPropertyAccess(ts.createThis(), ts.createIdentifier(this.eventType)),
+            ts.createIdentifier("set" + capitalize(this.targetName)),
             [],
             [
-              ts.createObjectLiteral(
+              ts.createCall(
+                ts.createIdentifier("String"),
+                [],
                 [
-                  ts.createPropertyAssignment(
-                    ts.createIdentifier(this.targetName),
-                    others.length > 0
-                      ? ts.createPropertyAccess(ts.createIdentifier(start), others.join("."))
-                      : ts.createIdentifier(start),
-                  ),
+                  others.length > 0
+                    ? ts.createPropertyAccess(ts.createIdentifier(start), others.join("."))
+                    : ts.createIdentifier(start),
                 ],
-                false,
               ),
             ],
           ),

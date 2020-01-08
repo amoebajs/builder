@@ -1,7 +1,6 @@
 import ts from "typescript";
 import { Attach, Component, Group, Input } from "../../core/decorators";
 import { DOMS, TYPES } from "../../utils";
-import { resolveSyntaxInsert } from "../../core/base";
 import { ReactComponent } from "../../providers";
 import { PropAttach } from "../../core/libs/attach.basic";
 
@@ -75,24 +74,16 @@ export class CssGridContainer extends ReactComponent {
 
   private initState() {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
+      this.addImports([this.helper.createImport("react", ["useState"])]);
       const state = this.defaultComponentState || {};
-      const field = ts.createProperty(
-        [],
-        [ts.createModifier(ts.SyntaxKind.PublicKeyword)],
-        ts.createIdentifier("state"),
-        undefined,
-        TYPES.Any,
-        ts.createObjectLiteral(
-          Object.keys(state).map(n =>
-            ts.createPropertyAssignment(
-              n,
-              resolveSyntaxInsert(typeof state[n], state[n], (_, __) => ts.createStringLiteral(String(state[n]))),
-            ),
-          ),
-          true,
-        ),
-      );
-      this.addFields([field], "unshift");
+      for (const [key, value] of Object.entries(state)) {
+        let type: undefined | string;
+        if (key === "zentBtnType") {
+          type = "IButtonType";
+          this.addImports([this.helper.createImport("zent", ["IButtonType"])]);
+        }
+        this.addReactUseState(key, value, type);
+      }
     }
   }
 
