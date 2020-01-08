@@ -4,11 +4,13 @@ import { ReactComponent } from "../../providers";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
 export class ZentButtonComponent extends ReactComponent {
+  protected propType = "IButtonProps";
+
   protected async onInit() {
     await super.onInit();
     const ButtonRefName = "Button";
     const helper = this.helper;
-    this.addImports([helper.createImport("zent", [ButtonRefName])]);
+    this.addImports([helper.createImport("zent", [ButtonRefName, "IButtonProps"])]);
     this.setState("rootElement", {
       ...this.getState("rootElement"),
       name: ButtonRefName,
@@ -32,6 +34,6 @@ export class ZentButtonComponent extends ReactComponent {
         onClick: helper.createReactPropsAccess("onClick"),
       },
     });
-    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.createReactPropsAccess("content"))]);
+    this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.createReactPropsAccess("children"))]);
   }
 }

@@ -21,8 +21,9 @@ type TP = IBasicReactContainerState<IPureObject>;
 type TY = IBasicReactContainerState<{}>;
 
 @Injectable(InjectScope.New)
-export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
+export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
+  protected propType: string = "any";
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
@@ -74,6 +75,17 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
     await super.onRender();
     const root = this.getState("rootElement");
     const children = this.getRootChildren();
+    this.addParameters([
+      ts.createParameter(
+        undefined,
+        undefined,
+        undefined,
+        "props",
+        undefined,
+        ts.createTypeReferenceNode(this.propType, undefined),
+        undefined,
+      ),
+    ]);
     this.addStatements([
       ts.createReturn(
         ts.createParen(
@@ -108,12 +120,16 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
       types: [],
     });
   }
-  protected addReactUseState(name: string, defaultValue: unknown) {
+  protected addReactUseState(name: string, defaultValue: unknown, type?: string) {
     let genericType: undefined | ts.TypeNode;
-    if (is.object(defaultValue)) {
-      genericType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
-    } else if (is.array(defaultValue)) {
-      genericType = ts.createArrayTypeNode(ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+    if (type) {
+      genericType = ts.createTypeReferenceNode(type, undefined);
+    } else {
+      if (is.object(defaultValue)) {
+        genericType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
+      } else if (is.array(defaultValue)) {
+        genericType = ts.createArrayTypeNode(ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
+      }
     }
     const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
       this.helper.createLiteral(defaultValue),
@@ -126,6 +142,8 @@ export class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
       undefined,
       useState,
     );
-    this.addStatements([ts.createVariableStatement([], [declare])]);
+    this.addStatements([
+      ts.createVariableStatement([], ts.createVariableDeclarationList([declare], ts.NodeFlags.Const)),
+    ]);
   }
 }
