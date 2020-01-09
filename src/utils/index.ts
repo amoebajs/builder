@@ -22,6 +22,8 @@ export const REACT = {
   StatelessComponent: "StatelessComponent",
   Fragment: "React.Fragment",
   Render: "render",
+  UseState: "useState",
+  UseCallback: "useCallback",
 };
 
 export interface IJsxAttrs {

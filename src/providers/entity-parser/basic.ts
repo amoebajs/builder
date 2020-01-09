@@ -191,7 +191,7 @@ export abstract class BasicEntityProvider {
     context.classes = classPreList
       .filter(i => !!i)
       .map(([scope, ctx]) =>
-        this.helper.createClass(true, scope.toString(), {
+        this.helper.createClassByContext(true, scope.toString(), {
           extendParent: null,
           implementParents: [],
           fields: [],
@@ -206,7 +206,7 @@ export abstract class BasicEntityProvider {
         }),
       );
     context.functions = functionPreList.map(([scope, ctx]) =>
-      this.helper.createFunction(true, scope.toString(), {
+      this.helper.createFunctionByContext(true, scope.toString(), {
         extendParent: null,
         implementParents: [],
         fields: [],

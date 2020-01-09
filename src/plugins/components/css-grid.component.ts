@@ -74,7 +74,6 @@ export class CssGridContainer extends ReactComponent {
 
   private initState() {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
-      this.addImports([this.helper.createImport("react", ["useState"])]);
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
         this.addReactUseState(key, value);

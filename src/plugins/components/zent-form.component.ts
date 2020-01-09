@@ -17,6 +17,9 @@ export class ZentFormComponent extends ReactComponent {
   @Input("fields")
   fields: IFormFieldOptions[] = [];
 
+  @Input()
+  apiUrl: string = "";
+
   protected async onInit() {
     await super.onInit();
     const COMPONENT_NAME = "Form";
@@ -28,6 +31,7 @@ export class ZentFormComponent extends ReactComponent {
       attrs: {
         layout: helper.createReactPropsAccess("layout", { defaultValue: "horizontal" }),
         form: helper.createFunctionCall("Form.useForm", [ts.createIdentifier("FormStrategy.View")]),
+        // onSubmit: this.addReactUseState
       },
     });
     this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.createReactPropsAccess("children"))]);

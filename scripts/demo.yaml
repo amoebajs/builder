@@ -19,8 +19,12 @@ page:
       id: ZentBtnDemoCompRef01
       props:
         loading:
-          type: state
-          expression: zentBtnLoading
+          type: directiveRef
+          syntaxType:
+          expression:
+            - ref: xxx
+              expression: data1
+            - ref
         children:
           type: literal
           syntaxType: string
@@ -40,7 +44,7 @@ page:
           syntaxType: boolean
           expression: false
         children:
-          type: state
+          type: literal
           expression: zentBtn02Content
         size:
           type: literal
@@ -64,7 +68,7 @@ page:
         required: true
     - module: ambjs-common-directive-module
       name: zent-select
-      id: zentInputDirective
+      id: zentSelectDirective
       input:
         formId: ZentFormComponentRef01
         name: 字段2
@@ -74,6 +78,11 @@ page:
             text: Option 1
           - value: 2
             text: Option 2
+    - module: ambjs-common-directive-module
+      name: zent-submit-button
+      id: zentSubmitButtonDirective
+      input:
+        formId: ZentFormComponentRef01
     - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective

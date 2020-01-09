@@ -58,7 +58,7 @@ export class BasicHelper {
     }
   }
 
-  public createClass(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  public createClassByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
     return ts.createClassDeclaration(
       [],
       createExportModifier(!unExport),
@@ -69,7 +69,7 @@ export class BasicHelper {
     );
   }
 
-  public createFunction(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  public createFunctionByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
     return ts.createFunctionDeclaration(
       undefined,
       createExportModifier(!unExport),

@@ -32,4 +32,16 @@ export class ReactRender {
     const newElement = ts.updateJsxOpeningElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
     this.setElementById(entityId, ts.updateJsxElement(element, newElement, element.children, element.closingElement));
   }
+
+  public appendRootState(name: string, defaultValue: unknown) {
+    this.parentRef.addReactUseState(name, defaultValue);
+  }
+
+  public appendRootCallback(name: string, callback: Function | string) {
+    this.parentRef.addReactUseCallback(name, callback);
+  }
+
+  public appendRootVariable(name: string, initilizer: ts.Expression) {
+    this.parentRef.addVariable(name, initilizer);
+  }
 }

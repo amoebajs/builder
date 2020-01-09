@@ -4,7 +4,7 @@ import { IPureObject } from "../../core/base";
 import { IJsxAttrs, REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
-import { ReactHelper, ReactRender } from "../entity-helper";
+import { ReactHelper } from "../entity-helper";
 import capitalize from "lodash/capitalize";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
@@ -24,13 +24,12 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
   protected propType: string = "any";
 
-  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
+  constructor(protected readonly helper: ReactHelper) {
     super();
   }
 
   protected async onInit() {
     await super.onInit();
-    this.render["parentRef"] = this;
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
@@ -119,7 +118,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
       types: [],
     });
   }
-  protected addReactUseState(name: string, defaultValue: unknown, type?: string) {
+  public addReactUseState(name: string, defaultValue: unknown, type?: string) {
     const genericType = type ? ts.createTypeReferenceNode(type, undefined) : TYPES.Any;
     const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
       this.helper.createLiteral(defaultValue),
@@ -134,6 +133,28 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
     this.addStatements([
       ts.createVariableStatement([], ts.createVariableDeclarationList([declare], ts.NodeFlags.Const)),
+    ]);
+  }
+
+  public addReactUseCallback(name: string, callback: Function | string) {
+    this.addVariable(
+      name,
+      this.helper.createFunctionCall("useCallback", [
+        ts.createIdentifier(callback.toString()),
+        ts.createArrayLiteral([]),
+      ]),
+    );
+  }
+
+  public addVariable(name: string, initilizer: ts.Expression) {
+    this.addStatements([
+      ts.createVariableStatement(
+        [],
+        ts.createVariableDeclarationList(
+          [ts.createVariableDeclaration(ts.createIdentifier(name), TYPES.Any, initilizer)],
+          ts.NodeFlags.Const,
+        ),
+      ),
     ]);
   }
 }
