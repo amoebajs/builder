@@ -9,17 +9,26 @@ import {
   resolveAttachProperties,
   resolveInputProperties,
 } from "../../core/decorators";
-import { BasicCompilationEntity, IBasicCompilationContext, IBasicCompilationFinalContext } from "../../core/base";
+import {
+  BasicCompilationEntity,
+  IBasicCompilationContext,
+  IBasicCompilationFinalContext,
+  IChildPropMap,
+  IDirectiveInputMap,
+  IComponentAttachMap,
+  ITypedSyntaxExpressionMap,
+} from "../../core/base";
 import { BasicDirective } from "../../core/directive";
 import { InvalidOperationError } from "../../errors";
 import { BasicChildRef } from "../entities";
 import { PropAttach } from "../../core/libs/attach.basic";
 import { BasicHelper } from "../entity-helper";
+import { is } from "../../utils/is";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
   childName: string;
-  props: { [prop: string]: any };
+  props: IChildPropMap;
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
@@ -34,17 +43,17 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   id: string;
   provider: keyof IFrameworkDepts;
   template: T;
-  input?: { [prop: string]: any };
+  input?: IDirectiveInputMap;
 }
 
 export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
-  attach?: { [prop: string]: any };
+  attach?: IComponentAttachMap;
 }
 
 export interface IPropertiesOptions {
-  input?: { [prop: string]: any };
-  attach?: { [prop: string]: any };
+  input?: IDirectiveInputMap;
+  attach?: IComponentAttachMap;
 }
 
 @Injectable()
@@ -274,29 +283,45 @@ export abstract class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: any) {
+  private _inputProperties<T extends any>(model: T, options: IDirectiveInputMap) {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
         const input = inputs[key];
         const group = input.group;
+        let value: IDirectiveInputMap[typeof key] | null = null;
         if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(input.name.value!)) {
-          (<any>model)[input.realName] = options[group][input.name.value!];
+          const groupMap = <ITypedSyntaxExpressionMap<any, any>>options[group];
+          value = groupMap[input.name.value!];
         } else if (options.hasOwnProperty(input.name.value!)) {
-          (<any>model)[input.realName] = options[input.name.value!];
+          value = (<ITypedSyntaxExpressionMap<any, any>>options)[input.name.value!];
         }
+        if (is.nullOrUndefined(value)) continue;
+        if (value.type === "literal") {
+          (<any>model)[input.realName] = value.expression;
+        }
+        if (value.type === "directiveRef") {
+          // TODO
+        }
+        // TODO 后续支持其他属性类型
       }
     }
   }
 
-  private _attachProperties<T extends any>(model: T, options: any) {
+  private _attachProperties<T extends any>(model: T, options: IComponentAttachMap) {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
         const attach = attaches[key];
         // invalid value or null value
         if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
-        model[attach.name.value]["__options"] = options[key] || {};
+        const propAttach: PropAttach = model[attach.name.value];
+        const syntaxStruct = options[key];
+        // 暂时只支持childRefs模式
+        if (is.nullOrUndefined(syntaxStruct) || syntaxStruct.type !== "childRefs") continue;
+        for (const iterator of options[key].expression) {
+          propAttach["_options"].set(iterator.id, iterator.value);
+        }
       }
     }
   }
