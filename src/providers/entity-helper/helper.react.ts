@@ -160,7 +160,7 @@ export class ReactHelper extends BasicHelper {
       const pathName = nameCaseParser(binding.name);
       const libPath = [modulePath, libRoot, pathName].join("/");
       const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
-      importList.push(this.createImport(libPath, binding.name));
+      importList.push(this.createImport(libPath, binding.alias));
       importList.push(this.createImport(stylePath));
     }
     return importList;
