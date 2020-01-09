@@ -15,8 +15,14 @@ export class ZentSubmitButtonDirective extends ReactDirective {
   text: string = "提交";
 
   protected async onAttach() {
-    const { helper } = this;
-    this.addImports([helper.createImport("zent", [COMPONENT_NAME])]);
+    this.addImports(
+      this.helper.createFrontLibImports({
+        libRoot: "es",
+        styleRoot: "css",
+        module: "zent",
+        imports: ["Button"],
+      }),
+    );
     let form = this.render.getElementById(this.formId);
     if (form) {
       this.render.appendRootCallback(ON_CLICK_CALLBACK_NAME, () => console.log(1));

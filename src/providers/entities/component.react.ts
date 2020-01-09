@@ -4,7 +4,7 @@ import { IPureObject } from "../../core/base";
 import { IJsxAttrs, REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
-import { ReactHelper } from "../entity-helper";
+import { ReactHelper, ReactRender } from "../entity-helper";
 import capitalize from "lodash/capitalize";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
@@ -24,12 +24,13 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
   protected propType: string = "any";
 
-  constructor(protected readonly helper: ReactHelper) {
+  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
   }
 
   protected async onInit() {
     await super.onInit();
+    this.render["parentRef"] = this;
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
     this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
@@ -99,6 +100,21 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
         ),
       ),
     ]);
+  }
+
+  protected visitAndChangeChildNode(visitor: (key: string, node: ts.JsxElement) => ts.JsxElement) {
+    const childNodes = Array.from(this.__elementMap.entries());
+    for (const [key, node] of childNodes) {
+      const newNode = visitor(<string>key, node);
+      this.addRootChildren(<string>key, newNode);
+    }
+  }
+
+  protected visitAndNotifyChildKey(visitor: (key: string) => void) {
+    const childNodes = Array.from(this.__elementMap.keys());
+    for (const key of childNodes) {
+      visitor(<string>key);
+    }
   }
 
   protected addRootChildren(id: string, element: ts.JsxElement) {

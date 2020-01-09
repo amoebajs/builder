@@ -14,26 +14,26 @@ class ZentFieldValueComponent extends ReactDirective {
   relatedFieldId: string = "";
 
   protected async onPostAttach() {
-    if (this.relatedFieldId) {
-      const { helper } = this;
-      const form = this.render.getElementById(this.formId);
-      if (form) {
-        const host = 
-        const fieldValueElement = helper.createJsxElement("FieldValue", [], { name: this.relatedFieldName }, [
-          ts.createJsxExpression(
-            undefined,
-            ts.createArrowFunction(
-              undefined,
-              undefined,
-              [ts.createParameter(undefined, undefined, undefined, "value")],
-              undefined,
-              undefined,
-              ts.createParen(this.createFormFieldJsxElement()),
-            ),
-          ),
-        ]);
-        // ts.updateJsxElement();
-      }
-    }
+    //   if (this.relatedFieldId) {
+    //     const { helper } = this;
+    //     const form = this.render.getElementById(this.formId);
+    //     if (form) {
+    //       const host =
+    //       const fieldValueElement = helper.createJsxElement("FieldValue", [], { name: this.relatedFieldName }, [
+    //         ts.createJsxExpression(
+    //           undefined,
+    //           ts.createArrowFunction(
+    //             undefined,
+    //             undefined,
+    //             [ts.createParameter(undefined, undefined, undefined, "value")],
+    //             undefined,
+    //             undefined,
+    //             ts.createParen(this.createFormFieldJsxElement()),
+    //           ),
+    //         ),
+    //       ]);
+    //       // ts.updateJsxElement();
+    //     }
+    //   }
   }
 }

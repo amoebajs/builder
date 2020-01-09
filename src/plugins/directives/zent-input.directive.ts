@@ -26,7 +26,18 @@ export class ZentInputDirective extends ReactDirective {
 
   protected async onAttach() {
     const { helper } = this;
-    this.addImports([helper.createImport("zent", [COMPONENT_NAME])]);
+    this.addImports(
+      helper.createFrontLibImports({
+        libRoot: "es",
+        styleRoot: "css",
+        module: "zent",
+        libName: "form",
+        imports: {
+          named: [COMPONENT_NAME],
+        },
+      }),
+    );
+    // this.addImports([helper.createImport("zent/es/form", [COMPONENT_NAME])]);
     let form = this.render.getElementById(this.formId);
     if (form) {
       form = ts.updateJsxElement(
@@ -39,34 +50,34 @@ export class ZentInputDirective extends ReactDirective {
     }
   }
 
-  protected async onPostAttach() {
-    if (this.relatedFieldName) {
-      const { helper } = this;
-      const form = this.render.getElementById(this.formId);
-      if (form) {
-        const fieldValueElement = helper.createJsxElement("FieldValue", [], { name: this.relatedFieldName }, [
-          ts.createJsxExpression(
-            undefined,
-            ts.createArrowFunction(
-              undefined,
-              undefined,
-              [ts.createParameter(undefined, undefined, undefined, "value")],
-              undefined,
-              undefined,
-              ts.createParen(this.createFormFieldJsxElement()),
-            ),
-          ),
-        ]);
-        // ts.updateJsxElement();
-      }
-    }
-  }
+  // protected async onPostAttach() {
+  //   if (this.relatedFieldName) {
+  //     const { helper } = this;
+  //     const form = this.render.getElementById(this.formId);
+  //     if (form) {
+  //       const fieldValueElement = helper.createJsxElement("FieldValue", [], { name: this.relatedFieldName }, [
+  //         ts.createJsxExpression(
+  //           undefined,
+  //           ts.createArrowFunction(
+  //             undefined,
+  //             undefined,
+  //             [ts.createParameter(undefined, undefined, undefined, "value")],
+  //             undefined,
+  //             undefined,
+  //             ts.createParen(this.createFormFieldJsxElement()),
+  //           ),
+  //         ),
+  //       ]);
+  //       // ts.updateJsxElement();
+  //     }
+  //   }
+  // }
 
   private createFormFieldJsxElement() {
     return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      name: this.name,
-      label: this.label,
-      required: this.required,
+      name: this.helper.createLiteral(this.name),
+      label: this.helper.createLiteral(this.label),
+      required: this.helper.createLiteral(this.required),
       props: this.helper.createObjectLiteral({
         placeholder: this.placeholder,
       }),

@@ -4,6 +4,7 @@ import { ZentBaseCssDirective } from "./zent-base-css.directive";
 import { ZentInputDirective } from "./zent-input.directive";
 import { ZentSelectDirective } from "./zent-select.directive";
 import { ZentSubmitButtonDirective } from "./zent-submit.directive";
+import { ZentFormDirective } from "./zent-form.directive";
 
 @Module({
   name: "ambjs-common-directive-module",
@@ -15,6 +16,7 @@ import { ZentSubmitButtonDirective } from "./zent-submit.directive";
     ZentInputDirective,
     ZentSelectDirective,
     ZentSubmitButtonDirective,
+    ZentFormDirective,
   ],
 })
 export class CommonDirectiveModule {}

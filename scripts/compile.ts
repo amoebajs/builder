@@ -18,21 +18,26 @@ const outDir = path.resolve(process.cwd(), "build", "src");
 
 const startTime = new Date().getTime();
 
+// const MAIN = "main.jsx";
+const MAIN = "main.tsx";
+
 // new Factory().builder
 const builder = new Factory().builder;
+// console.log(JSON.stringify(demoConf, null, 2));
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
+  // .createSource({ configs: demoConf, transpile: { enabled: true, target: "es2015", module: "es2015", jsx: "react" } })
   .createSource({ configs: demoConf })
   .then(({ sourceCode, depsJSON }) => {
     const endTime = new Date().getTime() - startTime;
     console.log("cost : " + endTime + "ms");
-    fs.writeFileSync(path.resolve(outDir, "main.tsx"), sourceCode, {
+    fs.writeFileSync(path.resolve(outDir, MAIN), sourceCode, {
       encoding: "utf8",
     });
     fs.writeFileSync(path.resolve(outDir, "dependencies.json"), depsJSON, {
       encoding: "utf8",
     });
-    console.log("emit ---> " + path.resolve(outDir, "main.tsx"));
+    console.log("emit ---> " + path.resolve(outDir, MAIN));
   })
   .catch(error => {
     console.log(error);

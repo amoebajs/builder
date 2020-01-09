@@ -24,14 +24,12 @@ export class ZentFormComponent extends ReactComponent {
     await super.onInit();
     const COMPONENT_NAME = "Form";
     const helper = this.helper;
-    this.addImports([helper.createImport("zent", [COMPONENT_NAME, "FormStrategy"])]);
     this.setState("rootElement", {
       ...this.getState("rootElement"),
       name: COMPONENT_NAME,
       attrs: {
         layout: helper.createReactPropsAccess("layout", { defaultValue: "horizontal" }),
-        form: helper.createFunctionCall("Form.useForm", [ts.createIdentifier("FormStrategy.View")]),
-        // onSubmit: this.addReactUseState
+        form: helper.createReactPropsAccess("form"),
       },
     });
     this.setState("rootChildren", [ts.createJsxExpression(undefined, helper.createReactPropsAccess("children"))]);

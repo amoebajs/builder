@@ -5,6 +5,21 @@ import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
+import { camelCase, kebabCase } from "lodash";
+
+export interface IFrontLibImports {
+  default?: string;
+  named: Array<string | [string, string]>;
+}
+
+export interface IFrontLibImportOptions {
+  libRoot: string;
+  styleRoot: string;
+  module: string;
+  libName?: string;
+  imports: Array<string | [string, string]> | IFrontLibImports;
+  nameCase?: "camel" | "kebab";
+}
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
@@ -140,5 +155,50 @@ export class ReactHelper extends BasicHelper {
       undefined,
       parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
     );
+  }
+  public createFrontLibImports(options: IFrontLibImportOptions) {
+    const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
+    const importList: ts.ImportDeclaration[] = [];
+    const nameCaseParser = nameCase === "kebab" ? kebabCase : camelCase;
+    if (is.array(imports)) {
+      for (const iterator of imports) {
+        const binding = { name: "", alias: "" };
+        if (is.array(iterator)) {
+          binding.name = iterator[0];
+          binding.alias = iterator[1];
+        } else {
+          binding.name = iterator;
+          binding.alias = iterator;
+        }
+        const pathName = nameCaseParser(libName || binding.name);
+        const libPath = [modulePath, libRoot, pathName].join("/");
+        const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
+        importList.push(this.createImport(libPath, binding.alias));
+        importList.push(this.createImport(stylePath));
+      }
+    } else {
+      const pathName = nameCaseParser(libName || imports.default);
+      const libPath = [modulePath, libRoot, pathName].join("/");
+      const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
+      importList.push(
+        ts.createImportDeclaration(
+          undefined,
+          undefined,
+          ts.createImportClause(
+            imports.default ? ts.createIdentifier(imports.default) : undefined,
+            ts.createNamedImports(
+              imports.named.map(named =>
+                is.string(named)
+                  ? ts.createImportSpecifier(undefined, ts.createIdentifier(named))
+                  : ts.createImportSpecifier(ts.createIdentifier(named[0]), ts.createIdentifier(named[1])),
+              ),
+            ),
+          ),
+          ts.createIdentifier(libPath),
+        ),
+      );
+      importList.push(this.createImport(stylePath));
+    }
+    return importList;
   }
 }

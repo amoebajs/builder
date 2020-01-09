@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts, { Identifier, isMethodDeclaration } from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { IInnerComponent, callComponentLifecycle } from "../../core/component";
 import {
@@ -9,17 +9,26 @@ import {
   resolveAttachProperties,
   resolveInputProperties,
 } from "../../core/decorators";
-import { BasicCompilationEntity, IBasicCompilationContext, IBasicCompilationFinalContext } from "../../core/base";
+import {
+  BasicCompilationEntity,
+  IBasicCompilationContext,
+  IBasicCompilationFinalContext,
+  IChildPropMap,
+  IComponentAttachMap,
+  IDirectiveInputMap,
+  ITypedSyntaxExpressionMap,
+} from "../../core/base";
 import { BasicDirective } from "../../core/directive";
 import { InvalidOperationError } from "../../errors";
 import { BasicChildRef } from "../entities";
 import { PropAttach } from "../../core/libs/attach.basic";
 import { BasicHelper } from "../entity-helper";
+import { is } from "../../utils/is";
 
 export interface IChildRefPluginOptions {
   refComponent: string;
   childName: string;
-  props: { [prop: string]: any };
+  props: IChildPropMap;
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
@@ -34,17 +43,17 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   id: string;
   provider: keyof IFrameworkDepts;
   template: T;
-  input?: { [prop: string]: any };
+  input?: IDirectiveInputMap;
 }
 
 export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   passContext?: IBasicCompilationContext;
-  attach?: { [prop: string]: any };
+  attach?: IComponentAttachMap;
 }
 
 export interface IPropertiesOptions {
-  input?: { [prop: string]: any };
-  attach?: { [prop: string]: any };
+  input?: IDirectiveInputMap;
+  attach?: IComponentAttachMap;
 }
 
 @Injectable()
@@ -111,7 +120,7 @@ export abstract class BasicEntityProvider {
   ) {
     await callComponentLifecycle(model);
     const context = this.onCompilationCall(model, model["__context"]);
-    const imports = this.onImportsUpdate(model, context.imports);
+    const imports = this.combineImports(context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
     const statements = this.onStatementsEmitted(model, [
       ...imports,
@@ -245,6 +254,125 @@ export abstract class BasicEntityProvider {
     return init;
   }
 
+  protected combineImports(raw: ts.ImportDeclaration[]) {
+    const record: Record<
+      string,
+      {
+        default: string[];
+        named: string[][];
+        namespace: string[];
+      }
+    > = {};
+    for (const { moduleSpecifier: moduleName, importClause } of raw) {
+      const defaultImport = importClause?.name;
+      const namedImports = importClause?.namedBindings || ts.createNamedImports([]);
+      const imported = record[(<ts.StringLiteral>moduleName).text];
+      if (imported) {
+        if (defaultImport && !imported.default.includes(defaultImport.text)) {
+          imported.default.push(defaultImport.text);
+        }
+        if (ts.isNamedImports(namedImports)) {
+          imported.named.push(
+            ...namedImports.elements
+              .filter(specifier =>
+                imported.named.every(
+                  ([importedPropertyName, importedName]) =>
+                    importedPropertyName !== specifier.propertyName?.text && importedName !== specifier.name.text,
+                ),
+              )
+              .map(specifier => [specifier.propertyName?.text || "", specifier.name.text]),
+          );
+        } else if (ts.isNamespaceImport(namedImports) && !imported.namespace.includes(namedImports.name.text)) {
+          imported.namespace.push(namedImports.name.text);
+        }
+      } else {
+        record[(<ts.StringLiteral>moduleName).text] = {
+          default: defaultImport ? [defaultImport.text] : [],
+          named: ts.isNamedImports(namedImports)
+            ? namedImports.elements.map(specifier => [specifier.propertyName?.text || "", specifier.name.text])
+            : [],
+          namespace: ts.isNamespaceImport(namedImports) ? [namedImports.name.text] : [],
+        };
+      }
+      // record[(<ts.StringLiteral>moduleName).text] = {
+      //   default: defaultImport?.text,
+      //   named: ts.isNamedImports(namedImports)
+      //     ? namedImports.elements.map(specifier => [specifier.propertyName?.text || "", specifier.name.text])
+      //     : [],
+      //   namespace: ts.isNamespaceImport(namedImports) ? namedImports.name.text : undefined,
+      // };
+    }
+    const combinedImportDeclarations: ts.ImportDeclaration[] = [];
+    for (const [moduleName, imports] of Object.entries(record)) {
+      for (const defaultImport of imports.default) {
+        combinedImportDeclarations.push(
+          ts.createImportDeclaration(
+            undefined,
+            undefined,
+            ts.createImportClause(ts.createIdentifier(defaultImport), undefined),
+            ts.createStringLiteral(moduleName),
+          ),
+        );
+      }
+      for (const namespaceImport of imports.namespace) {
+        combinedImportDeclarations.push(
+          ts.createImportDeclaration(
+            undefined,
+            undefined,
+            ts.createImportClause(undefined, ts.createNamespaceImport(ts.createIdentifier(namespaceImport))),
+            ts.createStringLiteral(moduleName),
+          ),
+        );
+      }
+      if (imports.named.length) {
+        combinedImportDeclarations.push(
+          ts.createImportDeclaration(
+            undefined,
+            undefined,
+            ts.createImportClause(
+              undefined,
+              ts.createNamedImports(
+                imports.named.map(([propertyName, name]) =>
+                  ts.createImportSpecifier(
+                    propertyName ? ts.createIdentifier(propertyName) : undefined,
+                    ts.createIdentifier(name),
+                  ),
+                ),
+              ),
+            ),
+            ts.createStringLiteral(moduleName),
+          ),
+        );
+      }
+      if (!imports.named.length && !imports.default.length && !imports.namespace.length) {
+        combinedImportDeclarations.push(
+          ts.createImportDeclaration(undefined, undefined, undefined, ts.createStringLiteral(moduleName)),
+        );
+      }
+    }
+    return combinedImportDeclarations;
+    // return Object.entries(record).map(([moduleName, imports]) => {
+    //   return ts.createImportDeclaration(
+    //     undefined,
+    //     undefined,
+    //     ts.createImportClause(
+    //       imports.default ? ts.createIdentifier(imports.default) : undefined,
+    //       imports.namespace
+    //         ? ts.createNamespaceImport(ts.createIdentifier(imports.namespace))
+    //         : ts.createNamedImports(
+    //             imports.named.map(([propertyName, name]) => {
+    //               return ts.createImportSpecifier(
+    //                 propertyName ? ts.createIdentifier(propertyName) : undefined,
+    //                 ts.createIdentifier(name),
+    //               );
+    //             }),
+    //           ),
+    //     ),
+    //     ts.createStringLiteral(moduleName),
+    //   );
+    // });
+  }
+
   /** @override */
   protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]): ts.Statement[] {
     return statements;
@@ -274,29 +402,45 @@ export abstract class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: any) {
+  private _inputProperties<T extends any>(model: T, options: IDirectiveInputMap) {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
         const input = inputs[key];
         const group = input.group;
+        let value: IDirectiveInputMap[typeof key] | null = null;
         if (group && options.hasOwnProperty(group) && options[group].hasOwnProperty(input.name.value!)) {
-          (<any>model)[input.realName] = options[group][input.name.value!];
+          const groupMap = <ITypedSyntaxExpressionMap<any, any>>options[group];
+          value = groupMap[input.name.value!];
         } else if (options.hasOwnProperty(input.name.value!)) {
-          (<any>model)[input.realName] = options[input.name.value!];
+          value = (<ITypedSyntaxExpressionMap<any, any>>options)[input.name.value!];
         }
+        if (is.nullOrUndefined(value)) continue;
+        if (value.type === "literal") {
+          (<any>model)[input.realName] = value.expression;
+        }
+        if (value.type === "directiveRef") {
+          // TODO
+        }
+        // TODO 后续支持其他属性类型
       }
     }
   }
 
-  private _attachProperties<T extends any>(model: T, options: any) {
+  private _attachProperties<T extends any>(model: T, options: IComponentAttachMap) {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
         const attach = attaches[key];
         // invalid value or null value
         if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
-        model[attach.name.value]["__options"] = options[key] || {};
+        const propAttach: PropAttach = model[attach.name.value];
+        const syntaxStruct = options[key];
+        // 暂时只支持childRefs模式
+        if (is.nullOrUndefined(syntaxStruct) || syntaxStruct.type !== "childRefs") continue;
+        for (const iterator of options[key].expression) {
+          propAttach["_options"].set(iterator.id, iterator.value);
+        }
       }
     }
   }
@@ -361,4 +505,8 @@ function updateImportDeclarations(imports: ts.ImportDeclaration[], statements: t
       }
     }
   }
+}
+
+function isImportAlias(propertyName: ts.Identifier | undefined, name: ts.Identifier) {
+  return propertyName?.text !== name.text;
 }

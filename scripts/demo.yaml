@@ -14,7 +14,13 @@ page:
     - ref: ZentFormComponent
       id: ZentFormComponentRef01
       props:
-        layout: vertical
+        layout:
+          type: literal
+          syntaxType: string
+          expression: vertical
+        form:
+          type: state
+          expression: form
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       props:
@@ -62,62 +68,109 @@ page:
       name: zent-input
       id: zentInputDirective
       input:
-        formId: ZentFormComponentRef01
-        name: 字段1
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+        name:
+          type: literal
+          expression: 字段1
         relatedFieldName: 字段2
-        required: true
+        required:
+          type: literal
+          expression: true
     - module: ambjs-common-directive-module
       name: zent-select
       id: zentSelectDirective
       input:
-        formId: ZentFormComponentRef01
-        name: 字段2
-        required: true
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+        name:
+          type: literal
+          expression: 字段2
+        required:
+          type: literal
+          expression: true
         data:
-          - value: 1
-            text: Option 1
-          - value: 2
-            text: Option 2
+          type: literal
+          expression:
+            - value: 1
+              text: Option 1
+            - value: 2
+              text: Option 2
     - module: ambjs-common-directive-module
       name: zent-submit-button
       id: zentSubmitButtonDirective
       input:
-        formId: ZentFormComponentRef01
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+    - module: ambjs-common-directive-module
+      name: zent-form
+      id: zentFormDirective
     - module: ambjs-common-directive-module
       name: custom-click
       id: CustomClickDemoDirective
       input:
-        host: ZentBtnDemoCompRef02
-        eventType: setState
-        attrName: onClick
-        targetName: zentBtn02Content
-        expression: e => new Date().getTime()
+        host:
+          type: literal
+          expression: ZentBtnDemoCompRef02
+        eventType:
+          type: literal
+          expression: setState
+        attrName:
+          type: literal
+          expression: onClick
+        targetName:
+          type: literal
+          expression: zentBtn02Content
+        expression:
+          type: literal
+          expression: e => new Date().getTime()
   input:
     basic:
-      useComponentState: true
+      useComponentState:
+        type: literal
+        expression: true
       defaultComponentState:
-        btn01Text: "10002"
-        zentBtnLoading: true
-        zentBtnType: danger
-        zentBtn02Content: BUTTON02
+        type: literal
+        expression:
+          btn01Text: "10002"
+          zentBtnLoading: true
+          zentBtnType: danger
+          zentBtn02Content: BUTTON02
         objectState:
-          id: xxx
-          name: yyy
-        arrayState:
-          - id: xxx
+          type: literal
+          expression:
+            id: xxx
             name: yyy
-          - id: zzz
-            name: aaa
-    gridTemplateColumnsCount: 2
-    gridTemplateRowsFrs: [1, 2]
+        arrayState:
+          type: literal
+          expression:
+            - id: xxx
+              name: yyy
+            - id: zzz
+              name: aaa
+    gridTemplateColumnsCount:
+      type: literal
+      expression: 2
+    gridTemplateRowsFrs:
+      type: literal
+      expression:
+        - 1
+        - 2
   attach:
     childRowStart:
-      - id: ZentBtnDemoCompRef01
-        value: 1
-      - id: ZentBtnDemoCompRef02
-        value: 2
+      type: childRefs
+      expression:
+        - id: ZentBtnDemoCompRef01
+          value: 1
+        - id: ZentBtnDemoCompRef02
+          value: 2
     childColumnStart:
-      - id: ZentBtnDemoCompRef01
-        value: 1
-      - id: ZentBtnDemoCompRef02
-        value: 2
+      type: childRefs
+      expression:
+        - id: ZentBtnDemoCompRef01
+          value: 1
+        - id: ZentBtnDemoCompRef02
+          value: 2
