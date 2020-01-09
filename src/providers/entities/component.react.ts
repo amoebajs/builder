@@ -103,6 +103,21 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     ]);
   }
 
+  protected visitAndChangeChildNode(visitor: (key: string, node: ts.JsxElement) => ts.JsxElement) {
+    const childNodes = Array.from(this.__elementMap.entries());
+    for (const [key, node] of childNodes) {
+      const newNode = visitor(<string>key, node);
+      this.addRootChildren(<string>key, newNode);
+    }
+  }
+
+  protected visitAndNotifyChildKey(visitor: (key: string) => void) {
+    const childNodes = Array.from(this.__elementMap.keys());
+    for (const key of childNodes) {
+      visitor(<string>key);
+    }
+  }
+
   protected addRootChildren(id: string, element: ts.JsxElement) {
     this.__elementMap.set(id, element);
   }
