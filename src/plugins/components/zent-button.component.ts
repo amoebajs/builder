@@ -20,6 +20,8 @@ export class ZentButtonComponent extends ReactComponent {
       ...this.getState("rootElement"),
       name: ButtonRefName,
       attrs: {
+        style: helper.createReactPropsAccess("style", { defaultValue: false }),
+        className: helper.createReactPropsAccess("className", { defaultValue: "" }),
         type: helper.createReactPropsAccess("type", { defaultValue: "default" }),
         size: helper.createReactPropsAccess("size", { defaultValue: "medium" }),
         htmlType: helper.createReactPropsAccess("htmlType", {
