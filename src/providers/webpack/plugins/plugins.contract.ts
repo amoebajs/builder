@@ -24,6 +24,5 @@ export interface IWebpackTemplateOptions {
 @Injectable()
 export abstract class WebpackPlugins {
   public abstract createProgressPlugin(): Plugin;
-  public abstract createTsImportPlugin(rules: any[]): any;
   public abstract createTemplatePlugin(options?: Partial<IWebpackTemplateOptions>): Plugin;
 }

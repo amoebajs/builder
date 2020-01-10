@@ -72,17 +72,28 @@ export class CssGridContainer extends ReactComponent {
     this.initExtends();
   }
 
+  protected async onPreRender() {
+    await super.onPreRender();
+    this.visitAndNotifyChildKey(key => {
+      const styles: Record<string, unknown> = {};
+      const cStart = this.childColumnStart.get(key);
+      if (cStart) {
+        styles["gridColumnStart"] = cStart;
+      }
+      const rStart = this.childRowStart.get(key);
+      if (rStart) {
+        styles["gridRowStart"] = rStart;
+      }
+      this.render.appendJsxStyles(key, styles);
+    });
+  }
+
   private initState() {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
       this.addImports([this.helper.createImport("react", ["useState"])]);
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
-        let type: undefined | string;
-        if (key === "zentBtnType") {
-          type = "IButtonType";
-          this.addImports([this.helper.createImport("zent", ["IButtonType"])]);
-        }
-        this.addReactUseState(key, value, type);
+        this.addReactUseState(key, value, "any");
       }
     }
   }

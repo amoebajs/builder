@@ -1,4 +1,4 @@
-import { IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks } from "./base";
+import { IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IChildPropMap } from "./base";
 
 export interface IChildRef extends IEwsEntity {
   readonly componentRef: string;
@@ -12,7 +12,7 @@ export interface IChildRefProtectedHooks extends IEwsEntityProtectedHooks {
 
 export interface IChildRefPrivates extends IEwsEntityPrivates<"childref"> {
   readonly __refId: string;
-  readonly __refOptions: { [name: string]: any };
+  readonly __refOptions: IChildPropMap;
 }
 
 export interface IInnerChildRef extends IChildRef, IChildRefPrivates, IChildRefProtectedHooks {}

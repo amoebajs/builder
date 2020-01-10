@@ -1,5 +1,4 @@
 import chalk from "chalk";
-import TransformerFactory from "ts-import-plugin";
 import HtmlWebPackPlugin from "html-webpack-plugin";
 import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core/decorators";
@@ -19,10 +18,6 @@ const defaultStyleSheets: IWebpackTemplateStyleOptions[] = [
 @Injectable()
 export class WebpackPluginsNodeProvider implements WebpackPlugins {
   constructor(protected path: Path, protected fs: Fs) {}
-
-  public createTsImportPlugin(rules: any[]) {
-    return TransformerFactory(rules);
-  }
 
   public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
     return new HtmlWebPackPlugin({

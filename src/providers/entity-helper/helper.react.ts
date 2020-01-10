@@ -5,6 +5,15 @@ import { BasicHelper } from "./helper.basic";
 import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
+import { camelCase, kebabCase } from "lodash";
+
+export interface IFrontLibImportOptions {
+  libRoot?: string;
+  styleRoot?: string;
+  nameCase?: "camel" | "kebab";
+  module: string;
+  imports: Array<string | [string, string]>;
+}
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
@@ -132,5 +141,28 @@ export class ReactHelper extends BasicHelper {
         ref,
       );
     }
+  }
+
+  public createFrontLibImports(options: IFrontLibImportOptions) {
+    const { imports = [], module: modulePath, libRoot, styleRoot, nameCase = "kebab" } = options;
+    const importList: ts.ImportDeclaration[] = [];
+    const nameCaseParser = nameCase === "kebab" ? kebabCase : camelCase;
+    for (const iterator of imports) {
+      const binding = { name: "", alias: "" };
+      if (!libRoot || !styleRoot) continue;
+      if (is.array(iterator)) {
+        binding.name = iterator[0];
+        binding.alias = iterator[1];
+      } else {
+        binding.name = iterator;
+        binding.alias = iterator;
+      }
+      const pathName = nameCaseParser(binding.name);
+      const libPath = [modulePath, libRoot, pathName].join("/");
+      const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
+      importList.push(this.createImport(libPath, binding.alias));
+      importList.push(this.createImport(stylePath));
+    }
+    return importList;
   }
 }

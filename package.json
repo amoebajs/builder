@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.2-alpha.1578300239488",
+  "version": "0.0.2-alpha.1578549460368",
   "main": "index.js",
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
@@ -60,7 +60,6 @@
     "prettier": "^1.19.1",
     "reflect-metadata": "^0.1.13",
     "style-loader": "^1.0.1",
-    "ts-import-plugin": "^1.6.1",
     "ts-loader": "^6.2.1",
     "tslib": "^1.10.0",
     "typescript": "^3.7.2",

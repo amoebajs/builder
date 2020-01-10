@@ -1,4 +1,5 @@
 import { InjectDIToken } from "@bonbons/di";
+import { merge } from "lodash";
 import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
 
@@ -8,7 +9,7 @@ export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
 
 export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
-  type: "object" | "string" | "number" | "boolean" | (string | number)[] | number[] | string[] | null;
+  allowValues: (string | number)[] | number[] | string[] | null;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -45,7 +46,7 @@ const defaultInput: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
-  type: null,
+  allowValues: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -57,19 +58,15 @@ export function Input(params: Partial<IInputPropertyContract>): PropertyDecorato
 export function Input(params?: any) {
   const decoParams = resolveParams<IInputPropertyContract>(params);
   return function propInputFactory(target: any, propertyKey: string) {
-    defineInputProperty(target.constructor, {
-      ...defaultInput,
-      ...decoParams,
-      realName: propertyKey,
-    });
+    defineInputProperty(target.constructor, merge({}, defaultInput, decoParams, { realName: propertyKey }));
   };
 }
 
-const defaultOutput: IInputPropertyContract = {
+const defaultAttach: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
-  type: null,
+  allowValues: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -81,11 +78,7 @@ export function Attach(params: Partial<IAttachPropertyContract>): PropertyDecora
 export function Attach(params?: any) {
   const decoParams = resolveParams<IAttachPropertyContract>(params);
   return function propAttachFactory(target: any, propertyKey: string) {
-    defineAttachProperty(target.constructor, {
-      ...defaultOutput,
-      ...decoParams,
-      realName: propertyKey,
-    });
+    defineAttachProperty(target.constructor, merge({}, defaultAttach, decoParams, { realName: propertyKey }));
   };
 }
 
@@ -127,13 +120,17 @@ function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: Inj
         i18n: metadata.i18nDescription ?? {},
       }
     : null;
-  const typeMeta = getTypeOfMeta(Reflect.getMetadata("design:type", target.prototype, metadata.realName));
+  const designType = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
   const data: IPropertyBase = {
     realName: metadata.realName,
     name: nameMeta,
     group: groupMeta,
     description: descMeta,
-    type: typeMeta,
+    type: {
+      meta: !metadata.allowValues ? "enums" : getMetaOfConstructor(designType),
+      allows: metadata.allowValues,
+      constructor: designType,
+    },
   };
   setDisplayI18NMeta(data.name, "zh-CN");
   setDisplayI18NMeta(data.description, "zh-CN", "value");
@@ -187,6 +184,6 @@ function getGroupNameMeta(data: IPropertyBase) {
   return data.group ? `${data.group}.${data.name.value}` : data.name.value;
 }
 
-function getTypeOfMeta(typeRef: any) {
+function getMetaOfConstructor(typeRef: any) {
   return typeRef === Number ? "number" : typeRef === String ? "string" : typeRef === Boolean ? "boolean" : "object";
 }

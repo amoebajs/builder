@@ -1,5 +1,4 @@
 import ts from "typescript";
-import TransformerFactory from "ts-import-plugin";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
@@ -12,7 +11,7 @@ import {
 } from "./entity-parser";
 import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
-import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins, defaultTransformers } from "./webpack";
+import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
 
 export interface IDirectiveDefine {
@@ -45,7 +44,6 @@ export interface ISourceCreateTranspileOptions {
   enabled: boolean;
   beforeTransformer: any[];
   afterTransformer: any[];
-  importPlugins: any[];
   jsx: "react" | "preserve" | false;
   module: "commonjs" | "es2015";
   target: "es5" | "es2015" | "es2016";
@@ -225,11 +223,10 @@ function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, resu
     jsx = false,
     beforeTransformer = [],
     afterTransformer = [],
-    importPlugins,
   } = transpile;
   result.sourceCode = ts.transpileModule(result.sourceCode, {
     transformers: {
-      before: [...beforeTransformer, TransformerFactory(importPlugins ?? defaultTransformers)],
+      before: beforeTransformer,
       after: afterTransformer,
     },
     compilerOptions: {
