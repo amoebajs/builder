@@ -33,7 +33,9 @@ const func = new FunctionGenerator()
   .setParamWithInitValue("p02", "25258")
   .setParamWithInitValue("p02_01", '"sdfsdfsd"')
   // .setParamWithInitValue("p02_01", () => ts.createStringLiteral("sdfsdfsd"))
-  .setParamWithInitValue("p03", (_, nullable) => (nullable ? ts.createFalse() : ts.createTrue()))
+  .setParamWithInitValue("p03", types =>
+    types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue(),
+  )
   .emit();
 
 sourceFile = ts.updateSourceFileNode(

@@ -11,7 +11,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
   protected params: Record<
     string,
     {
-      type: string;
+      type: string[];
       nullable: boolean;
       initValue: ts.Expression | undefined;
     }
@@ -19,14 +19,17 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
 
   public addParamWithType(name: string, type: string | string[], nullable = false) {
     this.params[name] = {
-      type: is.array(type) ? type.join(" | ") : type,
+      type: is.array(type) ? type : [type],
       nullable,
       initValue: void 0,
     };
     return this;
   }
 
-  public setParamWithInitValue(name: string, initValue: string | ((type: string, nullable: boolean) => ts.Expression)) {
+  public setParamWithInitValue(
+    name: string,
+    initValue: string | ((type: string[], nullable: boolean) => ts.Expression),
+  ) {
     const param = this.params[name];
     if (!param) return this;
     if (typeof initValue === "string") {
@@ -51,7 +54,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
           void 0,
           ts.createIdentifier(n),
           i.nullable ? ts.createToken(ts.SyntaxKind.QuestionToken) : void 0,
-          ts.createTypeReferenceNode(i.type, []),
+          ts.createTypeReferenceNode(i.type.join(" | "), []),
           !is.undefined(i.initValue) ? i.initValue : void 0,
         ),
       ),
