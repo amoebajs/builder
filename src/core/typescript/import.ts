@@ -1,11 +1,11 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
-import { StatementDelegate } from "./statement";
+import { StatementGenerator } from "./statement";
 import { is } from "../../utils/is";
 
 @Injectable(InjectScope.New)
-export class ImportDelegate extends StatementDelegate<ts.ImportDeclaration> {
+export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   protected defaultName: string | undefined = void 0;
   protected namespaceName: string | undefined = void 0;
   protected modulePath = "demo";

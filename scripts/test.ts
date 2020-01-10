@@ -1,31 +1,32 @@
 import ts from "typescript";
-import { ImportDelegate, FunctionDelegate } from "../src/core/typescript/index";
+import { ImportGenerator, FunctionGenerator } from "../src/core/typescript/index";
 
 const printer = ts.createPrinter();
 
 let sourceFile = ts.createSourceFile("a.tsx", "", ts.ScriptTarget.ES2017);
 
-const tsImport = new ImportDelegate()
+const tsImport = new ImportGenerator()
   .setDefaultName("ts")
   .setModulePath("typescript")
   .emit();
 
-const fsImport = new ImportDelegate()
+const fsImport = new ImportGenerator()
   .setNamespaceName("fs")
   .setModulePath("fs-extra")
   .emit();
 
-const childProcessImport = new ImportDelegate()
+const childProcessImport = new ImportGenerator()
   .addNamedBinding("fork")
   .addNamedBinding("spawn", "spawnFn")
   .setModulePath("child_process")
   .emit();
 
-const func = new FunctionDelegate()
+const func = new FunctionGenerator()
   .setName("demoFn")
-  .addkeywordTypeParam("p01", "string")
-  .addkeywordTypeParam("p02", "number", false, ts.createNumericLiteral("25258"))
-  .addkeywordTypeParam("p03", "boolean", true)
+  .addParamWithkeywordType("p01", "string")
+  .addParamWithkeywordType("p02", "number")
+  .addParamWithkeywordType("p03", "boolean", true)
+  .setParamWithInitValue("p02", ts.createNumericLiteral("25258"))
   .emit();
 
 sourceFile = ts.updateSourceFileNode(
