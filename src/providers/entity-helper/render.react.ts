@@ -46,6 +46,17 @@ export class ReactRender {
     this.setElementById(entityId, ts.updateJsxElement(element, newElement, element.children, element.closingElement));
   }
 
+  public appendRootState(name: string, defaultValue: unknown) {
+    this.parentRef.addReactUseState(name, defaultValue);
+  }
+
+  public appendRootCallback(name: string, callback: Function | string, deps?: string[]) {
+    this.parentRef.addReactUseCallback(name, callback, deps);
+  }
+
+  public appendRootVariable(name: string, initilizer: ts.Expression) {
+    this.parentRef.addVariable(name, initilizer);
+  }
   public appendJsxStyles(entityId: string, value: Record<string, unknown>) {
     let objExpression = this.helper.createObjectLiteral(value);
     const oldAttr = this.getJsxAttribute(entityId, "style");

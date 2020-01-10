@@ -23,6 +23,7 @@ const MAIN = "main.tsx";
 
 // new Factory().builder
 const builder = new Factory().builder;
+// console.log(JSON.stringify(demoConf, null, 2));
 // console.log(JSON.stringify(builder["globalMap"].maps, null, "  "));
 builder
   // .createSource({ configs: demoConf, transpile: { enabled: true, target: "es2015", module: "es2015", jsx: "react" } })
