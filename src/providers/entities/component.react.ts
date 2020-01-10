@@ -6,7 +6,6 @@ import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
 import capitalize from "lodash/capitalize";
-import { is } from "../../utils/is";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -40,8 +39,8 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected async onChildrenPostRender() {
     await super.onChildrenPostRender();
     const children = this.getChildren();
-    for (const iterator of children) {
-      const props = iterator.props || {};
+    for (const child of children) {
+      const props = child.props || {};
       const attrs: IJsxAttrs = {};
       for (const key in props) {
         if (props.hasOwnProperty(key)) {
@@ -62,10 +61,10 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
         }
       }
       this.addRootChildren(
-        iterator.id,
-        this.helper.createJsxElement(iterator.component, [], {
+        child.id,
+        this.helper.createJsxElement(child.component, [], {
           ...attrs,
-          key: iterator.id,
+          key: child.id,
         }),
       );
     }
@@ -135,17 +134,8 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
       types: [],
     });
   }
-  protected addReactUseState(name: string, defaultValue: unknown, type?: string) {
-    let genericType: undefined | ts.TypeNode;
-    if (type) {
-      genericType = ts.createTypeReferenceNode(type, undefined);
-    } else {
-      if (is.object(defaultValue)) {
-        genericType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);
-      } else if (is.array(defaultValue)) {
-        genericType = ts.createArrayTypeNode(ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword));
-      }
-    }
+  public addReactUseState(name: string, defaultValue: unknown, type?: string) {
+    const genericType = type ? ts.createTypeReferenceNode(type, undefined) : TYPES.Any;
     const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
       this.helper.createLiteral(defaultValue),
     ]);
@@ -159,6 +149,28 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
     this.addStatements([
       ts.createVariableStatement([], ts.createVariableDeclarationList([declare], ts.NodeFlags.Const)),
+    ]);
+  }
+
+  public addReactUseCallback(name: string, callback: Function | string, deps: string[] = []) {
+    this.addVariable(
+      name,
+      this.helper.createFunctionCall("useCallback", [
+        ts.createIdentifier(callback.toString()),
+        ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+      ]),
+    );
+  }
+
+  public addVariable(name: string, initilizer: ts.Expression) {
+    this.addStatements([
+      ts.createVariableStatement(
+        [],
+        ts.createVariableDeclarationList(
+          [ts.createVariableDeclaration(ts.createIdentifier(name), TYPES.Any, initilizer)],
+          ts.NodeFlags.Const,
+        ),
+      ),
     ]);
   }
 }
