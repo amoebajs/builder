@@ -6,19 +6,19 @@ const COMPONENT_NAME = "FormInputField";
 
 @Directive({ name: "zent-input" })
 export class ZentInputDirective extends ReactDirective {
-  @Input()
+  @Input({ displayName: "表单ID" })
   formId: string = "";
 
-  @Input()
-  name: string = "";
+  @Input({ displayName: "字段名称" })
+  name: string = this.entityId;
 
-  @Input()
+  @Input({ displayName: "标签" })
   label: string = "标签：";
 
-  @Input()
+  @Input({ displayName: "必填" })
   required: boolean = false;
 
-  @Input()
+  @Input({ displayName: "占位符" })
   placeholder: string = "请输入";
 
   @Input()
@@ -26,8 +26,8 @@ export class ZentInputDirective extends ReactDirective {
 
   protected async onAttach() {
     const { helper } = this;
-    this.addImports(
-      helper.createFrontLibImports({
+    this.addImports([
+      ...helper.createFrontLibImports({
         libRoot: "es",
         styleRoot: "css",
         module: "zent",
@@ -36,8 +36,8 @@ export class ZentInputDirective extends ReactDirective {
           named: [COMPONENT_NAME],
         },
       }),
-    );
-    // this.addImports([helper.createImport("zent/es/form", [COMPONENT_NAME])]);
+      this.helper.createImport("zent/css/input.css"),
+    ]);
     let form = this.render.getElementById(this.formId);
     if (form) {
       form = ts.updateJsxElement(
@@ -75,9 +75,9 @@ export class ZentInputDirective extends ReactDirective {
 
   private createFormFieldJsxElement() {
     return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      name: this.helper.createLiteral(this.name),
-      label: this.helper.createLiteral(this.label),
-      required: this.helper.createLiteral(this.required),
+      name: this.name,
+      label: this.label,
+      required: this.required,
       props: this.helper.createObjectLiteral({
         placeholder: this.placeholder,
       }),

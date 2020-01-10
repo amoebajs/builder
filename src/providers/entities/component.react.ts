@@ -152,12 +152,12 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     ]);
   }
 
-  public addReactUseCallback(name: string, callback: Function | string) {
+  public addReactUseCallback(name: string, callback: Function | string, deps: string[] = []) {
     this.addVariable(
       name,
       this.helper.createFunctionCall("useCallback", [
         ts.createIdentifier(callback.toString()),
-        ts.createArrayLiteral([]),
+        ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
       ]),
     );
   }

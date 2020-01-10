@@ -30,8 +30,8 @@ export class ZentSelectDirective extends ReactDirective {
   protected async onAttach() {
     const { helper } = this;
     const COMPONENT_NAME = "FormSelectField";
-    this.addImports(
-      helper.createFrontLibImports({
+    this.addImports([
+      ...helper.createFrontLibImports({
         libRoot: "es",
         styleRoot: "css",
         module: "zent",
@@ -40,8 +40,8 @@ export class ZentSelectDirective extends ReactDirective {
           named: [COMPONENT_NAME],
         },
       }),
-    );
-    // this.addImports([helper.createImport("zent/es/form", [COMPONENT_NAME])]);
+      helper.createImport("zent/css/select.css"),
+    ]);
     let form = this.render.getElementById(this.formId);
     if (form) {
       form = ts.updateJsxElement(
@@ -50,9 +50,9 @@ export class ZentSelectDirective extends ReactDirective {
         [
           ...form.children,
           helper.createJsxElement(COMPONENT_NAME, [], {
-            name: this.helper.createLiteral(this.name),
-            label: this.helper.createLiteral(this.label),
-            required: this.helper.createLiteral(this.required),
+            name: this.name,
+            label: this.label,
+            required: this.required,
             props: helper.createObjectLiteral({
               placeholder: this.placeholder,
               data: this.data,

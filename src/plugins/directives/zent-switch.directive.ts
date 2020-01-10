@@ -2,30 +2,38 @@ import { Directive, Input } from "../../core/decorators";
 import { ReactDirective } from "../../providers";
 import ts = require("typescript");
 
-const COMPONENT_NAME = "Button";
+const COMPONENT_NAME = "FormSwitchField";
 
-const ON_CLICK_CALLBACK_NAME = "onClick";
-
-@Directive({ name: "zent-submit-button" })
-export class ZentSubmitButtonDirective extends ReactDirective {
-  @Input()
+@Directive({ name: "zent-switch" })
+export class ZentSwitchDirective extends ReactDirective {
+  @Input({ displayName: "表单ID" })
   formId: string = "";
 
-  @Input()
-  text: string = "提交";
+  @Input({ displayName: "字段名称" })
+  name: string = this.entityId;
+
+  @Input({ displayName: "标签" })
+  label: string = "标签：";
+
+  @Input({ displayName: "必填" })
+  required: boolean = false;
 
   protected async onAttach() {
-    this.addImports(
-      this.helper.createFrontLibImports({
+    const { helper } = this;
+    this.addImports([
+      ...helper.createFrontLibImports({
         libRoot: "es",
         styleRoot: "css",
         module: "zent",
-        imports: ["Button"],
+        libName: "form",
+        imports: {
+          named: [COMPONENT_NAME],
+        },
       }),
-    );
+      this.helper.createImport("zent/css/switch.css"),
+    ]);
     let form = this.render.getElementById(this.formId);
     if (form) {
-      this.render.appendRootCallback(ON_CLICK_CALLBACK_NAME, () => console.log(1));
       form = ts.updateJsxElement(
         form,
         form.openingElement,
@@ -38,9 +46,9 @@ export class ZentSubmitButtonDirective extends ReactDirective {
 
   private createFormFieldJsxElement() {
     return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      children: this.text,
-      htmlType: "submit",
-      onClick: ts.createIdentifier(ON_CLICK_CALLBACK_NAME),
+      name: this.name,
+      label: this.label,
+      required: this.required,
     });
   }
 }

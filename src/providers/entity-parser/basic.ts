@@ -120,7 +120,7 @@ export abstract class BasicEntityProvider {
   ) {
     await callComponentLifecycle(model);
     const context = this.onCompilationCall(model, model["__context"]);
-    const imports = this.combineImports(context.imports);
+    const imports = this.onImportsUpdate(model, context.imports);
     const classApp = this.createRootComponent(model, context, unExport);
     const statements = this.onStatementsEmitted(model, [
       ...imports,
@@ -245,16 +245,12 @@ export abstract class BasicEntityProvider {
   }
 
   /** @override */
-  protected onImportsUpdate(
-    model: IInnerComponent,
-    imports: ts.ImportDeclaration[],
-    init: ts.ImportDeclaration[] = [],
-  ) {
-    imports.forEach(importDec => updateImportDeclarations(init, [importDec]));
-    return init;
+  protected onImportsUpdate(model: IInnerComponent, imports: ts.ImportDeclaration[]) {
+    return this.combineImports(imports);
   }
 
   protected combineImports(raw: ts.ImportDeclaration[]) {
+    const { helper } = this;
     const record: Record<
       string,
       {
@@ -294,83 +290,28 @@ export abstract class BasicEntityProvider {
           namespace: ts.isNamespaceImport(namedImports) ? [namedImports.name.text] : [],
         };
       }
-      // record[(<ts.StringLiteral>moduleName).text] = {
-      //   default: defaultImport?.text,
-      //   named: ts.isNamedImports(namedImports)
-      //     ? namedImports.elements.map(specifier => [specifier.propertyName?.text || "", specifier.name.text])
-      //     : [],
-      //   namespace: ts.isNamespaceImport(namedImports) ? namedImports.name.text : undefined,
-      // };
     }
     const combinedImportDeclarations: ts.ImportDeclaration[] = [];
     for (const [moduleName, imports] of Object.entries(record)) {
+      for (const namespaceImport of imports.namespace) {
+        combinedImportDeclarations.push(helper.createNamespaceImport(moduleName, namespaceImport));
+      }
       for (const defaultImport of imports.default) {
         combinedImportDeclarations.push(
-          ts.createImportDeclaration(
-            undefined,
-            undefined,
-            ts.createImportClause(ts.createIdentifier(defaultImport), undefined),
-            ts.createStringLiteral(moduleName),
-          ),
+          helper.createImport(moduleName, defaultImport, imports.named.length ? imports.named : undefined),
         );
-      }
-      for (const namespaceImport of imports.namespace) {
-        combinedImportDeclarations.push(
-          ts.createImportDeclaration(
-            undefined,
-            undefined,
-            ts.createImportClause(undefined, ts.createNamespaceImport(ts.createIdentifier(namespaceImport))),
-            ts.createStringLiteral(moduleName),
-          ),
-        );
+        // 具名导入跟随默认导入创建完成后删除，避免接下来重复创建
+        imports.named = [];
       }
       if (imports.named.length) {
-        combinedImportDeclarations.push(
-          ts.createImportDeclaration(
-            undefined,
-            undefined,
-            ts.createImportClause(
-              undefined,
-              ts.createNamedImports(
-                imports.named.map(([propertyName, name]) =>
-                  ts.createImportSpecifier(
-                    propertyName ? ts.createIdentifier(propertyName) : undefined,
-                    ts.createIdentifier(name),
-                  ),
-                ),
-              ),
-            ),
-            ts.createStringLiteral(moduleName),
-          ),
-        );
+        // 如果没有默认导入，此处创建具名导入
+        combinedImportDeclarations.push(helper.createImport(moduleName, undefined, imports.named));
       }
       if (!imports.named.length && !imports.default.length && !imports.namespace.length) {
-        combinedImportDeclarations.push(
-          ts.createImportDeclaration(undefined, undefined, undefined, ts.createStringLiteral(moduleName)),
-        );
+        combinedImportDeclarations.push(helper.createImport(moduleName));
       }
     }
     return combinedImportDeclarations;
-    // return Object.entries(record).map(([moduleName, imports]) => {
-    //   return ts.createImportDeclaration(
-    //     undefined,
-    //     undefined,
-    //     ts.createImportClause(
-    //       imports.default ? ts.createIdentifier(imports.default) : undefined,
-    //       imports.namespace
-    //         ? ts.createNamespaceImport(ts.createIdentifier(imports.namespace))
-    //         : ts.createNamedImports(
-    //             imports.named.map(([propertyName, name]) => {
-    //               return ts.createImportSpecifier(
-    //                 propertyName ? ts.createIdentifier(propertyName) : undefined,
-    //                 ts.createIdentifier(name),
-    //               );
-    //             }),
-    //           ),
-    //     ),
-    //     ts.createStringLiteral(moduleName),
-    //   );
-    // });
   }
 
   /** @override */

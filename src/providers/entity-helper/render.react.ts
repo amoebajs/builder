@@ -50,8 +50,8 @@ export class ReactRender {
     this.parentRef.addReactUseState(name, defaultValue);
   }
 
-  public appendRootCallback(name: string, callback: Function | string) {
-    this.parentRef.addReactUseCallback(name, callback);
+  public appendRootCallback(name: string, callback: Function | string, deps?: string[]) {
+    this.parentRef.addReactUseCallback(name, callback, deps);
   }
 
   public appendRootVariable(name: string, initilizer: ts.Expression) {

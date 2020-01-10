@@ -24,11 +24,12 @@ export class ReactEntityProvider extends BasicEntityProvider {
   }
 
   protected onImportsUpdate(model: IInnerComponent, imports: ts.ImportDeclaration[]) {
-    return super.onImportsUpdate(model, imports, [
-      this.helper.createImport("react", REACT.NS),
-      this.helper.createImport("react", [REACT.UseState, REACT.UseCallback]),
-      this.helper.createImport("react-dom", REACT.DomNS),
-    ]);
+    imports.unshift(
+      this.helper.createNamespaceImport("react", REACT.NS),
+      this.helper.createNamespaceImport("react-dom", REACT.DomNS),
+      this.helper.createImport("react", undefined, [REACT.UseState, REACT.UseCallback]),
+    );
+    return super.onImportsUpdate(model, imports);
   }
 
   protected emitFunctionComponentContext(context: Partial<IBasicCompilationFinalContext>) {

@@ -27,7 +27,7 @@ export const REACT = {
 };
 
 export interface IJsxAttrs {
-  [key: string]: ts.Expression | string | number | boolean | null;
+  [key: string]: ts.Expression | string | number | boolean | undefined;
 }
 
 const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);

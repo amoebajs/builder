@@ -47,17 +47,15 @@ export class ReactHelper extends BasicHelper {
         ts.createIdentifier(tagName),
         types,
         ts.createJsxAttributes(
-          Object.keys(attrs)
-            .filter(k => attrs.hasOwnProperty(k))
-            .map(k =>
+          Object.entries(attrs)
+            .filter(([k]) => attrs.hasOwnProperty(k))
+            .map(([key, value]) =>
               ts.createJsxAttribute(
-                ts.createIdentifier(k),
-                typeof attrs[k] === "string"
-                  ? ts.createStringLiteral(<string>attrs[k])
-                  : ts.createJsxExpression(
-                      undefined,
-                      resolveSyntaxInsert(typeof attrs[k], attrs[k], (t, e) => e),
-                    ),
+                ts.createIdentifier(key),
+                ts.createJsxExpression(
+                  undefined,
+                  is.stringOrNumberOrBoolean(value) ? this.createLiteral(value) : value,
+                ),
               ),
             ),
         ),
@@ -94,9 +92,7 @@ export class ReactHelper extends BasicHelper {
       expr = ts.createBinary(
         expr,
         defaultCheck === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
-          is.array(defaultValue) ? this.createArrayLiteral(defaultValue) : this.createObjectLiteral(defaultValue),
-        ),
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
       );
     }
     return expr;
@@ -115,39 +111,37 @@ export class ReactHelper extends BasicHelper {
       expr = ts.createBinary(
         expr,
         checkOperatorForDefaultValue === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
-          is.array(defaultValue) ? this.createArrayLiteral(defaultValue) : this.createObjectLiteral(defaultValue),
-        ),
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
       );
     }
     return expr;
   }
 
-  public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
-    const ref = ts.createStringLiteral(modulePath);
-    if (typeof names === "string") {
-      return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
-    } else if (names.length === 0) {
-      return ts.createImportDeclaration([], [], undefined, ref);
-    } else {
-      return ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(
-          undefined,
-          ts.createNamedImports(
-            names.map(s =>
-              ts.createImportSpecifier(
-                Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
-                ts.createIdentifier(Array.isArray(s) ? s[1] : s),
-              ),
-            ),
-          ),
-        ),
-        ref,
-      );
-    }
-  }
+  // public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
+  //   const ref = ts.createStringLiteral(modulePath);
+  //   if (typeof names === "string") {
+  //     return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
+  //   } else if (names.length === 0) {
+  //     return ts.createImportDeclaration([], [], undefined, ref);
+  //   } else {
+  //     return ts.createImportDeclaration(
+  //       [],
+  //       [],
+  //       ts.createImportClause(
+  //         undefined,
+  //         ts.createNamedImports(
+  //           names.map(s =>
+  //             ts.createImportSpecifier(
+  //               Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
+  //               ts.createIdentifier(Array.isArray(s) ? s[1] : s),
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //       ref,
+  //     );
+  //   }
+  // }
 
   public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
     return ts.createCall(
@@ -180,23 +174,7 @@ export class ReactHelper extends BasicHelper {
       const pathName = nameCaseParser(libName || imports.default);
       const libPath = [modulePath, libRoot, pathName].join("/");
       const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
-      importList.push(
-        ts.createImportDeclaration(
-          undefined,
-          undefined,
-          ts.createImportClause(
-            imports.default ? ts.createIdentifier(imports.default) : undefined,
-            ts.createNamedImports(
-              imports.named.map(named =>
-                is.string(named)
-                  ? ts.createImportSpecifier(undefined, ts.createIdentifier(named))
-                  : ts.createImportSpecifier(ts.createIdentifier(named[0]), ts.createIdentifier(named[1])),
-              ),
-            ),
-          ),
-          ts.createIdentifier(libPath),
-        ),
-      );
+      importList.push(this.createImport(libPath, imports.default, imports.named));
       importList.push(this.createImport(stylePath));
     }
     return importList;

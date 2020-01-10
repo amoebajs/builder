@@ -4,26 +4,32 @@ import { IPropertyBase } from "../base";
 
 export const PROPS_DEFINE = "ambjs::prop_define";
 
-export interface IPropPropertyContract extends IBasicI18NContract {
-  type: any;
+export interface IEnumPropPropertyContract<Value> extends IBasicI18NContract {
+  type: "select";
+  allowValues: Value[];
+}
+export interface ICommonPropPropertyContract extends IBasicI18NContract {
+  type: "input" | "switch";
 }
 
-const defaultInput: IPropPropertyContract = {
+export type PropPropertyContract<Value = unknown> = IEnumPropPropertyContract<Value> | ICommonPropPropertyContract;
+
+const defaultInput: PropPropertyContract = {
   name: null,
   displayName: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
-  type: null,
+  type: "input",
 };
 
 export function Prop(): PropertyDecorator;
 export function Prop(name: string): PropertyDecorator;
-export function Prop(params: Partial<IPropPropertyContract>): PropertyDecorator;
-export function Prop(params?: any) {
-  const decoParams = resolveParams<IPropPropertyContract>(params);
+export function Prop<Value>(params: Partial<PropPropertyContract<Value>>): PropertyDecorator;
+export function Prop<Value>(params?: Partial<PropPropertyContract<Value>> | string) {
+  const decoParams = resolveParams<PropPropertyContract<Value>>(params);
   return function propFactory(target: any, propertyKey: string) {
-    defineProp(target.constructor, {
+    defineProp(target.constructor, <REALNAME<PropPropertyContract>>{
       ...defaultInput,
       ...decoParams,
       realName: propertyKey,
@@ -31,7 +37,7 @@ export function Prop(params?: any) {
   };
 }
 
-function defineProp(target: EntityConstructor<any>, { realName, ...others }: REALNAME<IPropPropertyContract>) {
+function defineProp(target: EntityConstructor<any>, { realName, ...others }: REALNAME<PropPropertyContract>) {
   Reflect.defineMetadata(PROPS_DEFINE, { ...resolveProps(target), [others.name || realName]: others }, target);
 }
 
