@@ -54,7 +54,9 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
           void 0,
           ts.createIdentifier(n),
           i.nullable ? ts.createToken(ts.SyntaxKind.QuestionToken) : void 0,
-          ts.createTypeReferenceNode(i.type.join(" | "), []),
+          i.type.length === 0
+            ? ts.createTypeReferenceNode("any", [])
+            : ts.createTypeReferenceNode(i.type.join(" | "), []),
           !is.undefined(i.initValue) ? i.initValue : void 0,
         ),
       ),
