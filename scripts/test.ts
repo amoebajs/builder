@@ -23,10 +23,14 @@ const childProcessImport = new ImportGenerator()
 
 const func = new FunctionGenerator()
   .setName("demoFn")
-  .addParamWithkeywordType("p01", "string")
-  .addParamWithkeywordType("p02", "number")
-  .addParamWithkeywordType("p03", "boolean", true)
-  .setParamWithInitValue("p02", ts.createNumericLiteral("25258"))
+  .addParamWithType("p01", "string[]")
+  .addParamWithType("p02", "number")
+  .addParamWithType("p03", ["boolean", "undefined"])
+  .addParamWithType("p04", "boolean | undefined")
+  .addParamWithType("p05", "Date", true)
+  .setParamWithInitValue("p01", "[]")
+  .setParamWithInitValue("p02", "25258")
+  .setParamWithInitValue("p03", (_, nullable) => (nullable ? ts.createFalse() : ts.createTrue()))
   .emit();
 
 sourceFile = ts.updateSourceFileNode(

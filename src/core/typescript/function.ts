@@ -4,7 +4,6 @@ import { Injectable } from "../decorators";
 import { DeclarationGenerator } from "./declaration";
 import { is } from "../../utils/is";
 
-export type KeywordTypeName = "string" | "boolean" | "number" | "any" | "unknown" | "never";
 export type KeywordTypeReal = string | boolean | number;
 
 @Injectable(InjectScope.New)
@@ -12,40 +11,28 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
   protected params: Record<
     string,
     {
-      type: KeywordTypeName;
+      type: string;
       nullable: boolean;
       initValue: ts.Expression | undefined;
     }
   > = {};
 
-  public addParamWithkeywordType(name: string, type: KeywordTypeName = "any", nullable = false) {
+  public addParamWithType(name: string, type: string | string[], nullable = false) {
     this.params[name] = {
-      type,
+      type: is.array(type) ? type.join(" | ") : type,
       nullable,
       initValue: void 0,
     };
     return this;
   }
 
-  public setParamWithInitValue(name: string, initValue: KeywordTypeReal | ts.Expression) {
+  public setParamWithInitValue(name: string, initValue: string | ((type: string, nullable: boolean) => ts.Expression)) {
     const param = this.params[name];
     if (!param) return this;
-    if (typeof initValue === param.type) {
-      switch (typeof initValue) {
-        case "string":
-          param.initValue = ts.createStringLiteral(initValue);
-          break;
-        case "number":
-          param.initValue = ts.createStringLiteral(initValue.toString());
-          break;
-        case "boolean":
-          param.initValue = !initValue ? ts.createFalse() : ts.createTrue();
-          break;
-        default:
-          break;
-      }
+    if (typeof initValue === "string") {
+      param.initValue = ts.createIdentifier(initValue);
     } else {
-      param.initValue = <ts.Expression>initValue;
+      param.initValue = initValue(param.type, param.nullable);
     }
     return this;
   }
