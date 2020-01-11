@@ -40,7 +40,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
     return this;
   }
 
-  public emit(): ts.FunctionDeclaration {
+  protected create(): ts.FunctionDeclaration {
     return ts.createFunctionDeclaration(
       [],
       [],

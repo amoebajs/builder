@@ -56,7 +56,7 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
     return this;
   }
 
-  public emit(): ts.ImportDeclaration {
+  protected create(): ts.ImportDeclaration {
     let importClause: ts.ImportClause | undefined = void 0;
     if (is.nullOrUndefined(this.namespaceName)) {
       let defaultName: ts.Identifier | undefined = void 0;

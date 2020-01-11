@@ -37,6 +37,10 @@ const func = new FunctionGenerator()
   .setParamWithInitValue("p03", types =>
     types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue(),
   )
+  .pushTransformerBeforeEmit(node => {
+    console.log("is function : " + ts.isFunctionDeclaration(node));
+    return node;
+  })
   .emit();
 
 sourceFile = ts.updateSourceFileNode(
