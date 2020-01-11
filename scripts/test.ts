@@ -23,20 +23,19 @@ const childProcessImport = new ImportGenerator()
 
 const func = new FunctionGenerator()
   .setName("demoFn")
-  .addParamWithType("p01", "string[]")
-  .addParamWithType("p02", "number")
-  .addParamWithType("p02_01", "string")
-  .addParamWithType("p03", ["boolean", "undefined"])
-  .addParamWithType("p04", "boolean | undefined")
-  .addParamWithType("p05", "Date", true)
-  .addParamWithType("{ a, b, c }", [], true)
-  .setParamWithInitValue("p01", "[]")
-  .setParamWithInitValue("p02", "25258")
-  .setParamWithInitValue("p02_01", '"sdfsdfsd"')
+  .pushParamWithType("p01", "string[]")
+  .pushParamWithType("p02", "number")
+  .pushParamWithType("p02_01", "string")
+  .pushParamWithType("p03", ["boolean", "undefined"])
+  .pushParamWithType("p04", "boolean | undefined")
+  .pushParamWithType("p05", "Date", true)
+  .pushParamWithType("p06", [], true)
+  .updateParamInitValue("p01", "[]")
+  .updateParamInitValue("p02", "25258")
+  .updateParamInitValue("p02_01", '"sdfsdfsd"')
   // .setParamWithInitValue("p02_01", () => ts.createStringLiteral("sdfsdfsd"))
-  .setParamWithInitValue("p03", types =>
-    types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue(),
-  )
+  .updateParamInitValue("p03", types => (types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue()))
+  .updateParamDestruct("p06", ["a", "b", "c"])
   .pushTransformerBeforeEmit(node => {
     console.log("is function : " + ts.isFunctionDeclaration(node));
     return node;
