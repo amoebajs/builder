@@ -7,12 +7,18 @@ import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
 
+export interface IFrontLibImports {
+  default?: string;
+  named: Array<string | [string, string]>;
+}
+
 export interface IFrontLibImportOptions {
-  libRoot?: string;
-  styleRoot?: string;
-  nameCase?: "camel" | "kebab";
+  libRoot: string;
+  styleRoot: string;
   module: string;
-  imports: Array<string | [string, string]>;
+  libName?: string;
+  imports: Array<string | [string, string]> | IFrontLibImports;
+  nameCase?: "camel" | "kebab";
 }
 
 @Injectable(InjectScope.Singleton)
@@ -41,17 +47,15 @@ export class ReactHelper extends BasicHelper {
         ts.createIdentifier(tagName),
         types,
         ts.createJsxAttributes(
-          Object.keys(attrs)
-            .filter(k => attrs.hasOwnProperty(k))
-            .map(k =>
+          Object.entries(attrs)
+            .filter(([k]) => attrs.hasOwnProperty(k))
+            .map(([key, value]) =>
               ts.createJsxAttribute(
-                ts.createIdentifier(k),
-                typeof attrs[k] === "string"
-                  ? ts.createStringLiteral(<string>attrs[k])
-                  : ts.createJsxExpression(
-                      undefined,
-                      resolveSyntaxInsert(typeof attrs[k], attrs[k], (t, e) => e),
-                    ),
+                ts.createIdentifier(key),
+                ts.createJsxExpression(
+                  undefined,
+                  is.stringOrNumberOrBoolean(value) ? this.createLiteral(value) : value,
+                ),
               ),
             ),
         ),
@@ -88,9 +92,7 @@ export class ReactHelper extends BasicHelper {
       expr = ts.createBinary(
         expr,
         defaultCheck === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
-          is.array(defaultValue) ? this.createArrayLiteral(defaultValue) : this.createObjectLiteral(defaultValue),
-        ),
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
       );
     }
     return expr;
@@ -109,58 +111,70 @@ export class ReactHelper extends BasicHelper {
       expr = ts.createBinary(
         expr,
         checkOperatorForDefaultValue === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) =>
-          is.array(defaultValue) ? this.createArrayLiteral(defaultValue) : this.createObjectLiteral(defaultValue),
-        ),
+        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
       );
     }
     return expr;
   }
 
-  public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
-    const ref = ts.createStringLiteral(modulePath);
-    if (typeof names === "string") {
-      return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
-    } else if (names.length === 0) {
-      return ts.createImportDeclaration([], [], undefined, ref);
-    } else {
-      return ts.createImportDeclaration(
-        [],
-        [],
-        ts.createImportClause(
-          undefined,
-          ts.createNamedImports(
-            names.map(s =>
-              ts.createImportSpecifier(
-                Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
-                ts.createIdentifier(Array.isArray(s) ? s[1] : s),
-              ),
-            ),
-          ),
-        ),
-        ref,
-      );
-    }
-  }
+  // public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
+  //   const ref = ts.createStringLiteral(modulePath);
+  //   if (typeof names === "string") {
+  //     return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
+  //   } else if (names.length === 0) {
+  //     return ts.createImportDeclaration([], [], undefined, ref);
+  //   } else {
+  //     return ts.createImportDeclaration(
+  //       [],
+  //       [],
+  //       ts.createImportClause(
+  //         undefined,
+  //         ts.createNamedImports(
+  //           names.map(s =>
+  //             ts.createImportSpecifier(
+  //               Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
+  //               ts.createIdentifier(Array.isArray(s) ? s[1] : s),
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //       ref,
+  //     );
+  //   }
+  // }
 
+  public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
+    return ts.createCall(
+      ts.createIdentifier(name),
+      undefined,
+      parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
+    );
+  }
   public createFrontLibImports(options: IFrontLibImportOptions) {
-    const { imports = [], module: modulePath, libRoot, styleRoot, nameCase = "kebab" } = options;
+    const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
     const importList: ts.ImportDeclaration[] = [];
     const nameCaseParser = nameCase === "kebab" ? kebabCase : camelCase;
-    for (const iterator of imports) {
-      const binding = { name: "", alias: "" };
-      if (!libRoot || !styleRoot) continue;
-      if (is.array(iterator)) {
-        binding.name = iterator[0];
-        binding.alias = iterator[1];
-      } else {
-        binding.name = iterator;
-        binding.alias = iterator;
+    if (is.array(imports)) {
+      for (const iterator of imports) {
+        const binding = { name: "", alias: "" };
+        if (is.array(iterator)) {
+          binding.name = iterator[0];
+          binding.alias = iterator[1];
+        } else {
+          binding.name = iterator;
+          binding.alias = iterator;
+        }
+        const pathName = nameCaseParser(libName || binding.name);
+        const libPath = [modulePath, libRoot, pathName].join("/");
+        const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
+        importList.push(this.createImport(libPath, binding.alias));
+        importList.push(this.createImport(stylePath));
       }
-      const pathName = nameCaseParser(binding.name);
+    } else {
+      const pathName = nameCaseParser(libName || imports.default);
       const libPath = [modulePath, libRoot, pathName].join("/");
       const stylePath = [modulePath, styleRoot, pathName].join("/") + ".css";
-      importList.push(this.createImport(libPath, binding.alias));
+      importList.push(this.createImport(libPath, imports.default, imports.named));
       importList.push(this.createImport(stylePath));
     }
     return importList;
