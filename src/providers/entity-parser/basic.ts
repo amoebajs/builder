@@ -1,27 +1,28 @@
-import ts, { Identifier, isMethodDeclaration } from "typescript";
+import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { IInnerComponent, callComponentLifecycle } from "../../core/component";
-import {
-  EntityConstructor,
-  IConstructor,
-  IFrameworkDepts,
-  Injectable,
-  resolveAttachProperties,
-  resolveInputProperties,
-} from "../../core/decorators";
 import {
   BasicCompilationEntity,
+  BasicDirective,
+  Composition,
+  EntityConstructor,
   IBasicCompilationContext,
   IBasicCompilationFinalContext,
   IChildPropMap,
   IComponentAttachMap,
+  IConstructor,
   IDirectiveInputMap,
+  IFrameworkDepts,
+  IInnerComponent,
   ITypedSyntaxExpressionMap,
-} from "../../core/base";
-import { BasicDirective } from "../../core/directive";
-import { InvalidOperationError } from "../../errors";
+  Injectable,
+  PropAttach,
+  callComponentLifecycle,
+  createEntityId,
+  resolveAttachProperties,
+  resolveCompositions,
+  resolveInputProperties,
+} from "../../core";
 import { BasicChildRef } from "../entities";
-import { PropAttach } from "../../core/libs/attach.basic";
 import { BasicHelper } from "../entity-helper";
 import { is } from "../../utils/is";
 
@@ -74,7 +75,7 @@ export abstract class BasicEntityProvider {
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || new Map();
-    const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
+    const model = this._initContextInstance(template, { input, attach }, context, provider).setEntityId(id);
     for (const iterator of components) {
       model["__components"].push(
         this.createInstance(
@@ -93,7 +94,7 @@ export abstract class BasicEntityProvider {
     }
     for (const iterator of children) {
       model["__children"].push(
-        this._initContextInstance(BasicChildRef, {}, context)
+        this._initContextInstance(BasicChildRef, {}, context, provider)
           .setEntityId(iterator.childName)
           .setRefComponentId(iterator.refComponent)
           .setRefOptions(iterator.props || {}),
@@ -101,15 +102,24 @@ export abstract class BasicEntityProvider {
     }
     for (const iterator of directives) {
       model["__directives"].push(
-        provider.attachDirective(
-          model,
-          this._initContextInstance<BasicDirective>(iterator.template, { input: iterator.input }, context).setEntityId(
-            iterator.id,
-          ),
-        ),
+        this._createDirectiveFn(provider, context, iterator.id, model, iterator.template, iterator.input),
       );
     }
     return model;
+  }
+
+  private _createDirectiveFn(
+    provider: BasicEntityProvider,
+    context: IBasicCompilationContext,
+    id: string,
+    model: any,
+    template: any,
+    input: any,
+  ): any {
+    return provider.attachDirective(
+      model,
+      this._initContextInstance<BasicDirective>(template, { input }, context, provider).setEntityId(id),
+    );
   }
 
   public async callCompilation(
@@ -330,9 +340,11 @@ export abstract class BasicEntityProvider {
     template: InjectDIToken<T>,
     options: IPropertiesOptions,
     context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
   ): T {
     const model = this.injector.get(template);
     this.onInputPropertiesInit(model, options);
+    this._compositions(model, provider, context);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -385,69 +397,18 @@ export abstract class BasicEntityProvider {
       }
     }
   }
-}
 
-function updateImportDeclarations(imports: ts.ImportDeclaration[], statements: ts.ImportDeclaration[]) {
-  for (const statement of statements) {
-    if (ts.isImportDeclaration(statement)) {
-      const { importClause, moduleSpecifier } = statement;
-      if (!ts.isStringLiteral(moduleSpecifier)) continue;
-      const existIndex = imports.findIndex(
-        i =>
-          i.importClause &&
-          i.moduleSpecifier &&
-          ts.isStringLiteral(i.moduleSpecifier) &&
-          i.moduleSpecifier.text === moduleSpecifier.text,
-      );
-      if (existIndex < 0) {
-        imports.push(statement);
-      } else {
-        if (!importClause) continue;
-        const sourceItem = imports[existIndex];
-        const { importClause: clause01 } = sourceItem;
-        const { importClause: clause02 } = statement;
-        if (clause01!.namedBindings) {
-          if (ts.isNamedImports(clause01!.namedBindings)) {
-            if (clause02!.namedBindings && ts.isNamedImports(clause02!.namedBindings!)) {
-              const named01 = clause01!.namedBindings as ts.NamedImports;
-              const named02 = clause02!.namedBindings as ts.NamedImports;
-              const addto: ts.ImportSpecifier[] = [];
-              for (const element of named02.elements) {
-                const target = named01.elements.find(i => i.name.text === element.name.text);
-                if (!target) {
-                  addto.push(element);
-                }
-              }
-              named01.elements = ts.createNodeArray([...named01.elements].concat(addto));
-            } else {
-              imports.push(statement);
-            }
-          } else if (ts.isNamespaceImport(clause01!.namedBindings!)) {
-            if (
-              clause02!.namedBindings &&
-              ts.isNamespaceImport(clause02!.namedBindings!) &&
-              clause02!.namedBindings!.name.text !== clause02!.namedBindings!.name.text
-            ) {
-              throw new InvalidOperationError("import update failed: duplicate namespace import exist");
-            } else {
-              imports.push(statement);
-            }
-          }
-        } else {
-          // source is default import
-          if (!clause02!.namedBindings && clause02!.name!.text !== clause02!.name!.text) {
-            throw new InvalidOperationError(
-              `import update failed: duplicate default import exist - [${clause02!.name!.text}]`,
-            );
-          } else {
-            imports.push(statement);
-          }
-        }
+  private _compositions<T extends any>(model: T, provider: BasicEntityProvider, context: IBasicCompilationContext) {
+    const compositions = resolveCompositions(Object.getPrototypeOf(model).constructor);
+    for (const key in compositions) {
+      if (compositions.hasOwnProperty(key)) {
+        const composite = compositions[key];
+        if (!(model[composite.name] instanceof Composition)) model[composite.name] = Composition.create();
+        const compositeTarget: Composition = model[composite.name];
+        compositeTarget["setEntity"](composite.entity!);
+        compositeTarget["setCreateFn"](this._createDirectiveFn.bind(this, provider, context, createEntityId()));
+        model["__compositions"].push(compositeTarget);
       }
     }
   }
-}
-
-function isImportAlias(propertyName: ts.Identifier | undefined, name: ts.Identifier) {
-  return propertyName?.text !== name.text;
 }
