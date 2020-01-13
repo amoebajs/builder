@@ -12,11 +12,44 @@ export interface IParamDefine {
   initValue: ts.Expression | undefined;
 }
 
+export interface IParamCreateOptions {
+  name?: string;
+  type?: string | string[];
+  destruct?: string[];
+  nullable?: boolean;
+  initValue?: string | ((type: string[], nullable: boolean) => ts.Expression);
+}
+
 @Injectable(InjectScope.New)
 export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclaration> {
   protected params: Record<string, IParamDefine> = {};
+  protected typeParams: string[] = [];
+  protected returnType: string = "any";
+  protected isGenerator = false;
 
-  public pushParamWithType(name: string, type: string | string[], nullable = false) {
+  public setIsGenerator(is: boolean) {
+    this.isGenerator = is;
+    return this;
+  }
+
+  public pushTypeParam(typeName: string) {
+    this.typeParams.push(typeName);
+    return this;
+  }
+
+  public pushParam(options: string | IParamCreateOptions) {
+    if (typeof options === "string") {
+      this.pushParamWithType(options, "any");
+      return this;
+    }
+    const paramName = options.name || "_p" + (Object.keys(this.params).length + 1);
+    this.pushParamWithType(paramName, options.type || "any", options.nullable);
+    this.updateParamDestruct(paramName, options.destruct || []);
+    options.initValue && this.updateParamInitValue(paramName, options.initValue);
+    return this;
+  }
+
+  private pushParamWithType(name: string, type: string | string[], nullable = false) {
     this.params[name] = {
       type: is.array(type) ? type : [type],
       destruct: [],
@@ -26,7 +59,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
     return this;
   }
 
-  public updateParamDestruct(name: string, destruct: string[]) {
+  private updateParamDestruct(name: string, destruct: string[]) {
     const param = this.params[name];
     if (!param) return this;
     for (const nm of destruct) {
@@ -37,7 +70,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
     return this;
   }
 
-  public updateParamInitValue(
+  private updateParamInitValue(
     name: string,
     initValue: string | ((type: string[], nullable: boolean) => ts.Expression),
   ) {
@@ -54,10 +87,10 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
   protected create(): ts.FunctionDeclaration {
     return ts.createFunctionDeclaration(
       [],
-      [],
-      void 0,
-      ts.createIdentifier(this.name),
-      [],
+      this.getExportModifiers(),
+      createFuncGeneratorToken(this.isGenerator),
+      this.getName(),
+      createFuncTypeParams(this.typeParams),
       Object.entries(this.params).map(([n, i]) =>
         ts.createParameter(
           [],
@@ -69,10 +102,22 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
           createFuncParamInitValue(i),
         ),
       ),
-      void 0,
+      createFuncReturnType(this.returnType),
       ts.createBlock([], true),
     );
   }
+}
+
+function createFuncReturnType(returnType: string) {
+  return ts.createTypeReferenceNode(returnType, []);
+}
+
+function createFuncTypeParams(typeParams: string[]) {
+  return typeParams.map(i => ts.createTypeParameterDeclaration(i));
+}
+
+function createFuncGeneratorToken(is: boolean): ts.AsteriskToken | undefined {
+  return is ? ts.createToken(ts.SyntaxKind.AsteriskToken) : void 0;
 }
 
 function createFuncParamInitValue(i: IParamDefine): ts.Expression | undefined {

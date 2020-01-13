@@ -1,5 +1,6 @@
 import ts from "typescript";
-import { ImportGenerator, FunctionGenerator } from "../src/core/typescript/index";
+import prettier from "prettier";
+import { FunctionGenerator, ImportGenerator } from "../src/core/typescript/index";
 
 const printer = ts.createPrinter();
 
@@ -23,19 +24,19 @@ const childProcessImport = new ImportGenerator()
 
 const func = new FunctionGenerator()
   .setName("demoFn")
-  .pushParamWithType("p01", "string[]")
-  .pushParamWithType("p02", "number")
-  .pushParamWithType("p02_01", "string")
-  .pushParamWithType("p03", ["boolean", "undefined"])
-  .pushParamWithType("p04", "boolean | undefined")
-  .pushParamWithType("p05", "Date", true)
-  .pushParamWithType("p06", [], true)
-  .updateParamInitValue("p01", "[]")
-  .updateParamInitValue("p02", "25258")
-  .updateParamInitValue("p02_01", '"sdfsdfsd"')
-  // .setParamWithInitValue("p02_01", () => ts.createStringLiteral("sdfsdfsd"))
-  .updateParamInitValue("p03", types => (types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue()))
-  .updateParamDestruct("p06", ["a", "b", "c"])
+  .setExportType(true, true)
+  .pushParam("p0")
+  .pushParam({ name: "p1", type: "string[]", initValue: "[]" })
+  .pushParam({ name: "p2", type: "number", initValue: "25258" })
+  .pushParam({ name: "p2_01", type: "string", initValue: '"sdfsdfsd"' })
+  .pushParam({
+    name: "p3",
+    type: ["boolean", "undefined"],
+    initValue: types => (types.includes("undefined") ? ts.createIdentifier("void 0") : ts.createTrue()),
+  })
+  .pushParam({ name: "p4", type: "boolean | undefined", initValue: "true" })
+  .pushParam({ name: "p5", type: "Date", nullable: true })
+  .pushParam({ initValue: "{}", destruct: ["a", "b", "c"] })
   .pushTransformerBeforeEmit(node => {
     console.log("is function : " + ts.isFunctionDeclaration(node));
     return node;
@@ -54,4 +55,4 @@ sourceFile = ts.updateSourceFileNode(
 
 const result = printer.printNode(ts.EmitHint.SourceFile, sourceFile, sourceFile);
 
-console.log(result);
+console.log(prettier.format(result, { parser: "typescript", printWidth: 100 }));
