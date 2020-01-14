@@ -1,7 +1,7 @@
 import { IInnerDirective as IDirective } from "./directive";
 import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
 import { IInnerChildRef as IChildRef } from "./child-ref";
-import { Composition, IInnerComposite } from "./libs";
+import { BasicComposition, IInnerComposite } from "./libs";
 
 export interface IComponent extends IEwsEntity {}
 
@@ -37,11 +37,16 @@ export interface IChildElement {
 }
 
 export async function callOnInit(model: IInnerComponent) {
+  // pre compositions init
   for (const iterator of model.__compositions) {
     iterator.setParent(model);
     iterator.setBootstrapHook(directive => model.__directives.push(directive));
   }
   await model.onInit();
+  // post compositions init
+  for (const iterator of model.__compositions) {
+    iterator.init();
+  }
   for (const iterator of model.__components) {
     await callOnInit(iterator);
     await iterator.onInit();
@@ -146,7 +151,7 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   private readonly __children: IChildRef[] = [];
   private readonly __components: IInnerComponent[] = [];
   private readonly __directives: IDirective[] = [];
-  private readonly __compositions: Composition[] = [];
+  private readonly __compositions: BasicComposition[] = [];
 
   public get rendered() {
     return this.__rendered;

@@ -1,25 +1,25 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
   EntityConstructor,
+  IConstructor,
   IFrameworkDepts,
   Injectable,
   getInjectScope,
   resolveDepts,
-  IConstructor,
 } from "../core/decorators";
 import {
-  ReactComponent,
-  GlobalMap,
-  Builder,
-  BasicEntityProvider,
-  WebpackConfig,
-  HtmlBundle,
   BasicChildRef,
+  BasicEntityProvider,
+  BasicHelper,
+  Builder,
+  GlobalMap,
+  HtmlBundle,
+  ReactComponent,
   ReactDirective,
   ReactEntityProvider,
-  BasicHelper,
   ReactHelper,
   ReactRender,
+  WebpackConfig,
 } from "../providers";
 import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
 

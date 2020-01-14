@@ -2,6 +2,7 @@ import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import {
   BasicCompilationEntity,
+  BasicComposition,
   BasicDirective,
   Composition,
   EntityConstructor,
@@ -56,6 +57,15 @@ export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IC
 export interface IPropertiesOptions {
   input?: IDirectiveInputMap;
   attach?: IComponentAttachMap;
+}
+
+export function wrapMetaIntoCtor<T extends InjectDIToken<any>>(ctor: T, provider: string): T {
+  (<any>ctor)["__provider"] = provider;
+  return ctor;
+}
+
+export function getMetaFromCtor<T extends InjectDIToken<any>>(ctor: T): string | null {
+  return (<any>ctor)["__provider"];
 }
 
 @Injectable()
@@ -418,11 +428,15 @@ export abstract class BasicEntityProvider {
     for (const key in compositions) {
       if (compositions.hasOwnProperty(key)) {
         const composite = compositions[key];
-        if (!((<any>model)[composite.name] instanceof Composition)) (<any>model)[composite.name] = Composition.create();
-        const compositeTarget: Composition = (<any>model)[composite.name];
+        if (!((<any>model)[composite.name] instanceof BasicComposition)) {
+          (<any>model)[composite.name] = new (composite.delegate || Composition)();
+        }
+        const compositeTarget: BasicComposition = (<any>model)[composite.name];
+        // const compositeType = Object.getPrototypeOf(compositeTarget).constructor;
         const innerHandle = <IInnerComposite>(<unknown>compositeTarget);
         innerHandle.setEntity(composite.entity!);
         innerHandle.setCreateFn(this._createDirectiveFn.bind(this, provider, context));
+        innerHandle.setProvider(getMetaFromCtor(Object.getPrototypeOf(provider).constructor)!);
         model["__compositions"].push(innerHandle);
       }
     }

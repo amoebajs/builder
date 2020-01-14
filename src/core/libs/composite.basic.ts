@@ -1,60 +1,47 @@
 import { is } from "../../utils/is";
 import { EntityConstructor } from "../decorators";
-import { createEntityId } from "../base";
+import { ITypedSyntaxExpressionMap, createEntityId } from "../base";
 import { IDirectivePluginOptions } from "../../providers";
 import { BasicDirective } from "../directive";
 
-export interface ICompositionBootstrapOptions {
-  enabled: () => boolean;
-  bootstrapOptions: () => Record<string, unknown>;
-}
-
 export type ICompositionCreateQuickOptions = Record<string, unknown>;
 
+export type ICompositionCreateFnType = (model: any, iterator: IDirectivePluginOptions<any>) => BasicDirective<any>;
+
 export interface IInnerComposite {
-  setCreateFn(fn: (model: any, iterator: IDirectivePluginOptions<any>) => BasicDirective<any>): void;
+  readonly enabled: boolean;
+  readonly isInit: boolean;
+  setCreateFn(fn: ICompositionCreateFnType): void;
   setEntity(entity: EntityConstructor<any>): void;
   setParent(parent: any): void;
+  setProvider(provider: string): void;
   setBootstrapHook(startHook: (result: any) => void): void;
+  init(): void;
 }
 
-export class Composition {
-  public static create(enabled: boolean | (() => boolean), options: ICompositionCreateQuickOptions): Composition;
-  public static create(options: ICompositionCreateQuickOptions): Composition;
-  public static create(): Composition;
-  public static create(...args: any[]) {
-    let [enabled, options] = args;
-    if (typeof enabled !== "boolean") {
-      options = enabled;
-      enabled = true;
-    }
-    return new Composition({ enabled, bootstrapOptions: is.object(options) ? () => options : options });
+export abstract class BasicComposition {
+  protected _enabled: boolean = true;
+  protected _init: boolean = false;
+  protected inputs: Record<string, any> = {};
+  protected parent!: any;
+  protected provider!: string;
+  protected createFn!: ICompositionCreateFnType;
+  protected startHook!: (result: any) => void;
+  protected entity!: EntityConstructor<any>;
+
+  public get enabled() {
+    return this._enabled;
   }
 
-  private createFn!: Function;
-  private parent!: any;
-  private startHook!: (result: any) => void;
-  private compositeEntity!: EntityConstructor<any>;
-  private inputs: Record<string, unknown> = {};
-
-  public changeEnabled(enabled: boolean) {
-    this.options.enabled = () => enabled;
-    return this;
+  public get isInit() {
+    return this._init;
   }
-
-  public changeInputs(options: Record<string, unknown> | (() => Record<string, unknown>)) {
-    const optFn: () => Record<string, unknown> = is.object(options) ? () => <any>options : options;
-    this.options.bootstrapOptions = optFn;
-    return this;
-  }
-
-  constructor(private options: ICompositionBootstrapOptions) {}
 
   protected setEntity(entity: EntityConstructor<any>) {
-    this.compositeEntity = entity;
+    this.entity = entity;
   }
 
-  protected setCreateFn(fn: (model: any, iterator: IDirectivePluginOptions<any>) => BasicDirective<any>) {
+  protected setCreateFn(fn: ICompositionCreateFnType) {
     this.createFn = fn;
   }
 
@@ -62,18 +49,102 @@ export class Composition {
     this.parent = parent;
   }
 
+  protected setProvider(provider: string) {
+    this.provider = provider;
+  }
+
   protected setBootstrapHook(startHook: (result: any) => void) {
     this.startHook = startHook;
   }
 
-  public bootstrap() {
-    this.inputs = this.options.bootstrapOptions();
-    const fnResult = this.createFn(this.parent, {
-      template: this.compositeEntity,
-      input: this.inputs,
-      id: createEntityId(),
+  public init() {
+    if (!this._enabled) return;
+    if (this._init) return;
+    this._init = true;
+    this.startHook(
+      this.createFn(this.parent, {
+        provider: <any>this.provider,
+        template: this.entity,
+        input: this.inputs,
+        id: createEntityId(),
+      }),
+    );
+  }
+}
+
+export class Composition extends BasicComposition {
+  constructor(options?: ICompositionCreateQuickOptions) {
+    super();
+    if (!is.nullOrUndefined(options)) {
+      this.changeInputs(options);
+    }
+  }
+
+  public changeEnabled(enabled: boolean) {
+    this._enabled = enabled;
+    return this;
+  }
+
+  public changeInputs(options: Record<string, unknown>) {
+    const inputs: ITypedSyntaxExpressionMap<"literal"> = {};
+    Object.entries(options).forEach(([k, t]) => {
+      inputs[k] = {
+        type: "literal",
+        expression: t,
+      };
     });
-    this.startHook(fnResult);
-    return fnResult;
+    this.inputs = inputs;
+    return this;
+  }
+}
+
+export class CompositionList extends BasicComposition {
+  protected _listComposites: { enabled: boolean; options: Record<string, any> }[] = [];
+
+  constructor(optionsList: Record<string, unknown>[] = []) {
+    super();
+    for (let index = 0; index < optionsList.length; index++) {
+      this._listComposites.push({ enabled: true, options: {} });
+      this.changeInputs(index, optionsList[index]);
+    }
+  }
+
+  public addComposition(options: Record<string, unknown>, enabled = true) {
+    this._listComposites.push({ enabled, options: {} });
+    this.changeInputs(this._listComposites.length, options);
+    return this;
+  }
+
+  public changeEnabled(index: number, enabled: boolean) {
+    this._listComposites[index].enabled = enabled;
+    return this;
+  }
+
+  public changeInputs(index: number, options: Record<string, unknown>) {
+    const inputs: ITypedSyntaxExpressionMap<"literal"> = {};
+    Object.entries(options).forEach(([k, t]) => {
+      inputs[k] = {
+        type: "literal",
+        expression: t,
+      };
+    });
+    this._listComposites[index].options = inputs;
+    return this;
+  }
+
+  public init() {
+    if (this._init) return;
+    this._init = true;
+    for (const iterator of this._listComposites) {
+      if (!iterator.enabled) continue;
+      this.startHook(
+        this.createFn(this.parent, {
+          provider: <any>this.provider,
+          template: this.entity,
+          input: iterator.options,
+          id: createEntityId(),
+        }),
+      );
+    }
   }
 }

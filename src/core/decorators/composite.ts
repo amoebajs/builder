@@ -1,5 +1,5 @@
 import { EntityConstructor, IConstructor } from "./base";
-import { Composition } from "../libs";
+import { BasicComposition } from "../libs";
 
 export const COMPOSITE_DEFINE = "ambjs::composite_define";
 
@@ -8,7 +8,7 @@ export interface ICompositionDelegate {}
 export interface ICompositeContract {
   name: string;
   entity: EntityConstructor<any> | null;
-  delegate: IConstructor<Composition> | null;
+  delegate: IConstructor<BasicComposition> | null;
 }
 
 const defaultComposite: ICompositeContract = {
@@ -19,9 +19,11 @@ const defaultComposite: ICompositeContract = {
 
 export function Composite(entity: EntityConstructor<any>) {
   return function compositeDefine(target: any, propertyKey: string) {
+    const designType = Reflect.getMetadata("design:type", target, propertyKey);
     defineComposite(target.constructor, {
       ...defaultComposite,
       entity,
+      delegate: designType === Object ? null : designType,
       name: propertyKey,
     });
   };
