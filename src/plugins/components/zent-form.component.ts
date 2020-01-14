@@ -2,7 +2,7 @@ import ts from "typescript";
 import { Component, Composite, Input } from "../../core/decorators";
 import { ReactComponent } from "../../providers";
 import { IJsxAttrs } from "../../utils";
-import { Composition, CompositionList } from "../../core";
+import { CompositionList } from "../../core";
 import { ZentBaseCssDirective } from "../directives/zent-base-css.directive";
 
 export const enum SupportedFormFields {
@@ -28,7 +28,6 @@ export class ZentFormComponent extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    this.customClick.init();
     const COMPONENT_NAME = "Form";
     const helper = this.helper;
     this.setState("rootElement", {
