@@ -117,32 +117,6 @@ export class ReactHelper extends BasicHelper {
     return expr;
   }
 
-  // public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
-  //   const ref = ts.createStringLiteral(modulePath);
-  //   if (typeof names === "string") {
-  //     return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
-  //   } else if (names.length === 0) {
-  //     return ts.createImportDeclaration([], [], undefined, ref);
-  //   } else {
-  //     return ts.createImportDeclaration(
-  //       [],
-  //       [],
-  //       ts.createImportClause(
-  //         undefined,
-  //         ts.createNamedImports(
-  //           names.map(s =>
-  //             ts.createImportSpecifier(
-  //               Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
-  //               ts.createIdentifier(Array.isArray(s) ? s[1] : s),
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //       ref,
-  //     );
-  //   }
-  // }
-
   public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
     return ts.createCall(
       ts.createIdentifier(name),
@@ -150,6 +124,7 @@ export class ReactHelper extends BasicHelper {
       parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
     );
   }
+
   public createFrontLibImports(options: IFrontLibImportOptions) {
     const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
     const importList: ts.ImportDeclaration[] = [];

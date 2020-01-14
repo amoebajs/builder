@@ -1,6 +1,7 @@
 import { IInnerDirective as IDirective } from "./directive";
 import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
 import { IInnerChildRef as IChildRef } from "./child-ref";
+import { BasicComposition, IInnerComposite } from "./libs";
 
 export interface IComponent extends IEwsEntity {}
 
@@ -24,6 +25,7 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
   readonly __children: IChildRef[];
   readonly __components: IInnerComponent[];
   readonly __directives: IDirective[];
+  readonly __compositions: IInnerComposite[];
 }
 
 export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}
@@ -35,7 +37,18 @@ export interface IChildElement {
 }
 
 export async function callOnInit(model: IInnerComponent) {
+  // pre compositions init
+  for (const iterator of model.__compositions) {
+    iterator.setParent(model);
+    iterator.setBootstrapHook(directive => model.__directives.push(directive));
+  }
+  await model.onInit();
+  // post compositions init
+  for (const iterator of model.__compositions) {
+    iterator.init();
+  }
   for (const iterator of model.__components) {
+    await callOnInit(iterator);
     await iterator.onInit();
   }
   for (const iterator of model.__children) {
@@ -44,11 +57,14 @@ export async function callOnInit(model: IInnerComponent) {
   for (const iterator of model.__directives) {
     await iterator.onInit();
   }
-  await model.onInit();
 }
 
 export async function callOnComponentsPreRender(model: IInnerComponent) {
   for (const iterator of model.__components) {
+    // composites support
+    await callOnDirectivesPreAttach(iterator);
+    await callOnDirectivesAttach(iterator);
+    await callOnDirectivesPostAttach(iterator);
     await iterator.onPreRender();
   }
   await model.onComponentsPreRender();
@@ -135,6 +151,7 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   private readonly __children: IChildRef[] = [];
   private readonly __components: IInnerComponent[] = [];
   private readonly __directives: IDirective[] = [];
+  private readonly __compositions: BasicComposition[] = [];
 
   public get rendered() {
     return this.__rendered;
