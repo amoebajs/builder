@@ -23,10 +23,11 @@ export class ZentFormComponent extends ReactComponent {
   apiUrl: string = "";
 
   @Composite(ZentBaseCssDirective)
-  customClick: Composition = Composition.create(() => ({}));
+  customClick: Composition = Composition.create({ target: "base" });
 
   protected async onInit() {
     await super.onInit();
+    this.customClick.bootstrap();
     const COMPONENT_NAME = "Form";
     const helper = this.helper;
     this.setState("rootElement", {

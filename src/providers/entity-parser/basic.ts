@@ -423,7 +423,7 @@ export abstract class BasicEntityProvider {
         const innerHandle = <IInnerComposite>(<unknown>compositeTarget);
         innerHandle.setEntity(composite.entity!);
         innerHandle.setCreateFn(this._createDirectiveFn.bind(this, provider, context));
-        model["__compositions"].push(compositeTarget);
+        model["__compositions"].push(innerHandle);
       }
     }
   }

@@ -94,6 +94,7 @@ export interface IEwsEntityPrivates<E extends EntityType = EntityType> {
 }
 
 export interface IEwsEntityProtectedHooks {
+  onCreate(): Promise<void>;
   onInit(): Promise<void>;
 }
 
@@ -119,6 +120,10 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
     this["__scope"] = id;
     return this;
+  }
+
+  protected async onCreate(): Promise<void> {
+    return Promise.resolve();
   }
 
   protected async onInit(): Promise<void> {
