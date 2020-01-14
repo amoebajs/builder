@@ -1,7 +1,9 @@
 import ts from "typescript";
-import { Component, Input } from "../../core/decorators";
+import { Component, Composite, Input } from "../../core/decorators";
 import { ReactComponent } from "../../providers";
 import { IJsxAttrs } from "../../utils";
+import { CompositionList } from "../../core";
+import { ZentBaseCssDirective } from "../directives/zent-base-css.directive";
 
 export const enum SupportedFormFields {
   Input = "FormInputField",
@@ -19,6 +21,10 @@ export class ZentFormComponent extends ReactComponent {
 
   @Input()
   apiUrl: string = "";
+
+  @Composite(ZentBaseCssDirective)
+  // customClick: Composition = new Composition({ target: "base" });
+  customClick: CompositionList = new CompositionList([{ target: "base" }]);
 
   protected async onInit() {
     await super.onInit();

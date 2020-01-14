@@ -60,9 +60,9 @@ page:
           syntaxType: string
           expression: primary
   directives:
-    - module: ambjs-common-directive-module
-      name: zent-base-css
-      id: ZentBaseCssDemoDirective
+    # - module: ambjs-common-directive-module
+    #   name: zent-base-css
+    #   id: ZentBaseCssDemoDirective
     - module: ambjs-common-directive-module
       name: zent-input
       id: zentInputDirective
