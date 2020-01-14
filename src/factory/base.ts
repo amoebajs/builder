@@ -21,7 +21,7 @@ import {
   ReactRender,
   WebpackConfig,
 } from "../providers";
-import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
+import { CommonBundleModule, CommonComponentModule, CommonDirectiveModule } from "../plugins";
 
 export interface IFactoryOptions {
   trace: boolean;
@@ -75,6 +75,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   protected initModules() {
     this.useModule(CommonComponentModule);
     this.useModule(CommonDirectiveModule);
+    this.useModule(CommonBundleModule);
   }
 
   /** @override can be overrided */
