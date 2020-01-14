@@ -13,11 +13,12 @@ import {
   IDirectiveInputMap,
   IFrameworkDepts,
   IInnerComponent,
+  IInnerComposite,
+  IInnerEwsEntity,
   ITypedSyntaxExpressionMap,
   Injectable,
   PropAttach,
   callComponentLifecycle,
-  createEntityId,
   resolveAttachProperties,
   resolveCompositions,
   resolveInputProperties,
@@ -61,7 +62,7 @@ export interface IPropertiesOptions {
 export abstract class BasicEntityProvider {
   constructor(protected readonly injector: Injector, protected readonly helper: BasicHelper) {}
 
-  public createInstance<T extends IConstructor<IInnerComponent>>(
+  public createInstance<T extends IInnerComponent>(
     {
       template,
       input = {},
@@ -71,51 +72,59 @@ export abstract class BasicEntityProvider {
       children = [],
       id,
       passContext,
-    }: IRootPageCreateOptions<T>,
+    }: IRootPageCreateOptions<IConstructor<T>>,
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || new Map();
-    const model = this._initContextInstance(template, { input, attach }, context, provider).setEntityId(id);
+    const model: T = this._initContextInstance(template, { input, attach }, context, provider).setEntityId(id);
     for (const iterator of components) {
-      model["__components"].push(
-        this.createInstance(
-          {
-            id: iterator.id,
-            provider: iterator.provider,
-            template: iterator.template,
-            input: iterator.input,
-            components: iterator.components,
-            directives: iterator.directives,
-            passContext: context,
-          },
-          provider,
-        ),
-      );
+      model["__components"].push(this._createComponnentFn(iterator, context, provider));
     }
     for (const iterator of children) {
-      model["__children"].push(
-        this._initContextInstance(BasicChildRef, {}, context, provider)
-          .setEntityId(iterator.childName)
-          .setRefComponentId(iterator.refComponent)
-          .setRefOptions(iterator.props || {}),
-      );
+      model["__children"].push(<any>this._createChildRefFn(context, provider, iterator));
     }
     for (const iterator of directives) {
-      model["__directives"].push(
-        this._createDirectiveFn(provider, context, iterator.id, model, iterator.template, iterator.input),
-      );
+      model["__directives"].push(<any>this._createDirectiveFn(provider, context, model, iterator));
     }
     return model;
+  }
+
+  private _createComponnentFn(
+    iterator: IComponentPluginOptions<any>,
+    context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
+  ): IInnerComponent {
+    return this.createInstance<IInnerComponent>(
+      {
+        id: iterator.id,
+        provider: iterator.provider,
+        template: iterator.template,
+        input: iterator.input,
+        components: iterator.components,
+        directives: iterator.directives,
+        passContext: context,
+      },
+      provider,
+    );
+  }
+
+  private _createChildRefFn(
+    context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
+    iterator: IChildRefPluginOptions,
+  ): BasicChildRef<any> {
+    return this._initContextInstance(BasicChildRef, {}, context, provider)
+      .setEntityId(iterator.childName)
+      .setRefComponentId(iterator.refComponent)
+      .setRefOptions(iterator.props || {});
   }
 
   private _createDirectiveFn(
     provider: BasicEntityProvider,
     context: IBasicCompilationContext,
-    id: string,
     model: any,
-    template: any,
-    input: any,
-  ): any {
+    { id, template, input = {} }: IComponentPluginOptions<any>,
+  ): BasicDirective<any> {
     return provider.attachDirective(
       model,
       this._initContextInstance<BasicDirective>(template, { input }, context, provider).setEntityId(id),
@@ -161,7 +170,7 @@ export abstract class BasicEntityProvider {
   }
 
   /** @override */
-  protected onInputPropertiesInit<T extends any>(_: T, options: IPropertiesOptions) {
+  protected onInputPropertiesInit<T extends IInnerEwsEntity>(_: T, options: IPropertiesOptions) {
     if (options.input) {
       this._inputProperties(_, options.input);
     }
@@ -343,8 +352,8 @@ export abstract class BasicEntityProvider {
     provider: BasicEntityProvider,
   ): T {
     const model = this.injector.get(template);
-    this.onInputPropertiesInit(model, options);
-    this._compositions(model, provider, context);
+    this.onInputPropertiesInit(<any>model, options);
+    this._compositions(<any>model, provider, context);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -355,7 +364,7 @@ export abstract class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: IDirectiveInputMap) {
+  private _inputProperties<T extends IInnerEwsEntity>(model: T, options: IDirectiveInputMap) {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
@@ -380,14 +389,16 @@ export abstract class BasicEntityProvider {
     }
   }
 
-  private _attachProperties<T extends any>(model: T, options: IComponentAttachMap) {
+  private _attachProperties<T extends IInnerEwsEntity>(model: T, options: IComponentAttachMap) {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
         const attach = attaches[key];
         // invalid value or null value
-        if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
-        const propAttach: PropAttach = model[attach.name.value];
+        if (!((<any>model)[attach.name.value] instanceof PropAttach)) {
+          (<any>model)[attach.name.value] = new PropAttach();
+        }
+        const propAttach: PropAttach = (<any>model)[attach.name.value];
         const syntaxStruct = options[key];
         // 暂时只支持childRefs模式
         if (is.nullOrUndefined(syntaxStruct) || syntaxStruct.type !== "childRefs") continue;
@@ -398,15 +409,20 @@ export abstract class BasicEntityProvider {
     }
   }
 
-  private _compositions<T extends any>(model: T, provider: BasicEntityProvider, context: IBasicCompilationContext) {
+  private _compositions<T extends IInnerComponent>(
+    model: T,
+    provider: BasicEntityProvider,
+    context: IBasicCompilationContext,
+  ) {
     const compositions = resolveCompositions(Object.getPrototypeOf(model).constructor);
     for (const key in compositions) {
       if (compositions.hasOwnProperty(key)) {
         const composite = compositions[key];
-        if (!(model[composite.name] instanceof Composition)) model[composite.name] = Composition.create();
-        const compositeTarget: Composition = model[composite.name];
-        compositeTarget["setEntity"](composite.entity!);
-        compositeTarget["setCreateFn"](this._createDirectiveFn.bind(this, provider, context, createEntityId()));
+        if (!((<any>model)[composite.name] instanceof Composition)) (<any>model)[composite.name] = Composition.create();
+        const compositeTarget: Composition = (<any>model)[composite.name];
+        const innerHandle = <IInnerComposite>(<unknown>compositeTarget);
+        innerHandle.setEntity(composite.entity!);
+        innerHandle.setCreateFn(this._createDirectiveFn.bind(this, provider, context));
         model["__compositions"].push(compositeTarget);
       }
     }

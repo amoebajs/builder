@@ -1,5 +1,8 @@
 import { is } from "../../utils/is";
 import { EntityConstructor } from "../decorators";
+import { createEntityId } from "../base";
+import { IDirectivePluginOptions } from "../../providers";
+import { BasicDirective } from "../directive";
 
 export interface ICompositionBootstrapOptions {
   enabled: () => boolean;
@@ -7,6 +10,11 @@ export interface ICompositionBootstrapOptions {
 }
 
 export type ICompositionCreateQuickOptions = () => Record<string, unknown>;
+
+export interface IInnerComposite {
+  setCreateFn(fn: (model: any, iterator: IDirectivePluginOptions<any>) => BasicDirective<any>): void;
+  setEntity(entity: EntityConstructor<any>): void;
+}
 
 export class Composition {
   public static create(enabled: boolean | (() => boolean), options: ICompositionCreateQuickOptions): Composition;
@@ -41,12 +49,16 @@ export class Composition {
     this.inputs = this.options.bootstrapOptions();
   }
 
-  protected setCreateFn(fn: Function) {
+  protected setCreateFn(fn: (model: any, iterator: IDirectivePluginOptions<any>) => BasicDirective<any>) {
     this.createFn = fn;
   }
 
   protected bootstrap(parent: any) {
     this.inputs = this.options.bootstrapOptions();
-    return this.createFn(parent, this.compositeEntity, this.inputs);
+    return this.createFn(parent, {
+      template: this.compositeEntity,
+      input: this.inputs,
+      id: createEntityId(),
+    });
   }
 }

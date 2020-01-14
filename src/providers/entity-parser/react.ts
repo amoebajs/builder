@@ -6,7 +6,7 @@ import { REACT } from "../../utils";
 import { EntityConstructor, Injectable } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";
-import { IBasicCompilationFinalContext } from "../../core";
+import { IBasicCompilationFinalContext, IInnerEwsEntity } from "../../core";
 import { ReactHelper } from "../entity-helper";
 
 @Injectable()
@@ -60,7 +60,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
     return super.resolveExtensionsMetadata(_);
   }
 
-  protected onInputPropertiesInit(_: EntityConstructor<any>, __: IPropertiesOptions) {
+  protected onInputPropertiesInit(_: IInnerEwsEntity, __: IPropertiesOptions) {
     return super.onInputPropertiesInit(_, __);
   }
 
