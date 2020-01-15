@@ -1,22 +1,42 @@
 components:
+  - module: ambjs-common-module
+    name: css-grid-container
+    id: CssGridPageDemoRoot
   - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
   - module: zent-module
     name: zent-form
     id: ZentFormComponent
+directives:
+  - module: zent-module
+    name: zent-base-css
+    id: ZentBaseCssDemoDirective
+  - module: zent-module
+    name: zent-input
+    id: zentInputDirective
+  - module: zent-module
+    name: zent-switch
+    id: zentSwitchDirective
+  - module: zent-module
+    name: zent-select
+    id: zentSelectDirective
+  - module: zent-module
+    name: zent-form
+    id: zentFormDirective
+  - module: zent-module
+    name: zent-action-button
+    id: zentSubmitButtonDirective
+  - module: ambjs-common-module
+    name: custom-click
+    id: CustomClickDemoDirective
 page:
-  module: ambjs-common-module
-  name: css-grid-container
-  id: "CssGridPageDemoRoot"
+  ref: CssGridPageDemoRoot
+  id: CssGridPageDemoRoot01
   children:
     - ref: ZentFormComponent
       id: ZentFormComponentRef01
       props:
-        # layout:
-        #   type: literal
-        #   syntaxType: string
-        #   expression: vertical
         form:
           type: state
           expression: form
@@ -56,12 +76,8 @@ page:
           syntaxType: string
           expression: primary
   directives:
-    # - module: zent-module
-    #   name: zent-base-css
-    #   id: ZentBaseCssDemoDirective
-    - module: zent-module
-      name: zent-input
-      id: zentInputDirective
+    - ref: zentInputDirective
+      id: zentInputDirective01
       input:
         formId:
           type: literal
@@ -75,9 +91,8 @@ page:
         label:
           type: literal
           expression: 输入框
-    - module: zent-module
-      name: zent-switch
-      id: zentSwitchDirective
+    - ref: zentSwitchDirective
+      id: zentSwitchDirective01
       input:
         formId:
           type: literal
@@ -91,9 +106,8 @@ page:
         label:
           type: literal
           expression: 开关
-    - module: zent-module
-      name: zent-select
-      id: zentSelectDirective
+    - ref: zentSelectDirective
+      id: zentSelectDirective01
       input:
         formId:
           type: literal
@@ -117,9 +131,8 @@ page:
               text: Option 1
             - value: Option 2
               text: Option 2
-    - module: zent-module
-      name: zent-form
-      id: zentFormDirective
+    - ref: zentFormDirective
+      id: zentFormDirective01
       input:
         url:
           type: literal
@@ -127,16 +140,14 @@ page:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: zent-module
-      name: zent-action-button
-      id: zentSubmitButtonDirective
+    - ref: zentSubmitButtonDirective
+      id: zentSubmitButtonDirective01
       input:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-module
-      name: custom-click
-      id: CustomClickDemoDirective
+    - ref: CustomClickDemoDirective
+      id: CustomClickDemoDirective01
       input:
         host:
           type: literal

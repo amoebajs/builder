@@ -6,7 +6,7 @@ import { REACT } from "../../utils";
 import { EntityConstructor, Injectable } from "../../core/decorators";
 import { BasicDirective } from "../../core/directive";
 import { ReactComponent, ReactDirective } from "../entities";
-import { IBasicCompilationFinalContext, IInnerEwsEntity } from "../../core";
+import { IFinalScopedContext, IInnerEwsEntity } from "../../core";
 import { ReactHelper } from "../entity-helper";
 
 @Injectable()
@@ -15,11 +15,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
     super(injector, helper);
   }
 
-  protected createRootComponent(
-    model: IInnerComponent,
-    context: IBasicCompilationFinalContext,
-    isExport = true,
-  ): ts.Statement {
+  protected createRootComponent(model: IInnerComponent, context: IFinalScopedContext, isExport = true): ts.Statement {
     return this.helper.createFunctionByContext(!isExport, model.entityId, context);
   }
 
@@ -32,7 +28,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
     return super.onImportsUpdate(model, imports);
   }
 
-  protected emitFunctionComponentContext(context: Partial<IBasicCompilationFinalContext>) {
+  protected emitFunctionComponentContext(context: Partial<IFinalScopedContext>) {
     return context;
   }
 

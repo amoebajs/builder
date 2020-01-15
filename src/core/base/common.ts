@@ -78,5 +78,5 @@ export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRe
 /** 组件的附加参数字典类型：child附加列表 */
 export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
 
-/** child的prop参数字典类型：字面量+状态 */
-export type IChildPropMap = ITypedSyntaxExpressionMap<"literal" | "state">;
+/** comp-child的prop参数字典类型：字面量+状态 */
+export type IComponentPropMap = ITypedSyntaxExpressionMap<"literal" | "state">;

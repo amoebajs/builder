@@ -2,45 +2,17 @@ import ts from "typescript";
 import uuid from "uuid/v4";
 import { IPureObject, MapValueType } from "./common";
 import { BasicError } from "../../errors";
+import { IFinalScopedContext, SourceFileContext } from "./context";
 
 export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
 
-export interface IBasicCompilationFinalContext {
-  // all level
-  imports: ts.ImportDeclaration[];
-
-  // class level
-  extendParent: ts.HeritageClause | null;
-  implementParents: ts.HeritageClause[];
-  fields: ts.PropertyDeclaration[];
-  properties: ts.PropertyDeclaration[];
-  methods: ts.MethodDeclaration[];
-
-  // page level and function level
-  classes: ts.ClassDeclaration[];
-  functions: ts.FunctionDeclaration[];
-
-  // function level
-  parameters: ts.ParameterDeclaration[];
-  statements: ts.Statement[];
-}
-
-type EntityType = "directive" | "component" | "childref" | "entity";
+export type EntityType = "directive" | "component" | "childref" | "componentChildRef" | "directiveChildRef" | "entity";
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
   type: TYPE;
   container: ENTITY;
 }
-
-type ScopeMap<T> = {
-  [key in keyof T]: Map<string | symbol, IScopeStructure<EntityType, T[key]>>;
-};
-
-export type IBasicCompilationContext = Map<
-  string | symbol,
-  IScopeStructure<EntityType, Partial<IBasicCompilationFinalContext>>
->;
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
@@ -84,13 +56,13 @@ export interface IEwsEntityState<T extends IPureObject = IPureObject> {
 export interface IEwsEntityPrivates<E extends EntityType = EntityType> {
   readonly __scope: string;
   readonly __etype: E;
-  readonly __context: IBasicCompilationContext;
+  readonly __context: SourceFileContext<any>;
   __addChildElements<A extends any>(
-    target: keyof IBasicCompilationContext,
+    target: keyof IFinalScopedContext,
     args: A[],
     type: IBasicComponentAppendType,
   ): void;
-  __getChildElements<K extends keyof IBasicCompilationContext>(target: K): MapValueType<IBasicCompilationContext[K]>;
+  __getChildElements<K extends keyof IFinalScopedContext>(target: K): MapValueType<IFinalScopedContext[K]>;
 }
 
 export interface IEwsEntityProtectedHooks {
@@ -109,7 +81,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   private __scope = createEntityId();
   private __etype: EntityType = "entity";
   private __state: T = <T>{};
-  private __context!: IBasicCompilationContext;
+  private __context!: SourceFileContext<any>;
 
   public get entityId() {
     return this["__scope"];
@@ -202,13 +174,13 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   //#endregion
 
   private __addChildElements<A extends any>(
-    target: keyof IBasicCompilationFinalContext,
+    target: keyof IFinalScopedContext,
     args: A[],
     type: IBasicComponentAppendType,
   ) {
-    let context = this.__context.get(this.__scope);
+    let context = this.__context.scopedContext.get(this.__scope);
     if (!context) {
-      this.__context.set(
+      this.__context.scopedContext.set(
         this.__scope,
         (context = {
           scope: this.__scope,
@@ -231,10 +203,8 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     }
   }
 
-  private __getChildElements<K extends keyof IBasicCompilationFinalContext>(
-    target: K,
-  ): IBasicCompilationFinalContext[K] {
-    return this.__context.get(this.__scope)?.container[target] as any;
+  private __getChildElements<K extends keyof IFinalScopedContext>(target: K): IFinalScopedContext[K] {
+    return this.__context.scopedContext.get(this.__scope)?.container[target] as any;
   }
 }
 

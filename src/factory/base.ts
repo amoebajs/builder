@@ -8,7 +8,8 @@ import {
   resolveDepts,
 } from "../core/decorators";
 import {
-  BasicChildRef,
+  BasicComponentChildRef,
+  BasicDirectiveChildRef,
   BasicEntityProvider,
   BasicHelper,
   Builder,
@@ -19,9 +20,11 @@ import {
   ReactEntityProvider,
   ReactHelper,
   ReactRender,
+  SourceFileBasicContext,
   WebpackConfig,
 } from "../providers";
 import { CommonModule, ZentModule } from "../plugins";
+import { SourceFileContext } from "../core";
 
 export interface IFactoryOptions {
   trace: boolean;
@@ -69,6 +72,9 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(BasicHelper);
     this.useProvider(ReactHelper);
     this.useProvider(ReactRender);
+    this.useProvider(BasicDirectiveChildRef);
+    this.useProvider(BasicComponentChildRef);
+    this.useProvider(SourceFileContext, SourceFileBasicContext);
   }
 
   /** @override can be overrided */

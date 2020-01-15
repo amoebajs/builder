@@ -4,8 +4,10 @@ import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap, IMapEntry } from "./global-map";
 import {
-  IChildRefPluginOptions,
+  BasicEntityProvider,
+  ICompChildRefPluginOptions,
   IComponentPluginOptions,
+  IDirecChildRefPluginOptions,
   IDirectivePluginOptions,
   IRootPageCreateOptions,
 } from "./entity-parser";
@@ -13,30 +15,34 @@ import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
+import { SourceFileContext } from "../core";
 
 export interface IDirectiveDefine {
   module: string;
   name: string;
   id: string;
-  input?: { [name: string]: any };
 }
 
 export interface IComponentDefine extends IDirectiveDefine {}
 
-export interface IChildDefine {
+export interface IDirectiveChildDefine {
   ref: string;
   id: string;
+  input?: { [name: string]: any };
+}
+
+export interface IComponentChildDefine extends IDirectiveChildDefine {
+  children?: IComponentChildDefine[];
+  directives?: IComponentChildDefine[];
+  attach?: { [name: string]: any };
   props?: { [name: string]: any };
 }
 
-export interface IPageDefine extends IComponentDefine {
-  attach?: { [name: string]: any };
-  directives?: IDirectiveDefine[];
-  children?: IChildDefine[];
-}
+export interface IPageDefine extends IComponentChildDefine {}
 
 export interface IPageCreateOptions {
   components?: IComponentDefine[];
+  directives?: IDirectiveDefine[];
   page: IPageDefine;
 }
 
@@ -59,17 +65,14 @@ export interface IDirectiveCreateOptions {
   moduleName: string;
   templateName: string;
   componentName: string;
-  input: { [prop: string]: any };
 }
 
 export interface IComponentCreateOptions extends IDirectiveCreateOptions {}
 
-export type IChildCreateOptions = IChildRefPluginOptions;
-
 export interface IRootComponentCreateOptions extends IComponentCreateOptions {
   components?: IComponentCreateOptions[];
   directives?: IDirectiveCreateOptions[];
-  children?: IChildCreateOptions[];
+  children?: ICompChildRefPluginOptions[];
   attach: { [prop: string]: any };
 }
 
@@ -110,9 +113,9 @@ export class Builder {
       componentName: compName,
       input: configs.page.input || {},
       attach: configs.page.attach || {},
-      components: mapComp(configs),
-      directives: mapDire(configs),
-      children: mapChild(configs),
+      components: mapComp(configs.components),
+      directives: mapDire(configs.directives),
+      children: mapComponentChild(configs),
     });
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
@@ -157,7 +160,7 @@ export class Builder {
     const entity = this._resolveType(options.moduleName, options.templateName, type);
     const comps: IComponentPluginOptions<any>[] = [];
     const direcs: IDirectivePluginOptions<any>[] = [];
-    const childs: IChildRefPluginOptions[] = [];
+    const childs: ICompChildRefPluginOptions[] = [];
     let depts = { ...entity.metadata.entity.dependencies };
     let attaches = {};
     if (type === "root") {
@@ -205,10 +208,10 @@ export class Builder {
 
   private async _createComponentSource(options: IRootComponentCreateOptions): Promise<ICompileResult> {
     const opts = this._resolveCreateOptions("root", options);
-    const PROVIDER = this.globalMap.getProvider(opts.provider);
-    const provider = this.get(PROVIDER);
-    const instance = provider.createInstance(opts, provider);
-    const sourceFile = await provider.callCompilation(opts.provider, instance, options.componentName);
+    const context = this.injector.get<SourceFileContext<BasicEntityProvider>>(SourceFileContext);
+    context.setProvider(opts.provider);
+    const instance = context.provider.createInstance({ ...opts, passContext: context });
+    const sourceFile = await context.provider.callCompilation(opts.provider, instance, options.componentName);
     return {
       sourceFile,
       dependencies: opts.dependencies || {},
@@ -238,28 +241,42 @@ function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, resu
   }).outputText;
 }
 
-function mapChild(configs: IPageCreateOptions): IChildCreateOptions[] {
-  return (configs.page.children || []).map(i => ({
+function mapDirectiveChild(directives: IDirectiveChildDefine[] = []): IDirecChildRefPluginOptions[] {
+  return directives.map<IDirecChildRefPluginOptions>(i => ({
     childName: i.id,
-    refComponent: i.ref,
-    props: i.props || {},
+    refEntity: i.ref,
+    options: {
+      input: i.input || {},
+    },
   }));
 }
 
-function mapComp(configs: IPageCreateOptions): IComponentCreateOptions[] {
-  return (configs.components || []).map(i => ({
-    moduleName: i.module,
-    templateName: i.name,
-    componentName: i.id,
-    input: i.input || {},
+function mapComponentChild(children: IComponentChildDefine[] = []): ICompChildRefPluginOptions[] {
+  return children.map<ICompChildRefPluginOptions>(i => ({
+    childName: i.id,
+    refEntity: i.ref,
+    components: mapComponentChild(i.children),
+    directives: mapDirectiveChild(i.directives),
+    options: {
+      attach: i.attach || {},
+      input: i.input || {},
+      props: i.props || {},
+    },
   }));
 }
 
-function mapDire(configs: IPageCreateOptions): IDirectiveCreateOptions[] {
-  return (configs.page.directives || []).map(i => ({
+function mapComp(components: IComponentDefine[] = []): IComponentCreateOptions[] {
+  return components.map(i => ({
     moduleName: i.module,
     templateName: i.name,
     componentName: i.id,
-    input: i.input || {},
+  }));
+}
+
+function mapDire(directives: IDirectiveDefine[] = []): IDirectiveCreateOptions[] {
+  return directives.map(i => ({
+    moduleName: i.module,
+    templateName: i.name,
+    componentName: i.id,
   }));
 }

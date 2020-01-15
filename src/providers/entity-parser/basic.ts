@@ -6,12 +6,12 @@ import {
   BasicDirective,
   Composition,
   EntityConstructor,
-  IBasicCompilationContext,
-  IBasicCompilationFinalContext,
-  IChildPropMap,
   IComponentAttachMap,
+  IComponentInputMap,
+  IComponentPropMap,
   IConstructor,
   IDirectiveInputMap,
+  IFinalScopedContext,
   IFrameworkDepts,
   IInnerComponent,
   IInnerComposite,
@@ -19,26 +19,40 @@ import {
   ITypedSyntaxExpressionMap,
   Injectable,
   PropAttach,
+  SourceFileContext,
   callComponentLifecycle,
   resolveAttachProperties,
   resolveCompositions,
   resolveInputProperties,
 } from "../../core";
-import { BasicChildRef } from "../entities";
 import { BasicHelper } from "../entity-helper";
 import { is } from "../../utils/is";
 
-export interface IChildRefPluginOptions {
-  refComponent: string;
+export interface IDirecChildRefPluginOptions {
+  refEntity: string;
   childName: string;
-  props: IChildPropMap;
+  options: {
+    input: IDirectiveInputMap;
+  };
+}
+
+export interface ICompChildRefPluginOptions {
+  refEntity: string;
+  childName: string;
+  components: ICompChildRefPluginOptions[];
+  directives: IDirecChildRefPluginOptions[];
+  options: {
+    input: IComponentInputMap;
+    attach: IComponentAttachMap;
+    props: IComponentPropMap;
+  };
 }
 
 export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
   provider: keyof IFrameworkDepts;
   components?: IComponentPluginOptions<any>[];
   directives?: IDirectivePluginOptions<any>[];
-  children?: IChildRefPluginOptions[];
+  children?: ICompChildRefPluginOptions[];
   dependencies?: { [prop: string]: any };
 }
 
@@ -50,8 +64,8 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
 }
 
 export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
-  passContext?: IBasicCompilationContext;
   attach?: IComponentAttachMap;
+  passContext: SourceFileContext<BasicEntityProvider>;
 }
 
 export interface IPropertiesOptions {
@@ -72,72 +86,62 @@ export function getMetaFromCtor<T extends InjectDIToken<any>>(ctor: T): string |
 export abstract class BasicEntityProvider {
   constructor(protected readonly injector: Injector, protected readonly helper: BasicHelper) {}
 
-  public createInstance<T extends IInnerComponent>(
-    {
-      template,
-      input = {},
-      attach = {},
-      components = [],
-      directives = [],
-      children = [],
-      id,
-      passContext,
-    }: IRootPageCreateOptions<IConstructor<T>>,
-    provider: BasicEntityProvider,
-  ) {
-    const context: IBasicCompilationContext = passContext || new Map();
-    const model: T = this._initContextInstance(template, { input, attach }, context, provider).setEntityId(id);
+  public createInstance<T extends IInnerComponent>({
+    template,
+    input = {},
+    attach = {},
+    components = [],
+    directives = [],
+    children = [],
+    id,
+    passContext: context,
+  }: IRootPageCreateOptions<IConstructor<T>>) {
+    const model: T = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
     for (const iterator of components) {
-      model["__components"].push(this._createComponnentFn(iterator, context, provider));
+      model["__components"].push(this._createComponnentFn(iterator, context));
     }
     for (const iterator of children) {
-      model["__children"].push(<any>this._createChildRefFn(context, provider, iterator));
+      model["__children"].push(<any>this._createChildRefFn(context, iterator));
     }
     for (const iterator of directives) {
-      model["__directives"].push(<any>this._createDirectiveFn(provider, context, model, iterator));
+      model["__directives"].push(<any>this._createDirectiveFn(context, model, iterator));
     }
     return model;
   }
 
   private _createComponnentFn(
     iterator: IComponentPluginOptions<any>,
-    context: IBasicCompilationContext,
-    provider: BasicEntityProvider,
+    context: SourceFileContext<BasicEntityProvider>,
   ): IInnerComponent {
-    return this.createInstance<IInnerComponent>(
-      {
-        id: iterator.id,
-        provider: iterator.provider,
-        template: iterator.template,
-        input: iterator.input,
-        components: iterator.components,
-        directives: iterator.directives,
-        passContext: context,
-      },
-      provider,
-    );
+    return this.createInstance<IInnerComponent>({
+      id: iterator.id,
+      provider: iterator.provider,
+      template: iterator.template,
+      input: iterator.input,
+      components: iterator.components,
+      directives: iterator.directives,
+      passContext: context,
+    });
   }
 
   private _createChildRefFn(
-    context: IBasicCompilationContext,
-    provider: BasicEntityProvider,
-    iterator: IChildRefPluginOptions,
+    context: SourceFileContext<BasicEntityProvider>,
+    iterator: ICompChildRefPluginOptions,
   ): BasicChildRef<any> {
-    return this._initContextInstance(BasicChildRef, {}, context, provider)
+    return this._initContextInstance(BasicChildRef, {}, context)
       .setEntityId(iterator.childName)
-      .setRefComponentId(iterator.refComponent)
+      .setRefComponentId(iterator.refEntity)
       .setRefOptions(iterator.props || {});
   }
 
   private _createDirectiveFn(
-    provider: BasicEntityProvider,
-    context: IBasicCompilationContext,
+    context: SourceFileContext<BasicEntityProvider>,
     model: any,
     { id, template, input = {} }: IComponentPluginOptions<any>,
   ): BasicDirective<any> {
-    return provider.attachDirective(
+    return context.provider.attachDirective(
       model,
-      this._initContextInstance<BasicDirective>(template, { input }, context, provider).setEntityId(id),
+      this._initContextInstance<BasicDirective>(template, { input }, context).setEntityId(id),
     );
   }
 
@@ -190,8 +194,8 @@ export abstract class BasicEntityProvider {
   }
 
   /** @override */
-  protected onCompilationCall(model: IInnerComponent, _context: IBasicCompilationContext) {
-    const context: IBasicCompilationFinalContext = {
+  protected onCompilationCall(model: IInnerComponent, _context: SourceFileContext<BasicEntityProvider>) {
+    const context: IFinalScopedContext = {
       extendParent: null,
       implementParents: [],
       fields: [],
@@ -203,9 +207,9 @@ export abstract class BasicEntityProvider {
       parameters: [],
       statements: [],
     };
-    const classPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
-    const functionPreList: Array<[string | symbol, Partial<IBasicCompilationFinalContext>]> = [];
-    const _contexts = _context.entries();
+    const classPreList: Array<[string | symbol, Partial<IFinalScopedContext>]> = [];
+    const functionPreList: Array<[string | symbol, Partial<IFinalScopedContext>]> = [];
+    const _contexts = _context.scopedContext.entries();
     for (const [scope, group] of _contexts) {
       if (group.type === "component" && scope !== model["entityId"]) {
         const { imports = [], ...others } = group.container;
@@ -261,15 +265,11 @@ export abstract class BasicEntityProvider {
     return context;
   }
 
-  protected emitClassComponentContext(
-    _context: Partial<IBasicCompilationFinalContext>,
-  ): Partial<IBasicCompilationFinalContext> | null {
+  protected emitClassComponentContext(_context: Partial<IFinalScopedContext>): Partial<IFinalScopedContext> | null {
     return null;
   }
 
-  protected emitFunctionComponentContext(
-    _context: Partial<IBasicCompilationFinalContext>,
-  ): Partial<IBasicCompilationFinalContext> | null {
+  protected emitFunctionComponentContext(_context: Partial<IFinalScopedContext>): Partial<IFinalScopedContext> | null {
     return null;
   }
 
@@ -351,19 +351,18 @@ export abstract class BasicEntityProvider {
   /** @override */
   protected abstract createRootComponent(
     model: IInnerComponent,
-    context: IBasicCompilationFinalContext,
+    context: IFinalScopedContext,
     isExport?: boolean,
   ): ts.Statement;
 
   private _initContextInstance<T extends BasicCompilationEntity>(
     template: InjectDIToken<T>,
     options: IPropertiesOptions,
-    context: IBasicCompilationContext,
-    provider: BasicEntityProvider,
+    context: SourceFileContext<BasicEntityProvider>,
   ): T {
     const model = this.injector.get(template);
     this.onInputPropertiesInit(<any>model, options);
-    this._compositions(<any>model, provider, context);
+    this._compositions(<any>model, context);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -419,11 +418,7 @@ export abstract class BasicEntityProvider {
     }
   }
 
-  private _compositions<T extends IInnerComponent>(
-    model: T,
-    provider: BasicEntityProvider,
-    context: IBasicCompilationContext,
-  ) {
+  private _compositions<T extends IInnerComponent>(model: T, context: SourceFileContext<BasicEntityProvider>) {
     const compositions = resolveCompositions(Object.getPrototypeOf(model).constructor);
     for (const key in compositions) {
       if (compositions.hasOwnProperty(key)) {
@@ -435,8 +430,8 @@ export abstract class BasicEntityProvider {
         // const compositeType = Object.getPrototypeOf(compositeTarget).constructor;
         const innerHandle = <IInnerComposite>(<unknown>compositeTarget);
         innerHandle.setEntity(composite.entity!);
-        innerHandle.setCreateFn(this._createDirectiveFn.bind(this, provider, context));
-        innerHandle.setProvider(getMetaFromCtor(Object.getPrototypeOf(provider).constructor)!);
+        innerHandle.setCreateFn(this._createDirectiveFn.bind(this, context));
+        innerHandle.setProvider(getMetaFromCtor(Object.getPrototypeOf(context.provider).constructor)!);
         model["__compositions"].push(innerHandle);
       }
     }
