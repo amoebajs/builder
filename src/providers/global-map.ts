@@ -15,7 +15,7 @@ import {
   resolveProps,
 } from "../core/decorators";
 import { BasicError } from "../errors";
-import { BasicEntityProvider } from "./entity-parser";
+import { BasicEntityProvider, wrapMetaIntoCtor } from "./entity-parser";
 import { InjectDIToken } from "@bonbons/di";
 
 export interface IMetadataGroup {
@@ -55,7 +55,7 @@ export class GlobalMap {
   public readonly providers: Partial<IFrameworkStructure<any>> = {};
 
   public useProvider(name: keyof IFrameworkDepts, provider: typeof BasicEntityProvider) {
-    this.providers[name] = provider;
+    this.providers[name] = wrapMetaIntoCtor(provider, name);
     return this;
   }
 

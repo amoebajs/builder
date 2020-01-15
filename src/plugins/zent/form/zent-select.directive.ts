@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
 
 export interface ISelectData {
   value: any;

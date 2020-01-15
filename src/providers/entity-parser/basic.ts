@@ -1,27 +1,30 @@
-import ts, { Identifier, isMethodDeclaration } from "typescript";
+import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { IInnerComponent, callComponentLifecycle } from "../../core/component";
-import {
-  EntityConstructor,
-  IConstructor,
-  IFrameworkDepts,
-  Injectable,
-  resolveAttachProperties,
-  resolveInputProperties,
-} from "../../core/decorators";
 import {
   BasicCompilationEntity,
+  BasicComposition,
+  BasicDirective,
+  Composition,
+  EntityConstructor,
   IBasicCompilationContext,
   IBasicCompilationFinalContext,
   IChildPropMap,
   IComponentAttachMap,
+  IConstructor,
   IDirectiveInputMap,
+  IFrameworkDepts,
+  IInnerComponent,
+  IInnerComposite,
+  IInnerEwsEntity,
   ITypedSyntaxExpressionMap,
-} from "../../core/base";
-import { BasicDirective } from "../../core/directive";
-import { InvalidOperationError } from "../../errors";
+  Injectable,
+  PropAttach,
+  callComponentLifecycle,
+  resolveAttachProperties,
+  resolveCompositions,
+  resolveInputProperties,
+} from "../../core";
 import { BasicChildRef } from "../entities";
-import { PropAttach } from "../../core/libs/attach.basic";
 import { BasicHelper } from "../entity-helper";
 import { is } from "../../utils/is";
 
@@ -56,11 +59,20 @@ export interface IPropertiesOptions {
   attach?: IComponentAttachMap;
 }
 
+export function wrapMetaIntoCtor<T extends InjectDIToken<any>>(ctor: T, provider: string): T {
+  (<any>ctor)["__provider"] = provider;
+  return ctor;
+}
+
+export function getMetaFromCtor<T extends InjectDIToken<any>>(ctor: T): string | null {
+  return (<any>ctor)["__provider"];
+}
+
 @Injectable()
 export abstract class BasicEntityProvider {
   constructor(protected readonly injector: Injector, protected readonly helper: BasicHelper) {}
 
-  public createInstance<T extends IConstructor<IInnerComponent>>(
+  public createInstance<T extends IInnerComponent>(
     {
       template,
       input = {},
@@ -70,46 +82,63 @@ export abstract class BasicEntityProvider {
       children = [],
       id,
       passContext,
-    }: IRootPageCreateOptions<T>,
+    }: IRootPageCreateOptions<IConstructor<T>>,
     provider: BasicEntityProvider,
   ) {
     const context: IBasicCompilationContext = passContext || new Map();
-    const model = this._initContextInstance(template, { input, attach }, context).setEntityId(id);
+    const model: T = this._initContextInstance(template, { input, attach }, context, provider).setEntityId(id);
     for (const iterator of components) {
-      model["__components"].push(
-        this.createInstance(
-          {
-            id: iterator.id,
-            provider: iterator.provider,
-            template: iterator.template,
-            input: iterator.input,
-            components: iterator.components,
-            directives: iterator.directives,
-            passContext: context,
-          },
-          provider,
-        ),
-      );
+      model["__components"].push(this._createComponnentFn(iterator, context, provider));
     }
     for (const iterator of children) {
-      model["__children"].push(
-        this._initContextInstance(BasicChildRef, {}, context)
-          .setEntityId(iterator.childName)
-          .setRefComponentId(iterator.refComponent)
-          .setRefOptions(iterator.props || {}),
-      );
+      model["__children"].push(<any>this._createChildRefFn(context, provider, iterator));
     }
     for (const iterator of directives) {
-      model["__directives"].push(
-        provider.attachDirective(
-          model,
-          this._initContextInstance<BasicDirective>(iterator.template, { input: iterator.input }, context).setEntityId(
-            iterator.id,
-          ),
-        ),
-      );
+      model["__directives"].push(<any>this._createDirectiveFn(provider, context, model, iterator));
     }
     return model;
+  }
+
+  private _createComponnentFn(
+    iterator: IComponentPluginOptions<any>,
+    context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
+  ): IInnerComponent {
+    return this.createInstance<IInnerComponent>(
+      {
+        id: iterator.id,
+        provider: iterator.provider,
+        template: iterator.template,
+        input: iterator.input,
+        components: iterator.components,
+        directives: iterator.directives,
+        passContext: context,
+      },
+      provider,
+    );
+  }
+
+  private _createChildRefFn(
+    context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
+    iterator: IChildRefPluginOptions,
+  ): BasicChildRef<any> {
+    return this._initContextInstance(BasicChildRef, {}, context, provider)
+      .setEntityId(iterator.childName)
+      .setRefComponentId(iterator.refComponent)
+      .setRefOptions(iterator.props || {});
+  }
+
+  private _createDirectiveFn(
+    provider: BasicEntityProvider,
+    context: IBasicCompilationContext,
+    model: any,
+    { id, template, input = {} }: IComponentPluginOptions<any>,
+  ): BasicDirective<any> {
+    return provider.attachDirective(
+      model,
+      this._initContextInstance<BasicDirective>(template, { input }, context, provider).setEntityId(id),
+    );
   }
 
   public async callCompilation(
@@ -151,7 +180,7 @@ export abstract class BasicEntityProvider {
   }
 
   /** @override */
-  protected onInputPropertiesInit<T extends any>(_: T, options: IPropertiesOptions) {
+  protected onInputPropertiesInit<T extends IInnerEwsEntity>(_: T, options: IPropertiesOptions) {
     if (options.input) {
       this._inputProperties(_, options.input);
     }
@@ -330,9 +359,11 @@ export abstract class BasicEntityProvider {
     template: InjectDIToken<T>,
     options: IPropertiesOptions,
     context: IBasicCompilationContext,
+    provider: BasicEntityProvider,
   ): T {
     const model = this.injector.get(template);
-    this.onInputPropertiesInit(model, options);
+    this.onInputPropertiesInit(<any>model, options);
+    this._compositions(<any>model, provider, context);
     Object.defineProperty(model, "__context", {
       enumerable: true,
       configurable: false,
@@ -343,7 +374,7 @@ export abstract class BasicEntityProvider {
     return model;
   }
 
-  private _inputProperties<T extends any>(model: T, options: IDirectiveInputMap) {
+  private _inputProperties<T extends IInnerEwsEntity>(model: T, options: IDirectiveInputMap) {
     const inputs = resolveInputProperties(Object.getPrototypeOf(model).constructor);
     for (const key in inputs) {
       if (inputs.hasOwnProperty(key)) {
@@ -368,14 +399,16 @@ export abstract class BasicEntityProvider {
     }
   }
 
-  private _attachProperties<T extends any>(model: T, options: IComponentAttachMap) {
+  private _attachProperties<T extends IInnerEwsEntity>(model: T, options: IComponentAttachMap) {
     const attaches = resolveAttachProperties(Object.getPrototypeOf(model).constructor);
     for (const key in attaches) {
       if (attaches.hasOwnProperty(key)) {
         const attach = attaches[key];
         // invalid value or null value
-        if (!(model[attach.name.value] instanceof PropAttach)) model[attach.name.value] = new PropAttach();
-        const propAttach: PropAttach = model[attach.name.value];
+        if (!((<any>model)[attach.name.value] instanceof PropAttach)) {
+          (<any>model)[attach.name.value] = new PropAttach();
+        }
+        const propAttach: PropAttach = (<any>model)[attach.name.value];
         const syntaxStruct = options[key];
         // 暂时只支持childRefs模式
         if (is.nullOrUndefined(syntaxStruct) || syntaxStruct.type !== "childRefs") continue;
@@ -385,69 +418,27 @@ export abstract class BasicEntityProvider {
       }
     }
   }
-}
 
-function updateImportDeclarations(imports: ts.ImportDeclaration[], statements: ts.ImportDeclaration[]) {
-  for (const statement of statements) {
-    if (ts.isImportDeclaration(statement)) {
-      const { importClause, moduleSpecifier } = statement;
-      if (!ts.isStringLiteral(moduleSpecifier)) continue;
-      const existIndex = imports.findIndex(
-        i =>
-          i.importClause &&
-          i.moduleSpecifier &&
-          ts.isStringLiteral(i.moduleSpecifier) &&
-          i.moduleSpecifier.text === moduleSpecifier.text,
-      );
-      if (existIndex < 0) {
-        imports.push(statement);
-      } else {
-        if (!importClause) continue;
-        const sourceItem = imports[existIndex];
-        const { importClause: clause01 } = sourceItem;
-        const { importClause: clause02 } = statement;
-        if (clause01!.namedBindings) {
-          if (ts.isNamedImports(clause01!.namedBindings)) {
-            if (clause02!.namedBindings && ts.isNamedImports(clause02!.namedBindings!)) {
-              const named01 = clause01!.namedBindings as ts.NamedImports;
-              const named02 = clause02!.namedBindings as ts.NamedImports;
-              const addto: ts.ImportSpecifier[] = [];
-              for (const element of named02.elements) {
-                const target = named01.elements.find(i => i.name.text === element.name.text);
-                if (!target) {
-                  addto.push(element);
-                }
-              }
-              named01.elements = ts.createNodeArray([...named01.elements].concat(addto));
-            } else {
-              imports.push(statement);
-            }
-          } else if (ts.isNamespaceImport(clause01!.namedBindings!)) {
-            if (
-              clause02!.namedBindings &&
-              ts.isNamespaceImport(clause02!.namedBindings!) &&
-              clause02!.namedBindings!.name.text !== clause02!.namedBindings!.name.text
-            ) {
-              throw new InvalidOperationError("import update failed: duplicate namespace import exist");
-            } else {
-              imports.push(statement);
-            }
-          }
-        } else {
-          // source is default import
-          if (!clause02!.namedBindings && clause02!.name!.text !== clause02!.name!.text) {
-            throw new InvalidOperationError(
-              `import update failed: duplicate default import exist - [${clause02!.name!.text}]`,
-            );
-          } else {
-            imports.push(statement);
-          }
+  private _compositions<T extends IInnerComponent>(
+    model: T,
+    provider: BasicEntityProvider,
+    context: IBasicCompilationContext,
+  ) {
+    const compositions = resolveCompositions(Object.getPrototypeOf(model).constructor);
+    for (const key in compositions) {
+      if (compositions.hasOwnProperty(key)) {
+        const composite = compositions[key];
+        if (!((<any>model)[composite.name] instanceof BasicComposition)) {
+          (<any>model)[composite.name] = new (composite.delegate || Composition)();
         }
+        const compositeTarget: BasicComposition = (<any>model)[composite.name];
+        // const compositeType = Object.getPrototypeOf(compositeTarget).constructor;
+        const innerHandle = <IInnerComposite>(<unknown>compositeTarget);
+        innerHandle.setEntity(composite.entity!);
+        innerHandle.setCreateFn(this._createDirectiveFn.bind(this, provider, context));
+        innerHandle.setProvider(getMetaFromCtor(Object.getPrototypeOf(provider).constructor)!);
+        model["__compositions"].push(innerHandle);
       }
     }
   }
-}
-
-function isImportAlias(propertyName: ts.Identifier | undefined, name: ts.Identifier) {
-  return propertyName?.text !== name.text;
 }

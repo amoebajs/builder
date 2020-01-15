@@ -1,27 +1,27 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
   EntityConstructor,
+  IConstructor,
   IFrameworkDepts,
   Injectable,
   getInjectScope,
   resolveDepts,
-  IConstructor,
 } from "../core/decorators";
 import {
-  ReactComponent,
-  GlobalMap,
-  Builder,
-  BasicEntityProvider,
-  WebpackConfig,
-  HtmlBundle,
   BasicChildRef,
+  BasicEntityProvider,
+  BasicHelper,
+  Builder,
+  GlobalMap,
+  HtmlBundle,
+  ReactComponent,
   ReactDirective,
   ReactEntityProvider,
-  BasicHelper,
   ReactHelper,
   ReactRender,
+  WebpackConfig,
 } from "../providers";
-import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
+import { CommonModule, ZentModule } from "../plugins";
 
 export interface IFactoryOptions {
   trace: boolean;
@@ -73,8 +73,8 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
 
   /** @override can be overrided */
   protected initModules() {
-    this.useModule(CommonComponentModule);
-    this.useModule(CommonDirectiveModule);
+    this.useModule(CommonModule);
+    this.useModule(ZentModule);
   }
 
   /** @override can be overrided */

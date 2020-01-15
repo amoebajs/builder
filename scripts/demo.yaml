@@ -1,22 +1,22 @@
 components:
-  - module: ambjs-common-component-module
+  - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
-  - module: ambjs-common-component-module
+  - module: zent-module
     name: zent-form
     id: ZentFormComponent
 page:
-  module: ambjs-common-component-module
+  module: ambjs-common-module
   name: css-grid-container
   id: "CssGridPageDemoRoot"
   children:
     - ref: ZentFormComponent
       id: ZentFormComponentRef01
       props:
-        layout:
-          type: literal
-          syntaxType: string
-          expression: vertical
+        # layout:
+        #   type: literal
+        #   syntaxType: string
+        #   expression: vertical
         form:
           type: state
           expression: form
@@ -24,12 +24,8 @@ page:
       id: ZentBtnDemoCompRef01
       props:
         loading:
-          type: directiveRef
-          syntaxType:
-          expression:
-            - ref: xxx
-              expression: data1
-            - ref
+          type: state
+          expression: zentBtn01Loading
         children:
           type: literal
           syntaxType: string
@@ -49,7 +45,7 @@ page:
           syntaxType: boolean
           expression: false
         children:
-          type: literal
+          type: state
           expression: zentBtn02Content
         size:
           type: literal
@@ -60,10 +56,10 @@ page:
           syntaxType: string
           expression: primary
   directives:
-    - module: ambjs-common-directive-module
-      name: zent-base-css
-      id: ZentBaseCssDemoDirective
-    - module: ambjs-common-directive-module
+    # - module: zent-module
+    #   name: zent-base-css
+    #   id: ZentBaseCssDemoDirective
+    - module: zent-module
       name: zent-input
       id: zentInputDirective
       input:
@@ -79,7 +75,7 @@ page:
         label:
           type: literal
           expression: 输入框
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-switch
       id: zentSwitchDirective
       input:
@@ -95,7 +91,7 @@ page:
         label:
           type: literal
           expression: 开关
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-select
       id: zentSelectDirective
       input:
@@ -121,7 +117,7 @@ page:
               text: Option 1
             - value: Option 2
               text: Option 2
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-form
       id: zentFormDirective
       input:
@@ -131,14 +127,14 @@ page:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-action-button
       id: zentSubmitButtonDirective
       input:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-directive-module
+    - module: ambjs-common-module
       name: custom-click
       id: CustomClickDemoDirective
       input:
@@ -159,6 +155,9 @@ page:
           expression: e => new Date().getTime()
   input:
     basic:
+      width:
+        type: literal
+        expression: 100vw
       useComponentState:
         type: literal
         expression: true
@@ -168,39 +167,53 @@ page:
           btn01Text: "10002"
           zentBtnLoading: true
           zentBtnType: danger
+          zentBtn01Loading: true
           zentBtn02Content: BUTTON02
-        objectState:
-          type: literal
-          expression:
+          objectState:
             id: xxx
             name: yyy
-        arrayState:
-          type: literal
-          expression:
+          arrayState:
             - id: xxx
               name: yyy
             - id: zzz
               name: aaa
+    useGridRowRepeat:
+      type: literal
+      expression: false
+    useGridColumnRepeat:
+      type: literal
+      expression: false
     gridTemplateColumnsCount:
       type: literal
-      expression: 2
-    gridTemplateRowsFrs:
+      expression: 3
+    gridTemplateRowsSizes:
       type: literal
       expression:
-        - 1
-        - 2
+        - 88vh
+        - 6vh
+        - 6vh
+    gridTemplateColumnsSizes:
+      type: literal
+      expression:
+        - 10vw
+        - 80vw
+        - 10vw
   attach:
     childRowStart:
       type: childRefs
       expression:
         - id: ZentBtnDemoCompRef01
-          value: 1
+          value: 3
         - id: ZentBtnDemoCompRef02
           value: 2
+        - id: ZentFormComponentRef01
+          value: 1
     childColumnStart:
       type: childRefs
       expression:
         - id: ZentBtnDemoCompRef01
-          value: 1
+          value: 2
         - id: ZentBtnDemoCompRef02
+          value: 2
+        - id: ZentFormComponentRef01
           value: 2

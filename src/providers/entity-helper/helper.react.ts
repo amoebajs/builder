@@ -117,31 +117,11 @@ export class ReactHelper extends BasicHelper {
     return expr;
   }
 
-  // public createImport(modulePath: string, names: Array<string | [string, string]> | string = []) {
-  //   const ref = ts.createStringLiteral(modulePath);
-  //   if (typeof names === "string") {
-  //     return ts.createImportDeclaration([], [], ts.createImportClause(ts.createIdentifier(names), undefined), ref);
-  //   } else if (names.length === 0) {
-  //     return ts.createImportDeclaration([], [], undefined, ref);
-  //   } else {
-  //     return ts.createImportDeclaration(
-  //       [],
-  //       [],
-  //       ts.createImportClause(
-  //         undefined,
-  //         ts.createNamedImports(
-  //           names.map(s =>
-  //             ts.createImportSpecifier(
-  //               Array.isArray(s) ? ts.createIdentifier(s[0]) : undefined,
-  //               ts.createIdentifier(Array.isArray(s) ? s[1] : s),
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //       ref,
-  //     );
-  //   }
-  // }
+  public createReactPropsMixinAccess(propName: string, obj: Record<string, string | number | boolean | ts.Expression>) {
+    const access = this.createPropertyAccess("props", propName);
+    const objExp = this.createObjectAttr(obj);
+    return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
+  }
 
   public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
     return ts.createCall(
@@ -150,6 +130,7 @@ export class ReactHelper extends BasicHelper {
       parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
     );
   }
+
   public createFrontLibImports(options: IFrontLibImportOptions) {
     const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
     const importList: ts.ImportDeclaration[] = [];

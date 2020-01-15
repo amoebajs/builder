@@ -1,7 +1,9 @@
 import ts from "typescript";
-import { Component, Input } from "../../core/decorators";
-import { ReactComponent } from "../../providers";
-import { IJsxAttrs } from "../../utils";
+import { Component, Composite, Input } from "../../../core/decorators";
+import { ReactComponent } from "../../../providers";
+import { IJsxAttrs } from "../../../utils";
+import { CompositionList } from "../../../core";
+import { ZentBaseCssDirective } from "../base/zent-base-css.directive";
 
 export const enum SupportedFormFields {
   Input = "FormInputField",
@@ -18,7 +20,20 @@ export class ZentFormComponent extends ReactComponent {
   fields: IFormFieldOptions[] = [];
 
   @Input()
+  backgroundColor: string = "#fff";
+
+  @Input()
+  margin: string = "8px";
+
+  @Input()
+  padding: string = "12px";
+
+  @Input()
   apiUrl: string = "";
+
+  @Composite(ZentBaseCssDirective)
+  // customClick: Composition = new Composition({ target: "base" });
+  customClick: CompositionList = new CompositionList([{ target: "base" }]);
 
   protected async onInit() {
     await super.onInit();
@@ -28,6 +43,11 @@ export class ZentFormComponent extends ReactComponent {
       ...this.getState("rootElement"),
       name: COMPONENT_NAME,
       attrs: {
+        style: helper.createReactPropsMixinAccess("style", {
+          backgroundColor: this.backgroundColor,
+          padding: this.padding,
+          margin: this.margin,
+        }),
         layout: helper.createReactPropsAccess("layout", { defaultValue: "horizontal" }),
         form: helper.createReactPropsAccess("form"),
       },
