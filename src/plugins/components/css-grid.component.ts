@@ -13,11 +13,20 @@ export class CssGridContainer extends ReactComponent {
   @Input({ group: "basic", displayName: "组件默认状态" })
   public defaultComponentState: any = {};
 
+  @Input({ group: "basic", displayName: "背景色" })
+  public backgroundColor: string = "#fcfcfc";
+
+  @Input({ group: "basic", displayName: "宽度" })
+  public width: string = "100%";
+
+  @Input({ group: "basic", displayName: "高度" })
+  public height: string = "100vh";
+
   @Input({ name: "useGridRowRepeat", displayName: "使用Grid行重复" })
-  public use_GridRowRepeat: boolean = true;
+  public useGridRowRepeat: boolean = true;
 
   @Input({ displayName: "使用Grid列重复" })
-  public use_GridColumnRepeat: boolean = true;
+  public useGridColumnRepeat: boolean = true;
 
   @Input({ displayName: "Grid行数量" })
   public gridTemplateRowsCount: number = 1;
@@ -60,10 +69,12 @@ export class CssGridContainer extends ReactComponent {
     const rootElement = this.getState("rootElement");
     rootElement.name = DOMS.Div;
     rootElement.attrs["style"] = this.helper.createObjectAttr({
-      height: "100vh",
       display: "grid",
-      gridTemplateColumns: this.use_GridRowRepeat ? this.calcColnmnsRepeat() : this.calcColumnsSize(),
-      gridTemplateRows: this.use_GridColumnRepeat ? this.calcRowsRepeat() : this.calcRowsSize(),
+      height: this.height,
+      width: this.width,
+      backgroundColor: this.backgroundColor,
+      gridTemplateColumns: this.useGridRowRepeat ? this.calcColnmnsRepeat() : this.calcColumnsSize(),
+      gridTemplateRows: this.useGridColumnRepeat ? this.calcRowsRepeat() : this.calcRowsSize(),
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });

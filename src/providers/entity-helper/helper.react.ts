@@ -117,6 +117,12 @@ export class ReactHelper extends BasicHelper {
     return expr;
   }
 
+  public createReactPropsMixinAccess(propName: string, obj: Record<string, string | number | boolean | ts.Expression>) {
+    const access = this.createPropertyAccess("props", propName);
+    const objExp = this.createObjectAttr(obj);
+    return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
+  }
+
   public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
     return ts.createCall(
       ts.createIdentifier(name),
