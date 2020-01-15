@@ -29,16 +29,20 @@ import { BasicHelper } from "../entity-helper";
 import { is } from "../../utils/is";
 
 export interface IDirecChildRefPluginOptions {
-  refEntity: string;
-  childName: string;
+  /** entity id */
+  refEntityId: string;
+  /** entity name will emit into source code */
+  entityName: string;
   options: {
     input: IDirectiveInputMap;
   };
 }
 
 export interface ICompChildRefPluginOptions {
-  refEntity: string;
-  childName: string;
+  /** entity id */
+  refEntityId: string;
+  /** entity name will emit into source code */
+  entityName: string;
   components: ICompChildRefPluginOptions[];
   directives: IDirecChildRefPluginOptions[];
   options: {

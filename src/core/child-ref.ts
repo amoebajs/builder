@@ -9,6 +9,7 @@ import {
   IEwsEntityProtectedHooks,
   IPureObject,
 } from "./base";
+import { EntityConstructor } from "./decorators";
 
 export interface IBasicChildRef extends IEwsEntity {
   readonly componentRef: string;
@@ -22,11 +23,13 @@ export interface IBasicChildRefProtectedHooks extends IEwsEntityProtectedHooks {
 
 export interface IBasicChildRefPrivates {
   readonly __refId: string;
-  readonly __refOptions: {};
+  readonly __refConstructor: EntityConstructor<any>;
+  readonly __entityId: string;
+  readonly __options: {};
 }
 
 export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"componentChildRef"> {
-  readonly __refOptions: {
+  readonly __options: {
     input: IComponentInputMap;
     attach: IComponentAttachMap;
     props: IComponentPropMap;
@@ -36,7 +39,7 @@ export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEws
 }
 
 export interface IDirectiveChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"directiveChildRef"> {
-  readonly __refOptions: {
+  readonly __options: {
     input: IDirectiveInputMap;
   };
 }
@@ -53,25 +56,17 @@ export interface IInnerDirectiveChildRef
 
 export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   protected __refId!: IBasicChildRefPrivates["__refId"];
-  protected __refOptions: IBasicChildRefPrivates["__refOptions"] = {};
+  protected __refConstructor!: IBasicChildRefPrivates["__refConstructor"];
+  protected __entityId!: IBasicChildRefPrivates["__entityId"];
+  protected __refOptions: IBasicChildRefPrivates["__options"] = {};
 
-  public get refType() {
+  public get enntityRefId() {
     return this.__refId;
   }
 
   constructor() {
     super();
     this["__etype"] = "childref";
-  }
-
-  public setRefComponentId(refEntityId: IBasicChildRefPrivates["__refId"]) {
-    this.__refId = refEntityId;
-    return this;
-  }
-
-  public setRefOptions(options: IBasicChildRefPrivates["__refOptions"]) {
-    this.__refOptions = options;
-    return this;
   }
 
   /** @override */

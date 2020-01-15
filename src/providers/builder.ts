@@ -15,7 +15,8 @@ import { NotFoundError } from "../errors";
 import { Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
-import { SourceFileContext } from "../core";
+import { IInnerCompnentChildRef, IInnerDirectiveChildRef, SourceFileContext } from "../core";
+import { BasicComponentChildRef, BasicDirectiveChildRef } from "./entities";
 
 export interface IDirectiveDefine {
   module: string;
@@ -64,10 +65,15 @@ export interface ISourceCreateOptions {
 export interface IDirectiveCreateOptions {
   moduleName: string;
   templateName: string;
-  componentName: string;
+  importId: string;
 }
 
 export interface IComponentCreateOptions extends IDirectiveCreateOptions {}
+
+export interface IEntitiesGroup {
+  components: IComponentCreateOptions[];
+  directives: IDirectiveCreateOptions[];
+}
 
 export interface IRootComponentCreateOptions extends IComponentCreateOptions {
   components?: IComponentCreateOptions[];
@@ -106,17 +112,20 @@ export class Builder {
   public async createSource(options: ISourceCreateOptions): Promise<ISourceCreateResult> {
     const { configs, prettier: usePrettier = true, transpile = { enabled: false } } = options;
     const parser = !transpile.enabled ? "typescript" : "babel";
-    const compName = configs.page.id || "App";
-    const { sourceFile, dependencies } = await this._createComponentSource({
-      moduleName: configs.page.module,
-      templateName: configs.page.name,
-      componentName: compName,
-      input: configs.page.input || {},
-      attach: configs.page.attach || {},
-      components: mapComp(configs.components),
-      directives: mapDire(configs.directives),
-      children: mapComponentChild(configs),
-    });
+    const compName = configs.page.id;
+    const components = mapComp(configs.components);
+    const directives = mapDire(configs.directives);
+    // const { sourceFile, dependencies } = await this._createComponentSource({
+    //   moduleName: configs.page.module,
+    //   templateName: configs.page.name,
+    //   componentName: compName,
+    //   input: configs.page.input || {},
+    //   attach: configs.page.attach || {},
+    //   components: mapComp(configs.components),
+    //   directives: mapDire(configs.directives),
+    //   children: mapComponentChild(configs),
+    // });
+    const page = this._createComponentRef(mapComponentChild([configs.page])[0], { components, directives });
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
     const result: ISourceCreateResult = {
@@ -137,6 +146,34 @@ export class Builder {
 
   public buildSource(options: IWebpackOptions): Promise<void> {
     return this.webpackBuild.buildSource(options);
+  }
+
+  private _resolveConstructor(moduleName: string, templateName: string, type: "component" | "directive") {
+    const target = this.globalMap[type === "component" ? "getComponent" : "getDirective"](moduleName, templateName);
+    if (!target) {
+      throw new NotFoundError(`${type} [${moduleName}.${templateName}] not found`);
+    }
+    return target;
+  }
+
+  private _createComponentRef(options: ICompChildRefPluginOptions, group: IEntitiesGroup) {
+    const ref = this.injector.get(BasicComponentChildRef);
+    ref["__refId"] = options.refEntityId;
+    ref["__entityId"] = options.entityName;
+    ref["__options"] = options.options;
+    ref["__refComponnents"] = options.components.map(i => this._createComponentRef(i, group));
+    ref["__refDirectives"] = options.directives.map(i => this._createDirectiveRef(i, group));
+    return <IInnerCompnentChildRef>(<unknown>ref);
+  }
+
+  private _createDirectiveRef(options: IDirecChildRefPluginOptions, group: IEntitiesGroup) {
+    const ref = this.injector.get(BasicDirectiveChildRef);
+    const target = group.directives.find(i => i.importId === options.refEntityId)!;
+    ref["__refId"] = options.refEntityId;
+    ref["__refConstructor"] = null;
+    ref["__entityId"] = options.entityName;
+    ref["__options"] = options.options;
+    return <IInnerDirectiveChildRef>(<unknown>ref);
   }
 
   private _resolveType(moduleName: string, templateName: string, type: "component" | "directive" | "root") {
@@ -172,7 +209,7 @@ export class Builder {
       attaches = opts.attach || {};
     }
     return {
-      id: options.componentName,
+      id: options.importId,
       provider: <any>entity.provider!,
       template: entity.value,
       input: options.input,
@@ -211,7 +248,7 @@ export class Builder {
     const context = this.injector.get<SourceFileContext<BasicEntityProvider>>(SourceFileContext);
     context.setProvider(opts.provider);
     const instance = context.provider.createInstance({ ...opts, passContext: context });
-    const sourceFile = await context.provider.callCompilation(opts.provider, instance, options.componentName);
+    const sourceFile = await context.provider.callCompilation(opts.provider, instance, options.importId);
     return {
       sourceFile,
       dependencies: opts.dependencies || {},
@@ -241,10 +278,10 @@ function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, resu
   }).outputText;
 }
 
-function mapDirectiveChild(directives: IDirectiveChildDefine[] = []): IDirecChildRefPluginOptions[] {
+function mapDirectiveChild(directives: IDirectiveChildDefine[] = []) {
   return directives.map<IDirecChildRefPluginOptions>(i => ({
-    childName: i.id,
-    refEntity: i.ref,
+    refEntityId: i.ref,
+    entityName: i.id,
     options: {
       input: i.input || {},
     },
@@ -253,8 +290,8 @@ function mapDirectiveChild(directives: IDirectiveChildDefine[] = []): IDirecChil
 
 function mapComponentChild(children: IComponentChildDefine[] = []): ICompChildRefPluginOptions[] {
   return children.map<ICompChildRefPluginOptions>(i => ({
-    childName: i.id,
-    refEntity: i.ref,
+    refEntityId: i.ref,
+    entityName: i.id,
     components: mapComponentChild(i.children),
     directives: mapDirectiveChild(i.directives),
     options: {
@@ -265,18 +302,18 @@ function mapComponentChild(children: IComponentChildDefine[] = []): ICompChildRe
   }));
 }
 
-function mapComp(components: IComponentDefine[] = []): IComponentCreateOptions[] {
-  return components.map(i => ({
+function mapComp(components: IComponentDefine[] = []) {
+  return components.map<IComponentCreateOptions>(i => ({
     moduleName: i.module,
     templateName: i.name,
-    componentName: i.id,
+    importId: i.id,
   }));
 }
 
-function mapDire(directives: IDirectiveDefine[] = []): IDirectiveCreateOptions[] {
-  return directives.map(i => ({
+function mapDire(directives: IDirectiveDefine[] = []) {
+  return directives.map<IDirectiveCreateOptions>(i => ({
     moduleName: i.module,
     templateName: i.name,
-    componentName: i.id,
+    importId: i.id,
   }));
 }

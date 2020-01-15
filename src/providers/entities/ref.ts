@@ -9,8 +9,7 @@ import { InjectScope } from "@bonbons/di";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
-  protected __refId!: IDirectiveChildRefPrivates["__refId"];
-  protected __refOptions: IDirectiveChildRefPrivates["__refOptions"] = {
+  protected __options: IDirectiveChildRefPrivates["__options"] = {
     input: {},
   };
 
@@ -22,8 +21,7 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
 
 @Injectable(InjectScope.New)
 export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
-  protected __refId!: IComponentChildRefPrivates["__refId"];
-  protected __refOptions: IComponentChildRefPrivates["__refOptions"] = {
+  protected __options: IComponentChildRefPrivates["__options"] = {
     input: {},
     attach: {},
     props: {},
