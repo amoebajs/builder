@@ -31,6 +31,7 @@
     "scripts:webpack": "cd scripts-build && cross-env ENV_MODE=build node scripts/build",
     "scripts:start": "yarn scripts:source && yarn scripts:webpack",
     "scripts:restart": "yarn scripts:output && yarn scripts:run",
+    "demo:test": "cross-env TS_PROJECT=tsconfig.scripts.json npx ts-node scripts/test.ts",
     "pub:sdk": "yarn copy:prepublish-sdk && yarn build:sdk && node scripts/web/stable.publish.js",
     "rc:sdk": "yarn copy:prepublish-sdk && yarn build:sdk && node scripts/web/rc.publish.js",
     "pub": "yarn copy:prepublish && yarn compile:node && node scripts/node/stable.publish.js",
