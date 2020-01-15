@@ -1,6 +1,6 @@
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
-import ts = require("typescript");
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
+import ts from "typescript";
 
 const COMPONENT_NAME = "FormInputField";
 

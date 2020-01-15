@@ -1,9 +1,9 @@
 import ts from "typescript";
-import { Component, Composite, Input } from "../../core/decorators";
-import { ReactComponent } from "../../providers";
-import { IJsxAttrs } from "../../utils";
-import { CompositionList } from "../../core";
-import { ZentBaseCssDirective } from "../directives/zent-base-css.directive";
+import { Component, Composite, Input } from "../../../core/decorators";
+import { ReactComponent } from "../../../providers";
+import { IJsxAttrs } from "../../../utils";
+import { CompositionList } from "../../../core";
+import { ZentBaseCssDirective } from "../base/zent-base-css.directive";
 
 export const enum SupportedFormFields {
   Input = "FormInputField",

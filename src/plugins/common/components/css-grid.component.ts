@@ -1,8 +1,8 @@
 import ts from "typescript";
-import { Attach, Component, Group, Input } from "../../core/decorators";
-import { DOMS, TYPES } from "../../utils";
-import { ReactComponent } from "../../providers";
-import { PropAttach } from "../../core/libs/attach.basic";
+import { Attach, Component, Group, Input } from "../../../core/decorators";
+import { DOMS, TYPES } from "../../../utils";
+import { ReactComponent } from "../../../providers";
+import { PropAttach } from "../../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })

@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { Component } from "../../core/decorators";
-import { ReactComponent } from "../../providers";
+import { Component } from "../../../core/decorators";
+import { ReactComponent } from "../../../providers";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
 export class ZentButtonComponent extends ReactComponent {

@@ -1,2 +1,2 @@
-export * from "./components/common.module";
-export * from "./directives/common.module";
+export * from "./common/common.module";
+export * from "./zent/zent.module";

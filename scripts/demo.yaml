@@ -1,12 +1,12 @@
 components:
-  - module: ambjs-common-component-module
+  - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
-  - module: ambjs-common-component-module
+  - module: zent-module
     name: zent-form
     id: ZentFormComponent
 page:
-  module: ambjs-common-component-module
+  module: ambjs-common-module
   name: css-grid-container
   id: "CssGridPageDemoRoot"
   children:
@@ -56,10 +56,10 @@ page:
           syntaxType: string
           expression: primary
   directives:
-    # - module: ambjs-common-directive-module
+    # - module: zent-module
     #   name: zent-base-css
     #   id: ZentBaseCssDemoDirective
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-input
       id: zentInputDirective
       input:
@@ -75,7 +75,7 @@ page:
         label:
           type: literal
           expression: 输入框
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-switch
       id: zentSwitchDirective
       input:
@@ -91,7 +91,7 @@ page:
         label:
           type: literal
           expression: 开关
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-select
       id: zentSelectDirective
       input:
@@ -117,7 +117,7 @@ page:
               text: Option 1
             - value: Option 2
               text: Option 2
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-form
       id: zentFormDirective
       input:
@@ -127,14 +127,14 @@ page:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-directive-module
+    - module: zent-module
       name: zent-action-button
       id: zentSubmitButtonDirective
       input:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-directive-module
+    - module: ambjs-common-module
       name: custom-click
       id: CustomClickDemoDirective
       input:
