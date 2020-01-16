@@ -1,11 +1,14 @@
+import { InjectScope } from "@bonbons/di";
 import {
   BasicChildRef,
   IComponentChildRefPrivates,
   IDirectiveChildRefPrivates,
+  IInnerComponent,
+  IInnerDirective,
   IPureObject,
   Injectable,
+  callComponentLifecycle,
 } from "../../core";
-import { InjectScope } from "@bonbons/di";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
@@ -21,6 +24,15 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
     super();
     this["__etype"] = "directiveChildRef";
   }
+
+  protected async bootstrap() {
+    const instance: IInnerDirective = await super.bootstrap();
+    await instance.onInit();
+    await instance.onPreAttach();
+    await instance.onAttach();
+    await instance.onPostAttach();
+    return instance;
+  }
 }
 
 @Injectable(InjectScope.New)
@@ -33,28 +45,14 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   protected __refComponents: IComponentChildRefPrivates["__refComponents"] = [];
   protected __refDirectives: IComponentChildRefPrivates["__refDirectives"] = [];
 
-  public get entityInputs(): IComponentChildRefPrivates["__options"]["input"] {
-    return this.__options.input;
-  }
-
-  public get entityAttaches(): IComponentChildRefPrivates["__options"]["attach"] {
-    return this.__options.attach;
-  }
-
-  public get entityProps(): IComponentChildRefPrivates["__options"]["props"] {
-    return this.__options.props;
-  }
-
-  public get children(): IComponentChildRefPrivates["__refComponents"] {
-    return this.__refComponents;
-  }
-
-  public get directives(): IComponentChildRefPrivates["__refDirectives"] {
-    return this.__refDirectives;
-  }
-
   constructor() {
     super();
     this["__etype"] = "componentChildRef";
+  }
+
+  protected async bootstrap() {
+    const instance: IInnerComponent = await super.bootstrap();
+    await callComponentLifecycle(instance);
+    return instance;
   }
 }

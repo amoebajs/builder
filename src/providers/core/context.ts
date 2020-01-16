@@ -1,6 +1,7 @@
+import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
 import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap } from "../../providers";
-import { Injectable } from "../../core/decorators";
+import { EntityConstructor, Injectable } from "../../core/decorators";
 import {
   IBasicEntityProvider,
   ICompChildRefPluginOptions,
@@ -15,6 +16,8 @@ import { NotFoundError } from "../../errors";
 
 @Injectable(InjectScope.New)
 export class SourceFileBasicContext<T extends IBasicEntityProvider> extends SourceFileContext<T> {
+  private __componentsWillEmit: IComponentCreateOptions[] = [];
+
   constructor(protected injector: Injector, private globalMap: GlobalMap) {
     super();
     this.components = [];
@@ -37,12 +40,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this;
   }
 
-  public createRoot(options: ICompChildRefPluginOptions) {
-    this.root = this._createComponentRef(options);
-    return this;
-  }
-
-  public create() {
+  public build() {
     this.dependencies = this._resolveDependencies();
     return this;
   }
@@ -51,30 +49,61 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this.dependencies;
   }
 
-  private _createComponentRef(options: ICompChildRefPluginOptions) {
+  public async createRoot(options: ICompChildRefPluginOptions): Promise<void> {
+    this.root = await this._createComponentRef(options);
+  }
+
+  public callCompilation(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  public async createAST(): Promise<ts.SourceFile> {
+    throw new Error("Method not implemented.");
+  }
+
+  private async _createComponentRef(options: ICompChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicComponentChildRef);
     const target = this.components.find(i => i.importId === options.refEntityId)!;
     const { value } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
-    ref["__refId"] = options.refEntityId;
-    ref["__refConstructor"] = value;
-    ref["__entityId"] = options.entityName;
+    this._setBaseChildRefInfo(<any>ref, options, value, parent);
     ref["__options"] = options.options;
-    ref["__context"] = this;
-    ref["__refComponents"] = options.components.map(i => this._createComponentRef(i));
-    ref["__refDirectives"] = options.directives.map(i => this._createDirectiveRef(i));
+    for (const iterator of options.components) {
+      ref["__refComponents"].push(await this._createComponentRef(iterator, <any>ref));
+    }
+    for (const iterator of options.directives) {
+      ref["__refDirectives"].push(await this._createDirectiveRef(iterator, <any>ref));
+    }
+    await ref["bootstrap"]();
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
-  private _createDirectiveRef(options: IDirecChildRefPluginOptions) {
+  private async _createDirectiveRef(options: IDirecChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicDirectiveChildRef);
     const target = this.directives.find(i => i.importId === options.refEntityId)!;
     const { value } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
-    ref["__refId"] = options.refEntityId;
-    ref["__refConstructor"] = value;
-    ref["__entityId"] = options.entityName;
+    this._setBaseChildRefInfo(ref, options, value, parent);
     ref["__options"] = options.options;
-    ref["__context"] = this;
+    await ref["bootstrap"]();
     return <IInnerDirectiveChildRef>(<unknown>ref);
+  }
+
+  private _setBaseChildRefInfo(
+    ref: BasicDirectiveChildRef,
+    options: IDirecChildRefPluginOptions,
+    template: EntityConstructor<any>,
+    parent?: IInnerCompnentChildRef,
+  ) {
+    ref["__refId"] = options.refEntityId;
+    ref["__refConstructor"] = template;
+    ref["__entityId"] = options.entityName;
+    ref["__context"] = this;
+    ref["__provider"] = this.provider;
+    ref["__injector"] = this.injector;
+    if (parent) {
+      ref["__parentRef"] = parent;
+      ref["__parent"] = parent.__scope;
+    }
+    return ref;
   }
 
   private _resolveDependencies() {

@@ -1,5 +1,6 @@
 import {
   BasicCompilationEntity,
+  IBasicEntityProvider,
   IComponentAttachMap,
   IComponentInputMap,
   IComponentPropMap,
@@ -11,22 +12,20 @@ import {
 } from "./base";
 import { EntityConstructor } from "./decorators";
 
-export interface IBasicChildRef extends IEwsEntity {
-  readonly componentRef: string;
-}
+export interface IBasicChildRef extends IEwsEntity {}
 
 export interface IBasicChildRefProtectedHooks extends IEwsEntityProtectedHooks {
   onInit(): Promise<void>;
+  bootstrap(): Promise<any>;
 }
 
 export interface IBasicChildRefPrivates {
   readonly __refId: string;
-  readonly refId: string;
   readonly __refConstructor: EntityConstructor<any>;
-  readonly refTemplate: EntityConstructor<any>;
   readonly __entityId: string;
-  readonly entityId: string;
   readonly __options: {};
+  readonly __provider: IBasicEntityProvider;
+  readonly __parentRef: IInnerCompnentChildRef | undefined;
 }
 
 export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"componentChildRef"> {
@@ -35,13 +34,8 @@ export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEws
     attach: IComponentAttachMap;
     props: IComponentPropMap;
   };
-  readonly entityInputs: IComponentInputMap;
-  readonly entityAttaches: IComponentAttachMap;
-  readonly entityProps: IComponentPropMap;
   readonly __refComponents: IInnerCompnentChildRef[];
   readonly __refDirectives: IInnerDirectiveChildRef[];
-  readonly children: IInnerCompnentChildRef[];
-  readonly directives: IInnerDirectiveChildRef[];
 }
 
 export interface IDirectiveChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"directiveChildRef"> {
@@ -65,18 +59,8 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   protected __refConstructor!: IBasicChildRefPrivates["__refConstructor"];
   protected __entityId!: IBasicChildRefPrivates["__entityId"];
   protected __options: IBasicChildRefPrivates["__options"] = {};
-
-  public get refId(): IBasicChildRefPrivates["refId"] {
-    return this.__refId;
-  }
-
-  public get refTemplate(): IBasicChildRefPrivates["refTemplate"] {
-    return this.__refConstructor;
-  }
-
-  public get entityId(): IBasicChildRefPrivates["entityId"] {
-    return this.__entityId;
-  }
+  protected __provider!: IBasicChildRefPrivates["__provider"];
+  protected __parentRef!: IBasicChildRefPrivates["__parentRef"];
 
   constructor() {
     super();
@@ -85,5 +69,9 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
 
   protected async onInit() {
     return Promise.resolve();
+  }
+
+  protected async bootstrap(): Promise<any> {
+    return await this.__provider.attachInstance(<any>this);
   }
 }

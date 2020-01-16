@@ -1,29 +1,26 @@
 import ts from "typescript";
 import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
 import { IInnerCompnentChildRef } from "../child-ref";
+import { ClassGenerator, FunctionGenerator, ImportGenerator } from "../typescript";
+
+export const ContextItemsGroup = {
+  import: ImportGenerator,
+  class: ClassGenerator,
+  function: FunctionGenerator,
+};
 
 export interface IFinalScopedContext {
-  // all level
-  imports: ts.ImportDeclaration[];
-
-  // class level
-  extendParent: ts.HeritageClause | null;
-  implementParents: ts.HeritageClause[];
-  fields: ts.PropertyDeclaration[];
-  properties: ts.PropertyDeclaration[];
-  methods: ts.MethodDeclaration[];
-
-  // page level and function level
-  classes: ts.ClassDeclaration[];
-  functions: ts.FunctionDeclaration[];
-
-  // function level
-  parameters: ts.ParameterDeclaration[];
-  statements: ts.Statement[];
+  // imports: ts.ImportDeclaration[];
+  imports: InstanceType<typeof ContextItemsGroup["import"]>[];
+  // classes: ts.ClassDeclaration[];
+  classes: InstanceType<typeof ContextItemsGroup["class"]>[];
+  // functions: ts.FunctionDeclaration[];
+  functions: InstanceType<typeof ContextItemsGroup["function"]>[];
 }
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
+  parent: string | symbol | undefined;
   type: TYPE;
   container: ENTITY;
 }
@@ -39,9 +36,11 @@ export abstract class SourceFileContext<T extends any> {
   public directives!: IDirectiveCreateOptions[];
   public dependencies!: Record<string, string>;
   public abstract setProvider(provider: string): this;
-  public abstract createRoot(options: ICompChildRefPluginOptions): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
+  public abstract build(): this;
   public abstract getDependencies(): Record<string, string>;
-  public abstract create(): this;
+  public abstract createRoot(options: ICompChildRefPluginOptions): Promise<void>;
+  public abstract callCompilation(): Promise<void>;
+  public abstract createAST(): Promise<ts.SourceFile>;
 }

@@ -1,6 +1,6 @@
 import ts from "typescript";
 import uuid from "uuid/v4";
-import { InjectDIToken } from "@bonbons/di";
+import { InjectDIToken, Injector } from "@bonbons/di";
 import {
   IComponentAttachMap,
   IComponentInputMap,
@@ -10,15 +10,19 @@ import {
   MapValueType,
 } from "./common";
 import { BasicError } from "../../errors";
-import { IFinalScopedContext, SourceFileContext } from "./context";
+import { ContextItemsGroup, IFinalScopedContext, SourceFileContext } from "./context";
 import { IFrameworkDepts } from "../decorators";
+import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";
+import { IInnerComponent } from "../component";
+import { IInnerDirective } from "../directive";
 
-export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
+// export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
 
 export type EntityType = "directive" | "component" | "childref" | "componentChildRef" | "directiveChildRef" | "entity";
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
+  parent: string | symbol;
   type: TYPE;
   container: ENTITY;
 }
@@ -83,16 +87,20 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
   input?: IDirectiveInputMap;
 }
 
-export interface IBasicEntityProvider {}
+export interface IBasicEntityProvider {
+  attachInstance(ref: IInnerCompnentChildRef): Promise<IInnerComponent>;
+  attachInstance(ref: IInnerDirectiveChildRef): Promise<IInnerDirective>;
+}
 
 export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
   attach?: IComponentAttachMap;
   passContext: SourceFileContext<IBasicEntityProvider>;
 }
 
-export interface IPropertiesOptions {
-  input?: IDirectiveInputMap;
-  attach?: IComponentAttachMap;
+export interface IComponentPropertiesOptions {
+  input: IDirectiveInputMap;
+  attach: IComponentAttachMap;
+  props: IComponentPropMap;
 }
 
 export interface IRootComponentCreateOptions extends IComponentCreateOptions {
@@ -141,8 +149,10 @@ export interface IEwsEntityState<T extends IPureObject = IPureObject> {
 
 export interface IEwsEntityPrivates<E extends EntityType = EntityType> {
   readonly __scope: string;
+  readonly __parent: string;
   readonly __etype: E;
   readonly __context: SourceFileContext<any>;
+  readonly __injector: Injector;
   __addChildElements<A extends any>(
     target: keyof IFinalScopedContext,
     args: A[],
@@ -164,10 +174,12 @@ export interface IInnerEwsEntity<T extends IPureObject = IPureObject>
     IEwsEntityPrivates {}
 
 export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
-  private __scope = createEntityId();
-  private __etype: EntityType = "entity";
-  private __state: T = <T>{};
-  private __context!: SourceFileContext<any>;
+  protected __scope = createEntityId();
+  protected __parent!: string;
+  protected __etype: EntityType = "entity";
+  protected __state: T = <T>{};
+  protected __context!: SourceFileContext<any>;
+  protected __injector!: Injector;
 
   public get entityId() {
     return this["__scope"];
@@ -176,6 +188,11 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   public setEntityId(id: string): this {
     if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
     this["__scope"] = id;
+    return this;
+  }
+
+  public setParentId(id: string): this {
+    this["__parent"] = id;
     return this;
   }
 
@@ -189,11 +206,15 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     this.__state[key] = value;
   }
 
+  protected createNode<K extends keyof typeof ContextItemsGroup>(type: K): InstanceType<typeof ContextItemsGroup[K]> {
+    return this.__injector.get(<any>ContextItemsGroup[type]);
+  }
+
   protected getState<K extends keyof T>(key: K, defaultValue: T[K] | null = null): T[K] {
     return this.__state[key] || (defaultValue as any);
   }
 
-  protected addImports(args: ts.ImportDeclaration[], type: IBasicComponentAppendType = "push") {
+  protected addImports(args: IFinalScopedContext["imports"], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("imports", args, type);
   }
 
@@ -201,61 +222,77 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("imports") || [];
   }
 
-  protected addMethods(args: ts.MethodDeclaration[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("methods", args, type);
+  protected addClasses(args: IFinalScopedContext["classes"], type: IBasicComponentAppendType = "push") {
+    return this.__addChildElements("classes", args, type);
   }
 
-  protected getMethods() {
-    return this.__getChildElements("methods") || [];
+  protected getClasses() {
+    return this.__getChildElements("classes") || [];
   }
 
-  protected addProperties(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("properties", args, type);
+  protected addFunctions(args: IFinalScopedContext["functions"], type: IBasicComponentAppendType = "push") {
+    return this.__addChildElements("functions", args, type);
   }
 
-  protected getProperties() {
-    return this.__getChildElements("properties") || [];
+  protected getFunctions() {
+    return this.__getChildElements("functions") || [];
   }
 
-  protected addFields(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("fields", args, type);
-  }
+  // protected addMethods(args: ts.MethodDeclaration[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("methods", args, type);
+  // }
 
-  protected getFields() {
-    return this.__getChildElements("fields") || [];
-  }
+  // protected getMethods() {
+  //   return this.__getChildElements("methods") || [];
+  // }
 
-  protected addImplementParents(args: ts.HeritageClause[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("implementParents", args, type);
-  }
+  // protected addProperties(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("properties", args, type);
+  // }
 
-  protected getImplementParents() {
-    return this.__getChildElements("implementParents") || [];
-  }
+  // protected getProperties() {
+  //   return this.__getChildElements("properties") || [];
+  // }
 
-  protected setExtendParent(arg: ts.HeritageClause | null) {
-    return this.__addChildElements("extendParent", [arg], "reset");
-  }
+  // protected addFields(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("fields", args, type);
+  // }
 
-  protected getExtendParent() {
-    return this.__getChildElements("extendParent") || null;
-  }
+  // protected getFields() {
+  //   return this.__getChildElements("fields") || [];
+  // }
 
-  protected addStatements(arg: ts.Statement[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("statements", arg, type);
-  }
+  // protected addImplementParents(args: ts.HeritageClause[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("implementParents", args, type);
+  // }
 
-  protected getStatements() {
-    return this.__getChildElements("statements");
-  }
+  // protected getImplementParents() {
+  //   return this.__getChildElements("implementParents") || [];
+  // }
 
-  protected addParameters(arg: ts.ParameterDeclaration[], type: IBasicComponentAppendType = "push") {
-    return this.__addChildElements("parameters", arg, type);
-  }
+  // protected setExtendParent(arg: ts.HeritageClause | null) {
+  //   return this.__addChildElements("extendParent", [arg], "reset");
+  // }
 
-  protected getParameters() {
-    return this.__getChildElements("parameters");
-  }
+  // protected getExtendParent() {
+  //   return this.__getChildElements("extendParent") || null;
+  // }
+
+  // protected addStatements(arg: ts.Statement[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("statements", arg, type);
+  // }
+
+  // protected getStatements() {
+  //   return this.__getChildElements("statements");
+  // }
+
+  // protected addParameters(arg: ts.ParameterDeclaration[], type: IBasicComponentAppendType = "push") {
+  //   return this.__addChildElements("parameters", arg, type);
+  // }
+
+  // protected getParameters() {
+  //   return this.__getChildElements("parameters");
+  // }
 
   //#endregion
 
@@ -271,14 +308,15 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
         (context = {
           scope: this.__scope,
           type: this.__etype,
+          parent: this.__parent,
           container: {},
         }),
       );
     }
-    if (target === "extendParent") {
-      context.container[<"extendParent">target] = args[0];
-      return;
-    }
+    // if (target === "extendParent") {
+    //   context.container[<"extendParent">target] = args[0];
+    //   return;
+    // }
     if (type === "reset") {
       context.container[target] = <any>args;
     } else {

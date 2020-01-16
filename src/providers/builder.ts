@@ -97,15 +97,15 @@ export class Builder {
       .setProvider(provider)
       .importComponents(mapComp(configs.components))
       .importDirectives(mapDire(configs.directives))
-      .createRoot(mapComponentChild([configs.page])[0])
-      .create();
-    const dependencies = context.dependencies;
-    const root = context.root;
+      .build();
+    await context.createRoot(mapComponentChild([configs.page])[0]);
+    await context.callCompilation();
+    const sourceFile = await context.createAST();
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
     const result: ISourceCreateResult = {
       sourceCode: sourceString,
-      depsJSON: JSON.stringify(dependencies, null, "  "),
+      depsJSON: JSON.stringify(context.dependencies, null, "  "),
     };
     if (parser !== "typescript") {
       transpileModule(<any>transpile, result);

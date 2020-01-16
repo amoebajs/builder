@@ -33,7 +33,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.render["parentRef"] = this;
     this.setRootElement(REACT.Fragment, {});
     this.setState("rootChildren", []);
-    this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.PureComponent]));
   }
 
   protected async onChildrenPostRender() {
