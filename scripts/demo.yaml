@@ -1,3 +1,4 @@
+provider: react
 components:
   - module: ambjs-common-module
     name: css-grid-container

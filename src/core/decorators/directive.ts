@@ -13,7 +13,7 @@ export function resolveDirective(target: EntityConstructor<any>, defaults: Parti
 export interface IDirectiveContract extends IBasicI18NContract {
   name: string | null;
   displayName: string | null;
-  dependencies: { [name: string]: string | string[] };
+  dependencies: Record<string, string>;
 }
 
 const defaults: IDirectiveContract = {

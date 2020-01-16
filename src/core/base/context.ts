@@ -1,5 +1,6 @@
 import ts from "typescript";
-import { EntityType } from "./entity";
+import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
+import { IInnerCompnentChildRef } from "../child-ref";
 
 export interface IFinalScopedContext {
   // all level
@@ -33,5 +34,14 @@ export interface IScopedContext
 export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
   public provider!: T;
-  public abstract setProvider(provider: string): void;
+  public root!: IInnerCompnentChildRef;
+  public components!: IComponentCreateOptions[];
+  public directives!: IDirectiveCreateOptions[];
+  public dependencies!: Record<string, string>;
+  public abstract setProvider(provider: string): this;
+  public abstract createRoot(options: ICompChildRefPluginOptions): this;
+  public abstract importComponents(components: IComponentCreateOptions[]): this;
+  public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
+  public abstract getDependencies(): Record<string, string>;
+  public abstract create(): this;
 }

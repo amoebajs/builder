@@ -19,7 +19,7 @@ export interface IModuleContract {
   provider: keyof IFrameworkDepts;
   components: EntityConstructor<any>[];
   directives: EntityConstructor<any>[];
-  dependencies: { [name: string]: string | string[] };
+  dependencies: Record<string, string>;
 }
 
 export interface IBasicI18NContract {
@@ -31,7 +31,7 @@ export interface IBasicI18NContract {
 }
 
 export interface IFrameworkDepts {
-  react: { [name: string]: string };
+  react: Record<string, string>;
 }
 
 export type IFrameworkStructure<T> = {

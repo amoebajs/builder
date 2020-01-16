@@ -13,6 +13,10 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
     input: {},
   };
 
+  public get entityInputs(): IDirectiveChildRefPrivates["__options"]["input"] {
+    return this.__options.input;
+  }
+
   constructor() {
     super();
     this["__etype"] = "directiveChildRef";
@@ -26,8 +30,28 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     attach: {},
     props: {},
   };
-  protected __refComponnents: IComponentChildRefPrivates["__refComponnents"] = [];
+  protected __refComponents: IComponentChildRefPrivates["__refComponents"] = [];
   protected __refDirectives: IComponentChildRefPrivates["__refDirectives"] = [];
+
+  public get entityInputs(): IComponentChildRefPrivates["__options"]["input"] {
+    return this.__options.input;
+  }
+
+  public get entityAttaches(): IComponentChildRefPrivates["__options"]["attach"] {
+    return this.__options.attach;
+  }
+
+  public get entityProps(): IComponentChildRefPrivates["__options"]["props"] {
+    return this.__options.props;
+  }
+
+  public get children(): IComponentChildRefPrivates["__refComponents"] {
+    return this.__refComponents;
+  }
+
+  public get directives(): IComponentChildRefPrivates["__refDirectives"] {
+    return this.__refDirectives;
+  }
 
   constructor() {
     super();

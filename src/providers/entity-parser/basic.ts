@@ -6,9 +6,8 @@ import {
   BasicDirective,
   Composition,
   EntityConstructor,
+  IBasicEntityProvider,
   IComponentAttachMap,
-  IComponentInputMap,
-  IComponentPropMap,
   IConstructor,
   IDirectiveInputMap,
   IFinalScopedContext,
@@ -28,55 +27,6 @@ import {
 import { BasicHelper } from "../entity-helper";
 import { is } from "../../utils/is";
 
-export interface IDirecChildRefPluginOptions {
-  /** entity id */
-  refEntityId: string;
-  /** entity name will emit into source code */
-  entityName: string;
-  options: {
-    input: IDirectiveInputMap;
-  };
-}
-
-export interface ICompChildRefPluginOptions {
-  /** entity id */
-  refEntityId: string;
-  /** entity name will emit into source code */
-  entityName: string;
-  components: ICompChildRefPluginOptions[];
-  directives: IDirecChildRefPluginOptions[];
-  options: {
-    input: IComponentInputMap;
-    attach: IComponentAttachMap;
-    props: IComponentPropMap;
-  };
-}
-
-export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
-  provider: keyof IFrameworkDepts;
-  components?: IComponentPluginOptions<any>[];
-  directives?: IDirectivePluginOptions<any>[];
-  children?: ICompChildRefPluginOptions[];
-  dependencies?: { [prop: string]: any };
-}
-
-export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
-  id: string;
-  provider: keyof IFrameworkDepts;
-  template: T;
-  input?: IDirectiveInputMap;
-}
-
-export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
-  attach?: IComponentAttachMap;
-  passContext: SourceFileContext<BasicEntityProvider>;
-}
-
-export interface IPropertiesOptions {
-  input?: IDirectiveInputMap;
-  attach?: IComponentAttachMap;
-}
-
 export function wrapMetaIntoCtor<T extends InjectDIToken<any>>(ctor: T, provider: string): T {
   (<any>ctor)["__provider"] = provider;
   return ctor;
@@ -87,7 +37,7 @@ export function getMetaFromCtor<T extends InjectDIToken<any>>(ctor: T): string |
 }
 
 @Injectable()
-export abstract class BasicEntityProvider {
+export abstract class BasicEntityProvider implements IBasicEntityProvider {
   constructor(protected readonly injector: Injector, protected readonly helper: BasicHelper) {}
 
   public createInstance<T extends IInnerComponent>({
