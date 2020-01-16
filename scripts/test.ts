@@ -1,6 +1,6 @@
 import ts from "typescript";
 import prettier from "prettier";
-import { FunctionGenerator, ImportGenerator } from "../src/core/typescript/index";
+import { ClassGenerator, FunctionGenerator, ImportGenerator } from "../src/core/typescript/index";
 
 const printer = ts.createPrinter();
 
@@ -37,15 +37,31 @@ const func = new FunctionGenerator()
   .pushParam({ name: "p4", type: "boolean | undefined", initValue: "true" })
   .pushParam({ name: "p5", type: "Date", nullable: true })
   .pushParam({ initValue: "{}", destruct: ["a", "b", "c"] })
+  .setBody('console.log("fuck off");\nreturn;')
+  // .setBody(params => [
+  //   ts.createReturn(ts.createPropertyAccess(ts.createIdentifier(params[2].name), ts.createIdentifier("toString()"))),
+  // ])
   .pushTransformerBeforeEmit(node => {
     console.log("is function : " + ts.isFunctionDeclaration(node));
     return node;
   })
   .emit();
 
+const classF = new ClassGenerator()
+  .addMethod({
+    name: "funcAAA",
+    params: [
+      { name: "p1", type: "string[]", initValue: "[]" },
+      { name: "p2", type: "number", initValue: "25258" },
+    ],
+    returnType: ["any"],
+    body: 'console.log("fuck off");\nreturn;',
+  })
+  .emit();
+
 sourceFile = ts.updateSourceFileNode(
   sourceFile,
-  [tsImport, fsImport, childProcessImport, func],
+  [tsImport, fsImport, childProcessImport, func, classF],
   sourceFile.isDeclarationFile,
   sourceFile.referencedFiles,
   sourceFile.typeReferenceDirectives,

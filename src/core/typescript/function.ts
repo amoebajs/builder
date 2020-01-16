@@ -6,10 +6,15 @@ import { is } from "../../utils/is";
 
 export type KeywordTypeReal = string | boolean | number;
 export interface IParamDefine {
+  index: number;
   type: string[];
   destruct: string[];
   nullable: boolean;
   initValue: ts.Expression | undefined;
+}
+
+export interface INamedParamDefine extends IParamDefine {
+  name: string;
 }
 
 export interface IParamCreateOptions {
@@ -20,11 +25,18 @@ export interface IParamCreateOptions {
   initValue?: string | ((type: string[], nullable: boolean) => ts.Expression);
 }
 
+export interface IBodyDefine {
+  type: "text" | "statements";
+  text?: string;
+  statements?: (params: INamedParamDefine[]) => ts.Statement[];
+}
+
 @Injectable(InjectScope.New)
 export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclaration> {
   protected params: Record<string, IParamDefine> = {};
   protected typeParams: string[] = [];
-  protected returnType: string = "any";
+  protected returnType: string[] = ["any"];
+  protected body: IBodyDefine = { type: "statements", statements: () => [] };
   protected isGenerator = false;
 
   public setIsGenerator(is: boolean) {
@@ -32,54 +44,26 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
     return this;
   }
 
-  public pushTypeParam(typeName: string) {
-    this.typeParams.push(typeName);
+  public pushTypeParam(typeName: string | string[]) {
+    this.typeParams.push(...(is.array(typeName) ? typeName : [typeName]));
     return this;
   }
 
   public pushParam(options: string | IParamCreateOptions) {
-    if (typeof options === "string") {
-      this.pushParamWithType(options, "any");
-      return this;
-    }
-    const paramName = options.name || "_p" + (Object.keys(this.params).length + 1);
-    this.pushParamWithType(paramName, options.type || "any", options.nullable);
-    this.updateParamDestruct(paramName, options.destruct || []);
-    options.initValue && this.updateParamInitValue(paramName, options.initValue);
+    const index = Object.keys(this.params).length;
+    if (typeof options === "string") options = { name: options, type: "any" };
+    const paramName = options.name || "_p" + (index + 1);
+    this.params[paramName] = createParamDefine(index, options);
     return this;
   }
 
-  private pushParamWithType(name: string, type: string | string[], nullable = false) {
-    this.params[name] = {
-      type: is.array(type) ? type : [type],
-      destruct: [],
-      nullable,
-      initValue: void 0,
-    };
-    return this;
-  }
-
-  private updateParamDestruct(name: string, destruct: string[]) {
-    const param = this.params[name];
-    if (!param) return this;
-    for (const nm of destruct) {
-      if (param.destruct.indexOf(nm) < 0) {
-        param.destruct.push(nm);
-      }
-    }
-    return this;
-  }
-
-  private updateParamInitValue(
-    name: string,
-    initValue: string | ((type: string[], nullable: boolean) => ts.Expression),
-  ) {
-    const param = this.params[name];
-    if (!param) return this;
-    if (typeof initValue === "string") {
-      param.initValue = ts.createIdentifier(initValue);
+  public setBody(body: IBodyDefine["statements"] | IBodyDefine["text"]) {
+    if (typeof body === "string") {
+      this.body.type = "text";
+      this.body.text = body;
     } else {
-      param.initValue = initValue(param.type, param.nullable);
+      this.body.type === "statements";
+      this.body.statements = body || (() => []);
     }
     return this;
   }
@@ -91,49 +75,83 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
       createFuncGeneratorToken(this.isGenerator),
       this.getName(),
       createFuncTypeParams(this.typeParams),
-      Object.entries(this.params).map(([n, i]) =>
-        ts.createParameter(
-          [],
-          [],
-          void 0,
-          ts.createIdentifier(createFuncParamName(i, n)),
-          createFuncParamNullable(i),
-          createFuncParamType(i),
-          createFuncParamInitValue(i),
-        ),
-      ),
+      createFuncParams(this.params),
       createFuncReturnType(this.returnType),
-      ts.createBlock([], true),
+      createFuncBody(this.body, this.params),
     );
   }
 }
 
-function createFuncReturnType(returnType: string) {
-  return ts.createTypeReferenceNode(returnType, []);
+function createParamDefine(index: number, options: IParamCreateOptions): IParamDefine {
+  const paramType = is.array(options.type) ? options.type : [options.type || "any"];
+  const paramNullable = options.nullable || false;
+  return {
+    index,
+    type: paramType,
+    destruct: options.destruct || [],
+    nullable: paramNullable,
+    initValue: !options.initValue
+      ? void 0
+      : typeof options.initValue === "string"
+      ? ts.createIdentifier(options.initValue)
+      : options.initValue(paramType, paramNullable),
+  };
 }
 
-function createFuncTypeParams(typeParams: string[]) {
+export function getFuncParamByIndex(params: Record<string, IParamDefine>) {
+  return Object.entries(params).sort((a, b) => a[1].index - b[1].index);
+}
+
+export function createFuncParams(params: Record<string, IParamDefine>) {
+  return getFuncParamByIndex(params).map(([n, i]) =>
+    ts.createParameter(
+      [],
+      [],
+      void 0,
+      ts.createIdentifier(createFuncParamName(i, n)),
+      createFuncParamNullable(i),
+      createFuncParamType(i),
+      createFuncParamInitValue(i),
+    ),
+  );
+}
+
+export function createFuncReturnType(returnType: string[]) {
+  return ts.createTypeReferenceNode(returnType.join(" | "), []);
+}
+
+export function createFuncTypeParams(typeParams: string[]) {
   return typeParams.map(i => ts.createTypeParameterDeclaration(i));
 }
 
-function createFuncGeneratorToken(is: boolean): ts.AsteriskToken | undefined {
+export function createFuncGeneratorToken(is: boolean): ts.AsteriskToken | undefined {
   return is ? ts.createToken(ts.SyntaxKind.AsteriskToken) : void 0;
 }
 
-function createFuncParamInitValue(i: IParamDefine): ts.Expression | undefined {
+export function createFuncParamInitValue(i: IParamDefine): ts.Expression | undefined {
   return !is.undefined(i.initValue) ? i.initValue : void 0;
 }
 
-function createFuncParamNullable(i: IParamDefine): ts.QuestionToken | undefined {
+export function createFuncParamNullable(i: IParamDefine): ts.QuestionToken | undefined {
   return i.nullable ? ts.createToken(ts.SyntaxKind.QuestionToken) : void 0;
 }
 
-function createFuncParamType(i: IParamDefine): ts.TypeNode | undefined {
+export function createFuncParamType(i: IParamDefine): ts.TypeNode | undefined {
   return i.type.length === 0
     ? ts.createTypeReferenceNode("any", [])
     : ts.createTypeReferenceNode(i.type.join(" | "), []);
 }
 
-function createFuncParamName(i: IParamDefine, n: string): string {
+export function createFuncParamName(i: IParamDefine, n: string): string {
   return i.destruct.length === 0 ? n : `{ ${i.destruct.join(", ")} }`;
+}
+
+export function createFuncBody(body: IBodyDefine, params: Record<string, IParamDefine>) {
+  if (body.type === "text") {
+    return ts.createBlock([ts.createStatement(ts.createIdentifier(body.text!))], false);
+  }
+  return ts.createBlock(
+    body.statements!(getFuncParamByIndex(params).map(([name, param]) => ({ ...param, name }))),
+    true,
+  );
 }
