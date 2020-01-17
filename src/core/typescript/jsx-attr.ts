@@ -10,7 +10,7 @@ export type IJsxAttrDefine = string | IJsxElementDefine | (() => ts.Expression);
 export class JsxAttrGenerator extends DeclarationGenerator<ts.JsxAttributeLike> {
   protected jsxAttr: IJsxAttrDefine = "null";
 
-  public setJsxAttrValue(value: IJsxAttrDefine) {
+  public setValue(value: IJsxAttrDefine) {
     this.jsxAttr = value;
     return this;
   }

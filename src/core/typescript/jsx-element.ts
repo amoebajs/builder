@@ -22,7 +22,7 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
   }
 
   public addJsxAttr(name: string, value: IJsxAttrDefine) {
-    this.attrs[name] = new JsxAttrGenerator().setName(name).setJsxAttrValue(value);
+    this.attrs[name] = new JsxAttrGenerator().setName(name).setValue(value);
     return this;
   }
 
