@@ -4,3 +4,4 @@ export { FunctionGenerator } from "./function";
 export { ClassGenerator } from "./class";
 export { ImportGenerator } from "./import";
 export { VariableGenerator } from "./variable";
+export { JsxElementGenerator } from "./jsx-element";

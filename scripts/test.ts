@@ -1,6 +1,12 @@
 import ts from "typescript";
 import prettier from "prettier";
-import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../src/core/typescript/index";
+import {
+  ClassGenerator,
+  FunctionGenerator,
+  ImportGenerator,
+  JsxElementGenerator,
+  VariableGenerator,
+} from "../src/core/typescript/index";
 
 const printer = ts.createPrinter();
 
@@ -20,10 +26,6 @@ const childProcessImport = new ImportGenerator()
   .addNamedBinding("IOnDestroy")
   .addNamedBinding("IOnInit", "OnInit")
   .setModulePath("custom_path")
-  .emit();
-
-const vbs = new VariableGenerator()
-  .addField({ name: "HUJVJV", type: "string", initValue: '"THVGJVJVJH_HVJCJVJHV"' })
   .emit();
 
 const func = new FunctionGenerator()
@@ -74,9 +76,37 @@ const classF = new ClassGenerator()
   .addImplement("OnInit")
   .emit();
 
+const vbs = new VariableGenerator()
+  .addField({
+    name: "HUJVJV",
+    type: "any",
+    initValue: () =>
+      new JsxElementGenerator()
+        .setTagName("DemoChildRoot")
+        .addJsxAttr("name", '"woshinidie"')
+        .addJsxAttr("name2", "<div>hahaha</div>")
+        .addJsxChild("Sdvasdvsvss_34gfvsfv")
+        .addJsxChild({
+          tagName: "div",
+          attrs: {
+            p01: "<div>aaaaaa</div>",
+            p02: "<div>bbbbbb</div>",
+            p03: { tagName: "div", children: [{ tagName: "div", children: ["eeeee"] }] },
+            p04: { tagName: "div", children: ["dddddd"] },
+          },
+          children: [
+            "Sdfvsadf_34tgrfvdzd_Sdvasdvsvd_saefgwrf",
+            { tagName: "XXX", children: [] },
+            { tagName: "DDD", attrs: { a: "false", b: '"666"' } },
+          ],
+        })
+        .emit(),
+  })
+  .emit();
+
 sourceFile = ts.updateSourceFileNode(
   sourceFile,
-  [tsImport, fsImport, childProcessImport, vbs, func, classF],
+  [tsImport, fsImport, childProcessImport, func, classF, vbs],
   sourceFile.isDeclarationFile,
   sourceFile.referencedFiles,
   sourceFile.typeReferenceDirectives,
