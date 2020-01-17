@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
-import { DeclarationGenerator } from "./declaration";
+import { DeclarationGenerator, createDeclarationExport } from "./declaration";
 import { is } from "../../utils/is";
 import {
   FunctionGenerator,
@@ -42,6 +42,8 @@ export class ClassGenerator extends DeclarationGenerator<ts.ClassDeclaration> {
   protected fields: Record<string, IFiledDefine> = {};
   protected methods: Record<string, IMethodDefine> = {};
   protected typeParams: string[] = [];
+  protected extendName: string | null = null;
+  protected implementNames: string[] = [];
 
   public pushTypeParam(typeName: string) {
     this.typeParams.push(typeName);
@@ -68,20 +70,31 @@ export class ClassGenerator extends DeclarationGenerator<ts.ClassDeclaration> {
       function: new FunctionGenerator()
         .setName(options.name)
         .pushTypeParam(options.typeParams || [])
+        .setReturnType(options.returnType || [])
         .setBody(options.body),
     });
     (options.params || []).forEach(p => method.function.pushParam(p));
     return this;
   }
 
+  public setExtend(name: string | null) {
+    this.extendName = name;
+    return this;
+  }
+
+  public addImplement(name: string) {
+    this.implementNames.push(name);
+    return this;
+  }
+
   protected create(): ts.ClassDeclaration {
     return ts.createClassDeclaration(
       [],
-      [],
+      createDeclarationExport(this.exportType),
       ts.createIdentifier(this.name),
       createClassTypeParams(this.typeParams),
-      [],
-      [...createClassFields(this.fields), ...createClassMethods(this.methods)],
+      this.exist([createClassExtend(this.extendName), ...createClassImplements(this.implementNames)]),
+      this.exist([...createClassFields(this.fields), ...createClassMethods(this.methods)]),
     );
   }
 }
@@ -101,6 +114,24 @@ export function createClassFields(fields: Record<string, IFiledDefine>) {
       field.initValue,
     ),
   );
+}
+
+export function createClassExtend(name: string | null) {
+  return !name
+    ? undefined
+    : ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.createExpressionWithTypeArguments([], ts.createIdentifier(name)),
+      ]);
+}
+
+export function createClassImplements(names: string[]) {
+  return names.length === 0
+    ? []
+    : names.map(name =>
+        ts.createHeritageClause(ts.SyntaxKind.ImplementsKeyword, [
+          ts.createExpressionWithTypeArguments([], ts.createIdentifier(name)),
+        ]),
+      );
 }
 
 export function getClassMethodByIndex(params: Record<string, IMethodDefine>) {

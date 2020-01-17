@@ -7,8 +7,8 @@ const printer = ts.createPrinter();
 let sourceFile = ts.createSourceFile("a.tsx", "", ts.ScriptTarget.ES2017);
 
 const tsImport = new ImportGenerator()
-  .setDefaultName("ts")
-  .setModulePath("typescript")
+  .setDefaultName("React")
+  .setModulePath("react")
   .emit();
 
 const fsImport = new ImportGenerator()
@@ -17,14 +17,14 @@ const fsImport = new ImportGenerator()
   .emit();
 
 const childProcessImport = new ImportGenerator()
-  .addNamedBinding("fork")
-  .addNamedBinding("spawn", "spawnFn")
-  .setModulePath("child_process")
+  .addNamedBinding("IOnDestroy")
+  .addNamedBinding("IOnInit", "OnInit")
+  .setModulePath("custom_path")
   .emit();
 
 const func = new FunctionGenerator()
-  .setName("demoFn")
-  .setExportType(true, true)
+  .setName("DemoFn")
+  .setExport("default")
   .pushParam("p0")
   .pushParam({ name: "p1", type: "string[]", initValue: "[]" })
   .pushParam({ name: "p2", type: "number", initValue: "25258" })
@@ -48,6 +48,15 @@ const func = new FunctionGenerator()
   .emit();
 
 const classF = new ClassGenerator()
+  .setName("Woshinidie")
+  .setExport("named")
+  .addField({ name: "aaa", type: "number", initValue: "123456" })
+  .addField({ name: "bbb", type: "string" })
+  .addMethod({
+    name: "constructor",
+    params: [{ name: "private ccc", type: "boolean", initValue: "false" }],
+    body: 'this.bbb = "sdfsdf";\nconsole.log(this.ccc);',
+  })
   .addMethod({
     name: "funcAAA",
     params: [
@@ -57,6 +66,8 @@ const classF = new ClassGenerator()
     returnType: ["any"],
     body: 'console.log("fuck off");\nreturn;',
   })
+  .setExtend("React.Component")
+  .addImplement("OnInit")
   .emit();
 
 sourceFile = ts.updateSourceFileNode(

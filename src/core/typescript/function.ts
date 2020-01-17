@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
-import { DeclarationGenerator } from "./declaration";
+import { DeclarationGenerator, createDeclarationExport } from "./declaration";
 import { is } from "../../utils/is";
 
 export type KeywordTypeReal = string | boolean | number;
@@ -57,6 +57,11 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
     return this;
   }
 
+  public setReturnType(type: string | string[]) {
+    this.returnType = is.array(type) ? type : [type];
+    return this;
+  }
+
   public setBody(body: IBodyDefine["statements"] | IBodyDefine["text"]) {
     if (typeof body === "string") {
       this.body.type = "text";
@@ -71,7 +76,7 @@ export class FunctionGenerator extends DeclarationGenerator<ts.FunctionDeclarati
   protected create(): ts.FunctionDeclaration {
     return ts.createFunctionDeclaration(
       [],
-      this.getExportModifiers(),
+      createDeclarationExport(this.exportType),
       createFuncGeneratorToken(this.isGenerator),
       this.getName(),
       createFuncTypeParams(this.typeParams),
@@ -117,7 +122,7 @@ export function createFuncParams(params: Record<string, IParamDefine>) {
 }
 
 export function createFuncReturnType(returnType: string[]) {
-  return ts.createTypeReferenceNode(returnType.join(" | "), []);
+  return returnType.length === 0 ? undefined : ts.createTypeReferenceNode(returnType.join(" | "), []);
 }
 
 export function createFuncTypeParams(typeParams: string[]) {

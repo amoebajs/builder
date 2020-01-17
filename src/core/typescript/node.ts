@@ -11,6 +11,10 @@ export abstract class NodeGenerator<T extends ts.Node = ts.Node> {
     return this;
   }
 
+  protected exist<M>(arr: (M | undefined)[]): M[] {
+    return <M[]>arr.filter(i => !!i);
+  }
+
   protected abstract create(): T;
 
   public emit() {
