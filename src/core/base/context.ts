@@ -1,10 +1,11 @@
 import ts from "typescript";
 import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
 import { IInnerCompnentChildRef } from "../child-ref";
-import { ClassGenerator, FunctionGenerator, ImportGenerator } from "../typescript";
+import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../typescript";
 
 export const ContextItemsGroup = {
   import: ImportGenerator,
+  variable: VariableGenerator,
   class: ClassGenerator,
   function: FunctionGenerator,
 };
@@ -12,6 +13,7 @@ export const ContextItemsGroup = {
 export interface IFinalScopedContext {
   // imports: ts.ImportDeclaration[];
   imports: InstanceType<typeof ContextItemsGroup["import"]>[];
+  variables: InstanceType<typeof ContextItemsGroup["variable"]>[];
   // classes: ts.ClassDeclaration[];
   classes: InstanceType<typeof ContextItemsGroup["class"]>[];
   // functions: ts.FunctionDeclaration[];

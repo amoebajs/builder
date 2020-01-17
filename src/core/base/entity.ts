@@ -222,6 +222,14 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("imports") || [];
   }
 
+  protected addVariables(args: IFinalScopedContext["variables"], type: IBasicComponentAppendType = "push") {
+    return this.__addChildElements("variables", args, type);
+  }
+
+  protected getVariables() {
+    return this.__getChildElements("variables") || [];
+  }
+
   protected addClasses(args: IFinalScopedContext["classes"], type: IBasicComponentAppendType = "push") {
     return this.__addChildElements("classes", args, type);
   }
