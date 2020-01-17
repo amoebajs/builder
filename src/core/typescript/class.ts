@@ -2,7 +2,6 @@ import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
 import { DeclarationGenerator, createDeclarationExport } from "./declaration";
-import { is } from "../../utils/is";
 import {
   FunctionGenerator,
   IBodyDefine,
@@ -12,10 +11,12 @@ import {
   createFuncReturnType,
   createFuncTypeParams,
 } from "./function";
+import { IVariableCreateOptions, VariableGenerator } from "./variable";
+import { createTypeListNode } from "./node";
 
-export interface IFiledDefine {
-  type: string[];
-  initValue: ts.Expression | undefined;
+export interface IFiledGroupDefine {
+  nullable: Record<string, boolean>;
+  variables: VariableGenerator;
 }
 
 export interface IMethodDefine {
@@ -31,15 +32,13 @@ export interface IMethodCreateOptions {
   body?: IBodyDefine["statements"] | IBodyDefine["text"];
 }
 
-export interface IFiledCreateOptions {
-  name: string;
-  type?: string | string[];
-  initValue?: string | ((type: string[]) => ts.Expression);
+export interface IFieldCreateOptions extends IVariableCreateOptions {
+  nullable?: boolean;
 }
 
 @Injectable(InjectScope.New)
 export class ClassGenerator extends DeclarationGenerator<ts.ClassDeclaration> {
-  protected fields: Record<string, IFiledDefine> = {};
+  protected fields: IFiledGroupDefine = { nullable: {}, variables: new VariableGenerator() };
   protected methods: Record<string, IMethodDefine> = {};
   protected typeParams: string[] = [];
   protected extendName: string | null = null;
@@ -50,17 +49,10 @@ export class ClassGenerator extends DeclarationGenerator<ts.ClassDeclaration> {
     return this;
   }
 
-  public addField(options: string | IFiledCreateOptions) {
+  public addField(options: string | IFieldCreateOptions) {
     if (typeof options === "string") options = { name: options, type: "any" };
-    const fieldType = is.array(options.type) ? options.type : [options.type || "any"];
-    this.fields[options.name] = {
-      type: fieldType,
-      initValue: !options.initValue
-        ? void 0
-        : typeof options.initValue === "string"
-        ? ts.createIdentifier(options.initValue)
-        : options.initValue(fieldType),
-    };
+    this.fields.nullable[options.name] = options.nullable || false;
+    this.fields.variables.addField(options);
     return this;
   }
 
@@ -103,14 +95,14 @@ export function createClassTypeParams(typeParams: string[]) {
   return typeParams.map(i => ts.createTypeParameterDeclaration(i));
 }
 
-export function createClassFields(fields: Record<string, IFiledDefine>) {
-  return Object.entries(fields).map(([name, field]) =>
+export function createClassFields(fields: IFiledGroupDefine) {
+  return Object.entries(fields.variables["variables"]).map(([name, field]) =>
     ts.createProperty(
       [],
       [],
       ts.createIdentifier(name),
-      undefined,
-      ts.createTypeReferenceNode(field.type.join(" | "), []),
+      fields.nullable[name] ? ts.createToken(ts.SyntaxKind.QuestionToken) : undefined,
+      createTypeListNode(field.type),
       field.initValue,
     ),
   );

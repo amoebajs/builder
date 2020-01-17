@@ -3,6 +3,7 @@ import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
 import { DeclarationGenerator, createDeclarationExport } from "./declaration";
 import { is } from "../../utils/is";
+import { createTypeListNode } from "./node";
 
 export type KeywordTypeReal = string | boolean | number;
 export interface IParamDefine {
@@ -122,7 +123,7 @@ export function createFuncParams(params: Record<string, IParamDefine>) {
 }
 
 export function createFuncReturnType(returnType: string[]) {
-  return returnType.length === 0 ? undefined : ts.createTypeReferenceNode(returnType.join(" | "), []);
+  return returnType.length === 0 ? undefined : createTypeListNode(returnType);
 }
 
 export function createFuncTypeParams(typeParams: string[]) {
@@ -142,9 +143,7 @@ export function createFuncParamNullable(i: IParamDefine): ts.QuestionToken | und
 }
 
 export function createFuncParamType(i: IParamDefine): ts.TypeNode | undefined {
-  return i.type.length === 0
-    ? ts.createTypeReferenceNode("any", [])
-    : ts.createTypeReferenceNode(i.type.join(" | "), []);
+  return i.type.length === 0 ? ts.createTypeReferenceNode("any", []) : createTypeListNode(i.type);
 }
 
 export function createFuncParamName(i: IParamDefine, n: string): string {

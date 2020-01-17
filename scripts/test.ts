@@ -1,6 +1,6 @@
 import ts from "typescript";
 import prettier from "prettier";
-import { ClassGenerator, FunctionGenerator, ImportGenerator } from "../src/core/typescript/index";
+import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../src/core/typescript/index";
 
 const printer = ts.createPrinter();
 
@@ -20,6 +20,10 @@ const childProcessImport = new ImportGenerator()
   .addNamedBinding("IOnDestroy")
   .addNamedBinding("IOnInit", "OnInit")
   .setModulePath("custom_path")
+  .emit();
+
+const vbs = new VariableGenerator()
+  .addField({ name: "HUJVJV", type: "string", initValue: '"THVGJVJVJH_HVJCJVJHV"' })
   .emit();
 
 const func = new FunctionGenerator()
@@ -51,7 +55,7 @@ const classF = new ClassGenerator()
   .setName("Woshinidie")
   .setExport("named")
   .addField({ name: "aaa", type: "number", initValue: "123456" })
-  .addField({ name: "bbb", type: "string" })
+  .addField({ name: "bbb", type: "string", nullable: true })
   .addMethod({
     name: "constructor",
     params: [{ name: "private ccc", type: "boolean", initValue: "false" }],
@@ -72,7 +76,7 @@ const classF = new ClassGenerator()
 
 sourceFile = ts.updateSourceFileNode(
   sourceFile,
-  [tsImport, fsImport, childProcessImport, func, classF],
+  [tsImport, fsImport, childProcessImport, vbs, func, classF],
   sourceFile.isDeclarationFile,
   sourceFile.referencedFiles,
   sourceFile.typeReferenceDirectives,
