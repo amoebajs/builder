@@ -8,7 +8,7 @@ export type IJsxAttrDefine = string | IJsxElementDefine | (() => ts.Expression);
 
 @Injectable(InjectScope.New)
 export class JsxAttrGenerator extends DeclarationGenerator<ts.JsxAttributeLike> {
-  protected jsxAttr: IJsxAttrDefine = "null";
+  protected jsxAttr?: IJsxAttrDefine;
 
   public setValue(value: IJsxAttrDefine) {
     this.jsxAttr = value;
@@ -20,7 +20,9 @@ export class JsxAttrGenerator extends DeclarationGenerator<ts.JsxAttributeLike> 
       this.getName(),
       ts.createJsxExpression(
         undefined,
-        typeof this.jsxAttr === "string"
+        this.jsxAttr === void 0
+          ? void 0
+          : typeof this.jsxAttr === "string"
           ? ts.createIdentifier(this.jsxAttr)
           : typeof this.jsxAttr === "function"
           ? this.jsxAttr()

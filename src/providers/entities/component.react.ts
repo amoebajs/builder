@@ -1,11 +1,12 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { capitalize } from "lodash";
 import { IPureObject } from "../../core/base";
 import { IJsxAttrs, REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
-import capitalize from "lodash/capitalize";
+import { JsxElementGenerator } from "../../core/typescript";
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   rootElement: {
@@ -13,7 +14,7 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
     attrs: IJsxAttrs;
     types: any[];
   };
-  rootChildren: (ts.JsxChild | string)[];
+  rootChildren: JsxElementGenerator[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -21,7 +22,7 @@ type TY = IBasicReactContainerState<{}>;
 
 @Injectable(InjectScope.New)
 export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
-  private __elementMap: Map<string | symbol, ts.JsxElement> = new Map();
+  private __elementMap: Map<string | symbol, JsxElementGenerator> = new Map();
   protected propType: string = "any";
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
@@ -39,20 +40,24 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     await super.onChildrenPostRender();
     const children = this.getChildren();
     for (const child of children) {
+      const ele = this.helper.createViewElement(child.component, { key: child.id });
       const props = child.props || {};
-      const attrs: IJsxAttrs = {};
+      // const attrs: IJsxAttrs = {};
       for (const key in props) {
         if (props.hasOwnProperty(key)) {
           const element = props[key];
           switch (element.type) {
             case "state":
-              attrs[key] = ts.createIdentifier(element.expression);
+              ele.addJsxAttr(key, element.expression);
+              // attrs[key] = ts.createIdentifier(element.expression);
               break;
             case "props":
-              attrs[key] = this.helper.createReactPropsAccess(element.expression);
+              ele.addJsxAttr(key, "props." + element.expression);
+              // attrs[key] = this.helper.createReactPropsAccess(element.expression);
               break;
             case "literal":
-              attrs[key] = this.helper.createLiteral(element.expression);
+              ele.addJsxAttr(key, element.expression);
+              // attrs[key] = this.helper.createLiteral(element.expression);
               break;
             default:
               break;
@@ -61,10 +66,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
       }
       this.addRootChildren(
         child.id,
-        this.helper.createJsxElement(child.component, [], {
-          ...attrs,
-          key: child.id,
-        }),
+        this.helper.createViewElement(child.component, { key: child.id }),
+        // this.helper.createJsxElement(child.component, [], {
+        //   ...attrs,
+        //   key: child.id,
+        // }),
       );
     }
   }
@@ -73,32 +79,42 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     await super.onRender();
     const root = this.getState("rootElement");
     const children = this.getRootChildren();
-    this.addParameters([
-      ts.createParameter(
-        undefined,
-        undefined,
-        undefined,
-        "props",
-        undefined,
-        ts.createTypeReferenceNode(this.propType, undefined),
-        undefined,
-      ),
-    ]);
-    this.addStatements([
-      ts.createReturn(
-        ts.createParen(
-          this.helper.createJsxElement(
-            root.name,
-            root.types,
-            {
-              ...root.attrs,
-              key: this.entityId,
-            },
-            children,
-          ),
-        ),
-      ),
-    ]);
+    // this.addParameters([
+    //   ts.createParameter(
+    //     undefined,
+    //     undefined,
+    //     undefined,
+    //     "props",
+    //     undefined,
+    //     ts.createTypeReferenceNode(this.propType, undefined),
+    //     undefined,
+    //   ),
+    // ]);
+    const rootEle = this.__injector.get(JsxElementGenerator).setTagName(root.name);
+    children.forEach(c => rootEle.addJsxChild(c));
+    const render = this.createNode("function")
+      .setName("render")
+      .pushParam({ name: "props", type: "any" })
+      .pushTransformerBeforeEmit(node => {
+        node.body = ts.createBlock([ts.createReturn(rootEle.emit())]);
+        return node;
+      });
+    this.addFunctions([render]);
+    // this.addStatements([
+    //   ts.createReturn(
+    //     ts.createParen(
+    //       this.helper.createJsxElement(
+    //         root.name,
+    //         root.types,
+    //         {
+    //           ...root.attrs,
+    //           key: this.entityId,
+    //         },
+    //         children,
+    //       ),
+    //     ),
+    //   ),
+    // ]);
   }
 
   protected visitAndChangeChildNode(visitor: (key: string, node: ts.JsxElement) => ts.JsxElement) {
@@ -116,7 +132,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
-  protected addRootChildren(id: string, element: ts.JsxElement) {
+  protected addRootChildren(id: string, element: JsxElementGenerator) {
     this.__elementMap.set(id, element);
   }
 

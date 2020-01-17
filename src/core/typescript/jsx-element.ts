@@ -26,8 +26,10 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
     return this;
   }
 
-  public addJsxChild(node: string | IJsxElementDefine) {
+  public addJsxChild(node: string | IJsxElementDefine | JsxElementGenerator) {
     if (typeof node === "string") {
+      this.children.push(node);
+    } else if (node instanceof JsxElementGenerator) {
       this.children.push(node);
     } else {
       this.children.push(createJsxElement(node));

@@ -6,6 +6,8 @@ import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
+import { IJsxAttrDefine } from "../../core/typescript/jsx-attr";
+import { IJsxElementDefine, createJsxElement } from "../../core/typescript/jsx-element";
 
 export interface IFrontLibImports {
   default?: string;
@@ -34,6 +36,14 @@ export class ReactHelper extends BasicHelper {
       ),
       true,
     );
+  }
+
+  public createViewElement(
+    tagnname: string,
+    attrs: Record<string, IJsxAttrDefine> = {},
+    children: IJsxElementDefine[] = [],
+  ) {
+    return createJsxElement({ tagName: tagnname, attrs, children });
   }
 
   public createJsxElement(
