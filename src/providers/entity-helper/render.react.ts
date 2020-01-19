@@ -47,15 +47,15 @@ export class ReactRender {
   }
 
   public appendRootState(name: string, defaultValue: unknown) {
-    this.parentRef.addReactUseState(name, defaultValue);
+    this.parentRef.addComponentUseState(name, defaultValue);
   }
 
   public appendRootCallback(name: string, callback: Function | string, deps?: string[]) {
-    this.parentRef.addReactUseCallback(name, callback, deps);
+    this.parentRef.addComponentUseCallback(name, callback, deps);
   }
 
   public appendRootVariable(name: string, initilizer: ts.Expression) {
-    this.parentRef.addVariable(name, initilizer);
+    this.parentRef.addComponnentVariable(name, initilizer);
   }
   public appendJsxStyles(entityId: string, value: Record<string, unknown>) {
     let objExpression = this.helper.createObjectLiteral(value);

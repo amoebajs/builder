@@ -66,8 +66,6 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    const rootElement = this.getState("rootElement");
-    rootElement.name = DOMS.Div;
     rootElement.attrs["style"] = this.helper.createObjectAttr({
       display: "grid",
       height: this.height,
@@ -78,9 +76,8 @@ export class CssGridContainer extends ReactComponent {
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });
-    this.setState("rootElement", rootElement);
+    this.setState("rootElement", DOMS.Div);
     this.initState();
-    this.initExtends();
   }
 
   protected async onPreRender() {
@@ -103,7 +100,7 @@ export class CssGridContainer extends ReactComponent {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
-        this.addReactUseState(key, value);
+        this.addComponentUseState(key, value);
       }
     }
   }
@@ -122,11 +119,5 @@ export class CssGridContainer extends ReactComponent {
 
   private calcRowsRepeat(): string | number {
     return `repeat(${this.gridTemplateRowsCount}, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
-  }
-
-  public initExtends() {
-    if (this.useComponentState) {
-      this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component]));
-    }
   }
 }

@@ -7,12 +7,15 @@ import { createTypeListNode } from "./node";
 
 export interface IVariableDefine {
   type: string[];
+  arrayBinding: string[];
+  // namedBinding: string[];
   initValue: ts.Expression | undefined;
 }
 
 export interface IVariableCreateOptions {
-  name: string;
+  name?: string;
   type?: string | string[];
+  arrayBinding?: string[];
   initValue?: string | ((type: string[]) => ts.Expression);
 }
 
@@ -22,9 +25,12 @@ export class VariableGenerator extends StatementGenerator<ts.VariableStatement> 
 
   public addField(options: string | IVariableCreateOptions) {
     if (typeof options === "string") options = { name: options, type: "any" };
+    const index = Object.keys(this.variables).length;
+    const vbName = options.name || "_n" + (index + 1);
     const fieldType = is.array(options.type) ? options.type : [options.type || "any"];
-    this.variables[options.name] = {
+    this.variables[vbName] = {
       type: fieldType,
+      arrayBinding: options.arrayBinding || [],
       initValue: !options.initValue
         ? void 0
         : typeof options.initValue === "string"
@@ -44,6 +50,18 @@ export class VariableGenerator extends StatementGenerator<ts.VariableStatement> 
 
 export function createVariables(fields: Record<string, IVariableDefine>) {
   return Object.entries(fields).map(([name, field]) =>
-    ts.createVariableDeclaration(ts.createIdentifier(name), createTypeListNode(field.type), field.initValue),
+    ts.createVariableDeclaration(
+      field.arrayBinding.length > 0 ? createArrayBindingName(field) : ts.createIdentifier(name),
+      createTypeListNode(field.type),
+      field.initValue,
+    ),
+  );
+}
+
+function createArrayBindingName(
+  field: IVariableDefine,
+): string | ts.Identifier | ts.ObjectBindingPattern | ts.ArrayBindingPattern {
+  return ts.createArrayBindingPattern(
+    field.arrayBinding.map(n => ts.createBindingElement(undefined, undefined, ts.createIdentifier(n), undefined)),
   );
 }

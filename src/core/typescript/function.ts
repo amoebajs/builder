@@ -4,6 +4,7 @@ import { Injectable } from "../decorators";
 import { DeclarationGenerator, createDeclarationExport } from "./declaration";
 import { is } from "../../utils/is";
 import { createTypeListNode } from "./node";
+import { StatementGenerator } from "./statement";
 
 export type KeywordTypeReal = string | boolean | number;
 export interface IParamDefine {
@@ -29,7 +30,7 @@ export interface IParamCreateOptions {
 export interface IBodyDefine {
   type: "text" | "statements";
   text?: string;
-  statements?: (params: INamedParamDefine[]) => ts.Statement[];
+  statements?: StatementGenerator[] | ((params: INamedParamDefine[]) => ts.Statement[]);
 }
 
 @Injectable(InjectScope.New)
@@ -155,7 +156,9 @@ export function createFuncBody(body: IBodyDefine, params: Record<string, IParamD
     return ts.createBlock([ts.createStatement(ts.createIdentifier(body.text!))], false);
   }
   return ts.createBlock(
-    body.statements!(getFuncParamByIndex(params).map(([name, param]) => ({ ...param, name }))),
+    is.array(body.statements)
+      ? body.statements.map(i => i.emit())
+      : body.statements!(getFuncParamByIndex(params).map(([name, param]) => ({ ...param, name }))),
     true,
   );
 }

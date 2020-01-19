@@ -5,3 +5,4 @@ export { ClassGenerator } from "./class";
 export { ImportGenerator } from "./import";
 export { VariableGenerator } from "./variable";
 export { JsxElementGenerator } from "./jsx-element";
+export { JsxAttrGenerator } from "./jsx-attr";

@@ -2,19 +2,32 @@ import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { capitalize } from "lodash";
 import { IPureObject } from "../../core/base";
-import { IJsxAttrs, REACT, TYPES } from "../../utils";
+import { REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
-import { JsxElementGenerator } from "../../core/typescript";
+import { JsxAttrGenerator, JsxElementGenerator, StatementGenerator, VariableGenerator } from "../../core/typescript";
+
+export enum BasicState {
+  TagName = "renderTageName",
+  TagAttrs = "renderTagAttrs",
+  UnshiftNodes = "renderUnshiftNodes",
+  PushedNodes = "renderPushedNodes",
+  UseStates = "compUseStates",
+  UseCallbacks = "compUseCallbacks",
+  UseEffects = "compUseEffects",
+  CommonVariables = "compVariables",
+}
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
-  rootElement: {
-    name: string;
-    attrs: IJsxAttrs;
-    types: any[];
-  };
-  rootChildren: JsxElementGenerator[];
+  [BasicState.TagName]: string;
+  [BasicState.TagAttrs]: JsxAttrGenerator[];
+  [BasicState.UnshiftNodes]: JsxElementGenerator[];
+  [BasicState.PushedNodes]: JsxElementGenerator[];
+  [BasicState.UseStates]: VariableGenerator[];
+  [BasicState.UseCallbacks]: VariableGenerator[];
+  [BasicState.UseEffects]: VariableGenerator[];
+  [BasicState.CommonVariables]: VariableGenerator[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -23,7 +36,6 @@ type TY = IBasicReactContainerState<{}>;
 @Injectable(InjectScope.New)
 export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, JsxElementGenerator> = new Map();
-  protected propType: string = "any";
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
@@ -32,8 +44,14 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected async onInit() {
     await super.onInit();
     this.render["parentRef"] = this;
-    this.setRootElement(REACT.Fragment, {});
-    this.setState("rootChildren", []);
+    this.setState(BasicState.TagName, REACT.Fragment);
+    this.setState(BasicState.TagAttrs, []);
+    this.setState(BasicState.UnshiftNodes, []);
+    this.setState(BasicState.PushedNodes, []);
+    this.setState(BasicState.UseStates, []);
+    this.setState(BasicState.UseCallbacks, []);
+    this.setState(BasicState.UseEffects, []);
+    this.setState(BasicState.CommonVariables, []);
   }
 
   protected async onChildrenPostRender() {
@@ -42,86 +60,82 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     for (const child of children) {
       const ele = this.helper.createViewElement(child.component, { key: child.id });
       const props = child.props || {};
-      // const attrs: IJsxAttrs = {};
       for (const key in props) {
         if (props.hasOwnProperty(key)) {
           const element = props[key];
           switch (element.type) {
             case "state":
               ele.addJsxAttr(key, element.expression);
-              // attrs[key] = ts.createIdentifier(element.expression);
               break;
             case "props":
               ele.addJsxAttr(key, "props." + element.expression);
-              // attrs[key] = this.helper.createReactPropsAccess(element.expression);
               break;
             case "literal":
               ele.addJsxAttr(key, element.expression);
-              // attrs[key] = this.helper.createLiteral(element.expression);
               break;
             default:
               break;
           }
         }
       }
-      this.addRootChildren(
-        child.id,
-        this.helper.createViewElement(child.component, { key: child.id }),
-        // this.helper.createJsxElement(child.component, [], {
-        //   ...attrs,
-        //   key: child.id,
-        // }),
-      );
+      this.addRenderChildren(child.id, this.helper.createViewElement(child.component, { key: child.id }));
     }
   }
 
   protected async onRender() {
     await super.onRender();
-    const root = this.getState("rootElement");
-    const children = this.getRootChildren();
-    // this.addParameters([
-    //   ts.createParameter(
-    //     undefined,
-    //     undefined,
-    //     undefined,
-    //     "props",
-    //     undefined,
-    //     ts.createTypeReferenceNode(this.propType, undefined),
-    //     undefined,
-    //   ),
-    // ]);
-    const rootEle = this.__injector.get(JsxElementGenerator).setTagName(root.name);
-    children.forEach(c => rootEle.addJsxChild(c));
-    const render = this.createNode("function")
-      .setName("render")
-      .pushParam({ name: "props", type: "any" })
-      .pushTransformerBeforeEmit(node => {
-        node.body = ts.createBlock([ts.createReturn(rootEle.emit())]);
-        return node;
-      });
-    this.addFunctions([render]);
-    // this.addStatements([
-    //   ts.createReturn(
-    //     ts.createParen(
-    //       this.helper.createJsxElement(
-    //         root.name,
-    //         root.types,
-    //         {
-    //           ...root.attrs,
-    //           key: this.entityId,
-    //         },
-    //         children,
-    //       ),
-    //     ),
-    //   ),
-    // ]);
+    this.createFunctionRender([]);
   }
 
-  protected visitAndChangeChildNode(visitor: (key: string, node: ts.JsxElement) => ts.JsxElement) {
+  private createFunctionRender(statements: StatementGenerator[] = []) {
+    const { states, callbacks, effects } = this.getReactUsesImports();
+    this.addFunctions([
+      this.createNode("function")
+        .setName("render")
+        .pushParam({ name: "props", type: "any" })
+        .pushTransformerBeforeEmit(node => {
+          node.body = this.createComponentBlock(
+            this.createNode("jsx-element")
+              .setTagName(this.getState(BasicState.TagName))
+              .addJsxAttrs(this.getState(BasicState.TagAttrs))
+              .addJsxChildren([
+                ...this.getState(BasicState.UnshiftNodes),
+                ...this.getRenderChildren(),
+                ...this.getState(BasicState.PushedNodes),
+              ]),
+            (<StatementGenerator<any>[]>[])
+              .concat(states)
+              .concat(callbacks)
+              .concat(effects)
+              .concat(statements),
+          );
+          return node;
+        }),
+    ]);
+  }
+
+  private getReactUsesImports() {
+    const states = this.getState(BasicState.UseStates);
+    const callbacks = this.getState(BasicState.UseCallbacks);
+    const effects = this.getState(BasicState.UseEffects);
+    const imports: string[] = [];
+    if (states.length > 0) imports.push(REACT.UseState);
+    if (callbacks.length > 0) imports.push(REACT.UseCallback);
+    if (effects.length > 0) imports.push(REACT.UseEffect);
+    this.addImports(
+      imports.map(name =>
+        this.createNode("import")
+          .addNamedBinding(name)
+          .setModulePath(REACT.NS),
+      ),
+    );
+    return { states, callbacks, effects };
+  }
+
+  protected visitAndChangeChildNode(visitor: (key: string, node: JsxElementGenerator) => void) {
     const childNodes = Array.from(this.__elementMap.entries());
     for (const [key, node] of childNodes) {
-      const newNode = visitor(<string>key, node);
-      this.addRootChildren(<string>key, newNode);
+      visitor(<string>key, node);
     }
   }
 
@@ -132,60 +146,54 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
-  protected addRootChildren(id: string, element: JsxElementGenerator) {
+  protected addRenderChildren(id: string, element: JsxElementGenerator) {
     this.__elementMap.set(id, element);
   }
 
-  protected getRootChildren() {
-    const list = Array.from(this.__elementMap.values());
-    const nlist = this.getState("rootChildren") || [];
-    return [...nlist, ...list];
+  protected getRenderChildren() {
+    return Array.from(this.__elementMap.values());
   }
 
-  protected setRootElement(tagName: string, attrs: IJsxAttrs) {
-    this.setState("rootElement", {
-      name: tagName,
-      attrs,
-      types: [],
-    });
-  }
-  public addReactUseState(name: string, defaultValue: unknown, type?: string) {
-    const genericType = type ? ts.createTypeReferenceNode(type, undefined) : TYPES.Any;
-    const useState = ts.createCall(ts.createIdentifier("useState"), genericType ? [genericType] : undefined, [
-      this.helper.createLiteral(defaultValue),
-    ]);
-    const declare = ts.createVariableDeclaration(
-      ts.createArrayBindingPattern([
-        ts.createBindingElement(undefined, undefined, name),
-        ts.createBindingElement(undefined, undefined, "set" + capitalize(name)),
-      ]),
-      undefined,
-      useState,
-    );
-    this.addStatements([
-      ts.createVariableStatement([], ts.createVariableDeclarationList([declare], ts.NodeFlags.Const)),
+  protected addComponentUseState(name: string, defaultValue: unknown) {
+    this.setState(BasicState.UseStates, [
+      ...this.getState(BasicState.UseStates),
+      this.createNode("variable").addField({
+        arrayBinding: [name, "set" + capitalize(name)],
+        initValue: () =>
+          ts.createCall(ts.createIdentifier(REACT.UseState), [TYPES.Any], [this.helper.createLiteral(defaultValue)]),
+      }),
     ]);
   }
 
-  public addReactUseCallback(name: string, callback: Function | string, deps: string[] = []) {
-    this.addVariable(
-      name,
-      this.helper.createFunctionCall("useCallback", [
-        ts.createIdentifier(callback.toString()),
-        ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
-      ]),
-    );
+  protected addComponentUseCallback(name: string, callback: Function | string, deps: string[] = []) {
+    this.setState(BasicState.UseCallbacks, [
+      ...this.getState(BasicState.UseCallbacks),
+      this.createNode("variable").addField({
+        name: callback.toString(),
+        initValue: () =>
+          this.helper.createFunctionCall(REACT.UseCallback, [
+            ts.createIdentifier(callback.toString()),
+            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+          ]),
+      }),
+    ]);
   }
 
-  public addVariable(name: string, initilizer: ts.Expression) {
-    this.addStatements([
-      ts.createVariableStatement(
-        [],
-        ts.createVariableDeclarationList(
-          [ts.createVariableDeclaration(ts.createIdentifier(name), TYPES.Any, initilizer)],
-          ts.NodeFlags.Const,
-        ),
-      ),
+  protected addComponnentVariable(name: string, initilizer: ts.Expression) {
+    this.setState(BasicState.CommonVariables, [
+      ...this.getState(BasicState.CommonVariables),
+      this.createNode("variable").addField({
+        name,
+        initValue: () => initilizer,
+      }),
     ]);
+  }
+
+  private createComponentBlock(render: JsxElementGenerator, statements: StatementGenerator[] = []) {
+    return ts.createBlock(statements.map(i => i.emit()).concat(this.createComponentRenderReturn(render)));
+  }
+
+  private createComponentRenderReturn(rootEle: JsxElementGenerator) {
+    return ts.createReturn(rootEle.emit());
   }
 }

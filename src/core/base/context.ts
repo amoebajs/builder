@@ -1,13 +1,22 @@
 import ts from "typescript";
 import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
 import { IInnerCompnentChildRef } from "../child-ref";
-import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../typescript";
+import {
+  ClassGenerator,
+  FunctionGenerator,
+  ImportGenerator,
+  JsxAttrGenerator,
+  JsxElementGenerator,
+  VariableGenerator,
+} from "../typescript";
 
 export const ContextItemsGroup = {
   import: ImportGenerator,
   variable: VariableGenerator,
   class: ClassGenerator,
   function: FunctionGenerator,
+  ["jsx-element"]: JsxElementGenerator,
+  ["jsx-attribute"]: JsxAttrGenerator,
 };
 
 export interface IFinalScopedContext {

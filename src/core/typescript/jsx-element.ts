@@ -3,6 +3,7 @@ import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
 import { ExpressionGenerator } from "./expression";
 import { IJsxAttrDefine, JsxAttrGenerator } from "./jsx-attr";
+import { is } from "../../utils/is";
 
 export interface IJsxElementDefine {
   tagName: string;
@@ -21,8 +22,21 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
     return this;
   }
 
-  public addJsxAttr(name: string, value: IJsxAttrDefine) {
-    this.attrs[name] = new JsxAttrGenerator().setName(name).setValue(value);
+  public addJsxAttr(name: string, value: IJsxAttrDefine): this;
+  public addJsxAttr(attr: JsxAttrGenerator): this;
+  public addJsxAttr(name: string | JsxAttrGenerator, value?: IJsxAttrDefine) {
+    if (typeof name === "string") {
+      this.attrs[name] = new JsxAttrGenerator().setName(name).setValue(value!);
+    } else {
+      this.attrs[name["getName"]().text] = name;
+    }
+    return this;
+  }
+
+  public addJsxAttrs(kvs: ([string, IJsxAttrDefine] | JsxAttrGenerator)[]) {
+    for (const i of kvs) {
+      is.array(i) ? this.addJsxAttr(i[0], i[1]) : this.addJsxAttr(i);
+    }
     return this;
   }
 
@@ -33,6 +47,13 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
       this.children.push(node);
     } else {
       this.children.push(createJsxElement(node));
+    }
+    return this;
+  }
+
+  public addJsxChildren(nodes: Array<string | IJsxElementDefine | JsxElementGenerator>) {
+    for (const node of nodes) {
+      this.addJsxChild(node);
     }
     return this;
   }
