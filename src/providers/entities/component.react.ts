@@ -146,6 +146,29 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
+  protected addRenderAttrs(obj: Record<string, number | string | boolean | ts.Expression>) {
+    const entries = Object.entries(obj);
+    const existAttrs = this.getState(BasicState.TagAttrs);
+    for (const [name, attr] of entries) {
+      const valueExpression =
+        typeof attr === "number" || typeof attr === "boolean"
+          ? attr.toString()
+          : typeof attr === "string"
+          ? JSON.stringify(attr)
+          : () => attr;
+      const target = existAttrs.find(i => i["name"] === name);
+      if (target) {
+        target.setValue(valueExpression);
+        continue;
+      }
+      existAttrs.push(
+        this.createNode("jsx-attribute")
+          .setName(name)
+          .setValue(valueExpression),
+      );
+    }
+  }
+
   protected addRenderChildren(id: string, element: JsxElementGenerator) {
     this.__elementMap.set(id, element);
   }

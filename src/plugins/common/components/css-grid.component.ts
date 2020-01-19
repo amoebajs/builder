@@ -1,7 +1,6 @@
-import ts from "typescript";
 import { Attach, Component, Group, Input } from "../../../core/decorators";
-import { DOMS, TYPES } from "../../../utils";
-import { ReactComponent } from "../../../providers";
+import { DOMS } from "../../../utils";
+import { BasicState, ReactComponent } from "../../../providers";
 import { PropAttach } from "../../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
@@ -66,7 +65,7 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    rootElement.attrs["style"] = this.helper.createObjectAttr({
+    this.addRenderAttrs({
       display: "grid",
       height: this.height,
       width: this.width,
@@ -76,7 +75,7 @@ export class CssGridContainer extends ReactComponent {
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });
-    this.setState("rootElement", DOMS.Div);
+    this.setState(BasicState.TagName, DOMS.Div);
     this.initState();
   }
 
