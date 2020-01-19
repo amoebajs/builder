@@ -114,7 +114,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     ]);
   }
 
-  private getReactUsesImports() {
+  protected getReactUsesImports() {
     const states = this.getState(BasicState.UseStates);
     const callbacks = this.getState(BasicState.UseCallbacks);
     const effects = this.getState(BasicState.UseEffects);
