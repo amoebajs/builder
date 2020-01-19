@@ -4,6 +4,7 @@ import { Injectable } from "../decorators";
 import { ExpressionGenerator } from "./expression";
 import { IJsxAttrDefine, JsxAttributeGenerator } from "./jsx-attribute";
 import { is } from "../../utils/is";
+import { JsxExpressionGenerator } from "./jsx-expression";
 
 export interface IJsxElementDefine {
   tagName: string;
@@ -15,7 +16,7 @@ export interface IJsxElementDefine {
 export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.JsxSelfClosingElement> {
   protected tagName!: string;
   protected attrs: Record<string, JsxAttributeGenerator> = {};
-  protected children: (string | JsxElementGenerator)[] = [];
+  protected children: (string | JsxElementGenerator | JsxExpressionGenerator)[] = [];
 
   public setTagName(name: string) {
     this.tagName = name;
@@ -47,10 +48,10 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
     return this;
   }
 
-  public addJsxChild(node: string | IJsxElementDefine | JsxElementGenerator) {
+  public addJsxChild(node: string | IJsxElementDefine | JsxElementGenerator | JsxExpressionGenerator) {
     if (typeof node === "string") {
       this.children.push(node);
-    } else if (node instanceof JsxElementGenerator) {
+    } else if (node instanceof JsxElementGenerator || node instanceof JsxExpressionGenerator) {
       this.children.push(node);
     } else {
       this.children.push(createJsxElement(node));
@@ -58,7 +59,7 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
     return this;
   }
 
-  public addJsxChildren(nodes: Array<string | IJsxElementDefine | JsxElementGenerator>) {
+  public addJsxChildren(nodes: Array<string | IJsxElementDefine | JsxElementGenerator | JsxExpressionGenerator>) {
     for (const node of nodes) {
       this.addJsxChild(node);
     }

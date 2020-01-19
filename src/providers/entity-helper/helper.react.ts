@@ -8,6 +8,7 @@ import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
 import { IJsxElementDefine, createJsxElement } from "../../core/typescript/jsx-element";
+import { ImportGenerator } from "../../core/typescript";
 
 export interface IFrontLibImports {
   default?: string;
@@ -143,7 +144,7 @@ export class ReactHelper extends BasicHelper {
 
   public createFrontLibImports(options: IFrontLibImportOptions) {
     const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
-    const importList: ts.ImportDeclaration[] = [];
+    const importList: ImportGenerator[] = [];
     const nameCaseParser = nameCase === "kebab" ? kebabCase : camelCase;
     if (is.array(imports)) {
       for (const iterator of imports) {

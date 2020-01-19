@@ -7,6 +7,7 @@ import {
   ImportGenerator,
   JsxAttributeGenerator,
   JsxElementGenerator,
+  JsxExpressionGenerator,
   VariableGenerator,
 } from "../typescript";
 
@@ -17,6 +18,7 @@ export const ContextItemsGroup = {
   function: FunctionGenerator,
   ["jsx-element"]: JsxElementGenerator,
   ["jsx-attribute"]: JsxAttributeGenerator,
+  ["jsx-expression"]: JsxExpressionGenerator,
 };
 
 export interface IFinalScopedContext {

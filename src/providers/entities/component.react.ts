@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { capitalize } from "lodash";
-import { IPureObject } from "../../core/base";
+import { IPureObject, resolveSyntaxInsert } from "../../core/base";
 import { REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
@@ -9,9 +9,13 @@ import { ReactHelper, ReactRender } from "../entity-helper";
 import {
   JsxAttributeGenerator,
   JsxElementGenerator,
+  JsxExpressionGenerator,
   StatementGenerator,
   VariableGenerator,
 } from "../../core/typescript";
+
+export type JsxAttributeValueType = number | string | boolean | ts.Expression;
+export type JsxAttributeType = JsxAttributeValueType | Record<string, JsxAttributeValueType>;
 
 export enum BasicState {
   TagName = "renderTageName",
@@ -27,8 +31,8 @@ export enum BasicState {
 export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.TagName]: string;
   [BasicState.TagAttrs]: JsxAttributeGenerator[];
-  [BasicState.UnshiftNodes]: JsxElementGenerator[];
-  [BasicState.PushedNodes]: JsxElementGenerator[];
+  [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
+  [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
@@ -122,12 +126,29 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
-  protected addRenderObjectAttr(name: string, obj: Record<string, number | string | boolean | ts.Expression>) {
+  protected addRenderAttrWithObject(name: string, obj: Record<string, JsxAttributeValueType>) {
     this.getState(BasicState.TagAttrs).push(
       this.createNode("jsx-attribute")
         .setName(name)
         .setValue(() => this.helper.createObjectAttr(obj)),
     );
+  }
+
+  protected addRenderAttrWithValue(name: string, value: JsxAttributeValueType) {
+    this.getState(BasicState.TagAttrs).push(
+      this.createNode("jsx-attribute")
+        .setName(name)
+        .setValue(() => resolveSyntaxInsert(typeof value, value, (_, e) => e)),
+    );
+  }
+
+  protected addRenderAttrsWithMap(map: Record<string, JsxAttributeType>) {
+    const entries = Object.entries(map);
+    for (const [name, attr] of entries) {
+      typeof attr === "object"
+        ? this.addRenderAttrWithObject(name, <any>attr)
+        : this.addRenderAttrWithValue(name, attr);
+    }
   }
 
   protected addRenderChildren(id: string, element: JsxElementGenerator) {
