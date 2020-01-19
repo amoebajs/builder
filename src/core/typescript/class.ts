@@ -33,6 +33,7 @@ export interface IMethodCreateOptions {
 }
 
 export interface IFieldCreateOptions extends IVariableCreateOptions {
+  name: string;
   nullable?: boolean;
 }
 

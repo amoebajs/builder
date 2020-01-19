@@ -1,6 +1,13 @@
 import { IInnerDirective as IDirective } from "./directive";
-import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
-import { IInnerChildRef as IChildRef } from "./child-ref";
+import {
+  BasicCompilationEntity,
+  IComponentPropMap,
+  IEwsEntity,
+  IEwsEntityPrivates,
+  IEwsEntityProtectedHooks,
+  IPureObject,
+} from "./base";
+import { IInnerCompnentChildRef as IChildRef } from "./child-ref";
 import { BasicComposition, IInnerComposite } from "./libs";
 
 export interface IComponent extends IEwsEntity {}
@@ -33,7 +40,7 @@ export interface IInnerComponent extends IComponent, IComponentPrivates, ICompon
 export interface IChildElement {
   component: string;
   id: string;
-  props: { [prop: string]: any };
+  props: IComponentPropMap;
 }
 
 export async function callOnInit(model: IInnerComponent) {
@@ -84,26 +91,26 @@ export async function callOnComponentsPostRender(model: IInnerComponent) {
   await model.onComponentsPostRender();
 }
 
-export async function callOnChildrenPreEmit(model: IInnerComponent) {
-  for (const iterator of model.__children) {
-    await iterator.onPreEmit();
-  }
-  await model.onChildrenPreRender();
-}
+// export async function callOnChildrenPreEmit(model: IInnerComponent) {
+//   for (const iterator of model.__children) {
+//     await iterator.bootstrap();
+//   }
+//   await model.onChildrenPreRender();
+// }
 
 export async function callOnChildrenEmit(model: IInnerComponent) {
   for (const iterator of model.__children) {
-    await iterator.onEmit();
+    await iterator.bootstrap();
   }
   await model.onChildrenRender();
 }
 
-export async function callOnChildrenPostEmit(model: IInnerComponent) {
-  for (const iterator of model.__children) {
-    await iterator.onPostEmit();
-  }
-  await model.onChildrenPostRender();
-}
+// export async function callOnChildrenPostEmit(model: IInnerComponent) {
+//   for (const iterator of model.__children) {
+//     await iterator.onPostEmit();
+//   }
+//   await model.onChildrenPostRender();
+// }
 
 export async function callOnDirectivesPreAttach(model: IInnerComponent) {
   for (const iterator of model.__directives) {
@@ -137,9 +144,9 @@ export async function callComponentLifecycle(model: IInnerComponent) {
   await callOnComponentsPreRender(model);
   await callOnComponentsRender(model);
   await callOnComponentsPostRender(model);
-  await callOnChildrenPreEmit(model);
+  // await callOnChildrenPreEmit(model);
   await callOnChildrenEmit(model);
-  await callOnChildrenPostEmit(model);
+  // await callOnChildrenPostEmit(model);
   await callOnDirectivesPreAttach(model);
   await callOnDirectivesAttach(model);
   await callOnDirectivesPostAttach(model);
@@ -159,9 +166,9 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
 
   protected getChildren(): IChildElement[] {
     return this.__children.map(i => ({
-      component: i.componentRef,
-      id: i.entityId,
-      props: { ...i.__refOptions },
+      component: i.__refId,
+      id: i.__entityId,
+      props: { ...i.__options.props },
     }));
   }
 

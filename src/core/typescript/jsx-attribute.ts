@@ -7,7 +7,7 @@ import { IJsxElementDefine, createJsxElement } from "./jsx-element";
 export type IJsxAttrDefine = string | IJsxElementDefine | (() => ts.Expression);
 
 @Injectable(InjectScope.New)
-export class JsxAttrGenerator extends DeclarationGenerator<ts.JsxAttributeLike> {
+export class JsxAttributeGenerator extends DeclarationGenerator<ts.JsxAttributeLike> {
   protected jsxAttr?: IJsxAttrDefine;
 
   public setValue(value: IJsxAttrDefine) {

@@ -16,13 +16,18 @@ import { NotFoundError } from "../../errors";
 
 @Injectable(InjectScope.New)
 export class SourceFileBasicContext<T extends IBasicEntityProvider> extends SourceFileContext<T> {
-  private __componentsWillEmit: IComponentCreateOptions[] = [];
-
   constructor(protected injector: Injector, private globalMap: GlobalMap) {
     super();
     this.components = [];
     this.directives = [];
     this.dependencies = {};
+    this.astContext = {
+      imports: [],
+      variables: [],
+      functions: [],
+      classes: [],
+      statements: [],
+    };
   }
 
   public setProvider(provider: string) {
@@ -53,12 +58,40 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     this.root = await this._createComponentRef(options);
   }
 
-  public callCompilation(): Promise<void> {
-    throw new Error("Method not implemented.");
+  public async callCompilation(): Promise<void> {
+    const entries = Array.from(this.scopedContext.entries());
+    for (const [, e] of entries) {
+      // console.log(k);
+      // console.log(e);
+      if (e.type === "component") {
+        const { imports = [], functions = [], classes = [], variables = [] } = e.container;
+        this.astContext.imports.push(...imports.map(i => i.emit()));
+        this.astContext.functions.push(...functions.map(i => i.emit()));
+        this.astContext.classes.push(...classes.map(i => i.emit()));
+        this.astContext.variables.push(...variables.map(i => i.emit()));
+      }
+    }
+    this.astContext = {
+      imports: this.provider.afterImportsCreated(this, this.astContext.imports),
+      variables: this.provider.afterVariablesCreated(this, this.astContext.variables),
+      classes: this.provider.afterClassesCreated(this, this.astContext.classes),
+      functions: this.provider.afterFunctionsCreated(this, this.astContext.functions),
+      statements: this.provider.afterAllCreated(this, []),
+    };
   }
 
-  public async createAST(): Promise<ts.SourceFile> {
-    throw new Error("Method not implemented.");
+  public async createSourceFile(): Promise<ts.SourceFile> {
+    const sourceFile = ts.createSourceFile("demo.tsx", "", ts.ScriptTarget.ES2017);
+    const { imports, functions, variables, classes, statements } = this.astContext;
+    return ts.updateSourceFileNode(
+      sourceFile,
+      [...imports, ...variables, ...classes, ...functions, ...statements],
+      sourceFile.isDeclarationFile,
+      sourceFile.referencedFiles,
+      sourceFile.typeReferenceDirectives,
+      sourceFile.hasNoDefaultLib,
+      sourceFile.libReferenceDirectives,
+    );
   }
 
   private async _createComponentRef(options: ICompChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
@@ -93,12 +126,12 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     template: EntityConstructor<any>,
     parent?: IInnerCompnentChildRef,
   ) {
+    ref.setEntityId(options.entityName);
     ref["__refId"] = options.refEntityId;
     ref["__refConstructor"] = template;
     ref["__entityId"] = options.entityName;
     ref["__context"] = this;
     ref["__provider"] = this.provider;
-    ref["__injector"] = this.injector;
     if (parent) {
       ref["__parentRef"] = parent;
       ref["__parent"] = parent.__scope;

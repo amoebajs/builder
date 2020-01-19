@@ -6,7 +6,12 @@ import { REACT, TYPES } from "../../utils";
 import { BasicComponent } from "../../core/component";
 import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
-import { JsxAttrGenerator, JsxElementGenerator, StatementGenerator, VariableGenerator } from "../../core/typescript";
+import {
+  JsxAttributeGenerator,
+  JsxElementGenerator,
+  StatementGenerator,
+  VariableGenerator,
+} from "../../core/typescript";
 
 export enum BasicState {
   TagName = "renderTageName",
@@ -16,18 +21,18 @@ export enum BasicState {
   UseStates = "compUseStates",
   UseCallbacks = "compUseCallbacks",
   UseEffects = "compUseEffects",
-  CommonVariables = "compVariables",
+  CommonStatements = "compStatements",
 }
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.TagName]: string;
-  [BasicState.TagAttrs]: JsxAttrGenerator[];
+  [BasicState.TagAttrs]: JsxAttributeGenerator[];
   [BasicState.UnshiftNodes]: JsxElementGenerator[];
   [BasicState.PushedNodes]: JsxElementGenerator[];
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
-  [BasicState.CommonVariables]: VariableGenerator[];
+  [BasicState.CommonStatements]: StatementGenerator<any>[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -36,6 +41,22 @@ type TY = IBasicReactContainerState<{}>;
 @Injectable(InjectScope.New)
 export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, JsxElementGenerator> = new Map();
+
+  protected get statements() {
+    return this.getState(BasicState.CommonStatements);
+  }
+
+  protected get useStates() {
+    return this.getState(BasicState.UseStates);
+  }
+
+  protected get useCallbacks() {
+    return this.getState(BasicState.UseCallbacks);
+  }
+
+  protected get useEffects() {
+    return this.getState(BasicState.UseEffects);
+  }
 
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
@@ -51,7 +72,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.UseStates, []);
     this.setState(BasicState.UseCallbacks, []);
     this.setState(BasicState.UseEffects, []);
-    this.setState(BasicState.CommonVariables, []);
+    this.setState(BasicState.CommonStatements, []);
   }
 
   protected async onChildrenPostRender() {
@@ -65,13 +86,13 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           const element = props[key];
           switch (element.type) {
             case "state":
-              ele.addJsxAttr(key, element.expression);
+              ele.addJsxAttr(key, <string>element.expression);
               break;
             case "props":
-              ele.addJsxAttr(key, "props." + element.expression);
+              ele.addJsxAttr(key, "props." + <string>element.expression);
               break;
             case "literal":
-              ele.addJsxAttr(key, element.expression);
+              ele.addJsxAttr(key, () => this.helper.createLiteral(element.expression));
               break;
             default:
               break;
@@ -85,51 +106,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected async onRender() {
     await super.onRender();
     this.createFunctionRender([]);
-  }
-
-  private createFunctionRender(statements: StatementGenerator[] = []) {
-    const { states, callbacks, effects } = this.getReactUsesImports();
-    this.addFunctions([
-      this.createNode("function")
-        .setName("render")
-        .pushParam({ name: "props", type: "any" })
-        .pushTransformerBeforeEmit(node => {
-          node.body = this.createComponentBlock(
-            this.createNode("jsx-element")
-              .setTagName(this.getState(BasicState.TagName))
-              .addJsxAttrs(this.getState(BasicState.TagAttrs))
-              .addJsxChildren([
-                ...this.getState(BasicState.UnshiftNodes),
-                ...this.getRenderChildren(),
-                ...this.getState(BasicState.PushedNodes),
-              ]),
-            (<StatementGenerator<any>[]>[])
-              .concat(states)
-              .concat(callbacks)
-              .concat(effects)
-              .concat(statements),
-          );
-          return node;
-        }),
-    ]);
-  }
-
-  protected getReactUsesImports() {
-    const states = this.getState(BasicState.UseStates);
-    const callbacks = this.getState(BasicState.UseCallbacks);
-    const effects = this.getState(BasicState.UseEffects);
-    const imports: string[] = [];
-    if (states.length > 0) imports.push(REACT.UseState);
-    if (callbacks.length > 0) imports.push(REACT.UseCallback);
-    if (effects.length > 0) imports.push(REACT.UseEffect);
-    this.addImports(
-      imports.map(name =>
-        this.createNode("import")
-          .addNamedBinding(name)
-          .setModulePath(REACT.NS),
-      ),
-    );
-    return { states, callbacks, effects };
   }
 
   protected visitAndChangeChildNode(visitor: (key: string, node: JsxElementGenerator) => void) {
@@ -146,27 +122,12 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
-  protected addRenderAttrs(obj: Record<string, number | string | boolean | ts.Expression>) {
-    const entries = Object.entries(obj);
-    const existAttrs = this.getState(BasicState.TagAttrs);
-    for (const [name, attr] of entries) {
-      const valueExpression =
-        typeof attr === "number" || typeof attr === "boolean"
-          ? attr.toString()
-          : typeof attr === "string"
-          ? JSON.stringify(attr)
-          : () => attr;
-      const target = existAttrs.find(i => i["name"] === name);
-      if (target) {
-        target.setValue(valueExpression);
-        continue;
-      }
-      existAttrs.push(
-        this.createNode("jsx-attribute")
-          .setName(name)
-          .setValue(valueExpression),
-      );
-    }
+  protected addRenderObjectAttr(name: string, obj: Record<string, number | string | boolean | ts.Expression>) {
+    this.getState(BasicState.TagAttrs).push(
+      this.createNode("jsx-attribute")
+        .setName(name)
+        .setValue(() => this.helper.createObjectAttr(obj)),
+    );
   }
 
   protected addRenderChildren(id: string, element: JsxElementGenerator) {
@@ -177,39 +138,77 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     return Array.from(this.__elementMap.values());
   }
 
-  protected addComponentUseState(name: string, defaultValue: unknown) {
-    this.setState(BasicState.UseStates, [
-      ...this.getState(BasicState.UseStates),
+  protected addUseState(name: string, defaultValue: unknown) {
+    this.useStates.push(
       this.createNode("variable").addField({
         arrayBinding: [name, "set" + capitalize(name)],
         initValue: () =>
           ts.createCall(ts.createIdentifier(REACT.UseState), [TYPES.Any], [this.helper.createLiteral(defaultValue)]),
       }),
-    ]);
+    );
   }
 
-  protected addComponentUseCallback(name: string, callback: Function | string, deps: string[] = []) {
-    this.setState(BasicState.UseCallbacks, [
-      ...this.getState(BasicState.UseCallbacks),
+  protected addUseCallback(name: string, callback: Function | string, deps: string[] = []) {
+    this.useCallbacks.push(
       this.createNode("variable").addField({
-        name: callback.toString(),
+        name,
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseCallback, [
             ts.createIdentifier(callback.toString()),
             ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
           ]),
       }),
-    ]);
+    );
   }
 
-  protected addComponnentVariable(name: string, initilizer: ts.Expression) {
-    this.setState(BasicState.CommonVariables, [
-      ...this.getState(BasicState.CommonVariables),
+  protected addCommonStatement(name: string, initilizer: ts.Expression) {
+    this.statements.push(
       this.createNode("variable").addField({
         name,
         initValue: () => initilizer,
       }),
+    );
+  }
+
+  private createFunctionRender(statements: StatementGenerator<any>[] = []) {
+    this.initReact16UseHooks();
+    this.addFunctions([
+      this.createNode("function")
+        .setName(this.entityId)
+        .pushParam({ name: "props", type: "any" })
+        .pushTransformerBeforeEmit(node => {
+          node.body = this.createComponentBlock(
+            this.createNode("jsx-element")
+              .setTagName(this.getState(BasicState.TagName))
+              .addJsxAttrs(this.getState(BasicState.TagAttrs))
+              .addJsxChildren([
+                ...this.getState(BasicState.UnshiftNodes),
+                ...this.getRenderChildren(),
+                ...this.getState(BasicState.PushedNodes),
+              ]),
+            (<StatementGenerator<any>[]>[])
+              .concat(this.useStates)
+              .concat(this.useCallbacks)
+              .concat(this.useEffects)
+              .concat(statements),
+          );
+          return node;
+        }),
     ]);
+  }
+
+  private initReact16UseHooks() {
+    const imports: string[] = [];
+    if (this.useStates.length > 0) imports.push(REACT.UseState);
+    if (this.useCallbacks.length > 0) imports.push(REACT.UseCallback);
+    if (this.useEffects.length > 0) imports.push(REACT.UseEffect);
+    this.addImports(
+      imports.map(name =>
+        this.createNode("import")
+          .addNamedBinding(name)
+          .setModulePath(REACT.PackageName),
+      ),
+    );
   }
 
   private createComponentBlock(render: JsxElementGenerator, statements: StatementGenerator[] = []) {

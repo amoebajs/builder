@@ -65,7 +65,7 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    this.addRenderAttrs({
+    this.addRenderObjectAttr("style", {
       display: "grid",
       height: this.height,
       width: this.width,
@@ -99,7 +99,7 @@ export class CssGridContainer extends ReactComponent {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
-        this.addComponentUseState(key, value);
+        this.addUseState(key, value);
       }
     }
   }

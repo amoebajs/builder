@@ -6,7 +6,7 @@ import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
-import { IJsxAttrDefine } from "../../core/typescript/jsx-attr";
+import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
 import { IJsxElementDefine, createJsxElement } from "../../core/typescript/jsx-element";
 
 export interface IFrontLibImports {

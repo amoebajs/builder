@@ -4,7 +4,6 @@ import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
 import { BasicEntityProvider } from "./entity-parser";
-import { NotFoundError } from "../errors";
 import { IFrameworkDepts, Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
@@ -100,7 +99,7 @@ export class Builder {
       .build();
     await context.createRoot(mapComponentChild([configs.page])[0]);
     await context.callCompilation();
-    const sourceFile = await context.createAST();
+    const sourceFile = await context.createSourceFile();
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
     const result: ISourceCreateResult = {

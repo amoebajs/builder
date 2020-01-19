@@ -3,168 +3,168 @@ components:
   - module: ambjs-common-module
     name: css-grid-container
     id: CssGridPageDemoRoot
-  - module: zent-module
-    name: zent-button
-    id: ZentBtnDemoComponent
-  - module: zent-module
-    name: zent-form
-    id: ZentFormComponent
+  # - module: zent-module
+  #   name: zent-button
+  #   id: ZentBtnDemoComponent
+  # - module: zent-module
+  #   name: zent-form
+  #   id: ZentFormComponent
 directives:
-  - module: zent-module
-    name: zent-base-css
-    id: ZentBaseCssDemoDirective
-  - module: zent-module
-    name: zent-input
-    id: zentInputDirective
-  - module: zent-module
-    name: zent-switch
-    id: zentSwitchDirective
-  - module: zent-module
-    name: zent-select
-    id: zentSelectDirective
-  - module: zent-module
-    name: zent-form
-    id: zentFormDirective
-  - module: zent-module
-    name: zent-action-button
-    id: zentSubmitButtonDirective
+  # - module: zent-module
+  #   name: zent-base-css
+  #   id: ZentBaseCssDemoDirective
+  # - module: zent-module
+  #   name: zent-input
+  #   id: zentInputDirective
+  # - module: zent-module
+  #   name: zent-switch
+  #   id: zentSwitchDirective
+  # - module: zent-module
+  #   name: zent-select
+  #   id: zentSelectDirective
+  # - module: zent-module
+  #   name: zent-form
+  #   id: zentFormDirective
+  # - module: zent-module
+  #   name: zent-action-button
+  #   id: zentSubmitButtonDirective
   - module: ambjs-common-module
     name: custom-click
     id: CustomClickDemoDirective
 page:
   ref: CssGridPageDemoRoot
   id: CssGridPageDemoRoot01
-  children:
-    - ref: ZentFormComponent
-      id: ZentFormComponentRef01
-      props:
-        form:
-          type: state
-          expression: form
-    - ref: ZentBtnDemoComponent
-      id: ZentBtnDemoCompRef01
-      props:
-        loading:
-          type: state
-          expression: zentBtn01Loading
-        children:
-          type: literal
-          syntaxType: string
-          expression: BUTTON01
-        size:
-          type: literal
-          syntaxType: string
-          expression: large
-        type:
-          type: state
-          expression: zentBtnType
-    - ref: ZentBtnDemoComponent
-      id: ZentBtnDemoCompRef02
-      props:
-        loading:
-          type: literal
-          syntaxType: boolean
-          expression: false
-        children:
-          type: state
-          expression: zentBtn02Content
-        size:
-          type: literal
-          syntaxType: string
-          expression: large
-        type:
-          type: literal
-          syntaxType: string
-          expression: primary
-  directives:
-    - ref: zentInputDirective
-      id: zentInputDirective01
-      input:
-        formId:
-          type: literal
-          expression: ZentFormComponentRef01
-        name:
-          type: literal
-          expression: name
-        required:
-          type: literal
-          expression: true
-        label:
-          type: literal
-          expression: 输入框
-    - ref: zentSwitchDirective
-      id: zentSwitchDirective01
-      input:
-        formId:
-          type: literal
-          expression: ZentFormComponentRef01
-        name:
-          type: literal
-          expression: isOpen
-        required:
-          type: literal
-          expression: true
-        label:
-          type: literal
-          expression: 开关
-    - ref: zentSelectDirective
-      id: zentSelectDirective01
-      input:
-        formId:
-          type: literal
-          expression: ZentFormComponentRef01
-        label:
-          type: literal
-          expression: 下拉选项
-        name:
-          type: literal
-          expression: option
-        required:
-          type: literal
-          expression: true
-        placeholder:
-          type: litertal
-          expression: 请选择
-        data:
-          type: literal
-          expression:
-            - value: Option 1
-              text: Option 1
-            - value: Option 2
-              text: Option 2
-    - ref: zentFormDirective
-      id: zentFormDirective01
-      input:
-        url:
-          type: literal
-          expression: https://www.youzan.com
-        formId:
-          type: literal
-          expression: ZentFormComponentRef01
-    - ref: zentSubmitButtonDirective
-      id: zentSubmitButtonDirective01
-      input:
-        formId:
-          type: literal
-          expression: ZentFormComponentRef01
-    - ref: CustomClickDemoDirective
-      id: CustomClickDemoDirective01
-      input:
-        host:
-          type: literal
-          expression: ZentBtnDemoCompRef02
-        eventType:
-          type: literal
-          expression: setState
-        attrName:
-          type: literal
-          expression: onClick
-        targetName:
-          type: literal
-          expression: zentBtn02Content
-        expression:
-          type: literal
-          expression: e => new Date().getTime()
+  # children:
+  #   - ref: ZentFormComponent
+  #     id: ZentFormComponentRef01
+  #     props:
+  #       form:
+  #         type: state
+  #         expression: form
+  #   - ref: ZentBtnDemoComponent
+  #     id: ZentBtnDemoCompRef01
+  #     props:
+  #       loading:
+  #         type: state
+  #         expression: zentBtn01Loading
+  #       children:
+  #         type: literal
+  #         syntaxType: string
+  #         expression: BUTTON01
+  #       size:
+  #         type: literal
+  #         syntaxType: string
+  #         expression: large
+  #       type:
+  #         type: state
+  #         expression: zentBtnType
+  #   - ref: ZentBtnDemoComponent
+  #     id: ZentBtnDemoCompRef02
+  #     props:
+  #       loading:
+  #         type: literal
+  #         syntaxType: boolean
+  #         expression: false
+  #       children:
+  #         type: state
+  #         expression: zentBtn02Content
+  #       size:
+  #         type: literal
+  #         syntaxType: string
+  #         expression: large
+  #       type:
+  #         type: literal
+  #         syntaxType: string
+  #         expression: primary
+  # directives:
+  #   - ref: zentInputDirective
+  #     id: zentInputDirective01
+  #     input:
+  #       formId:
+  #         type: literal
+  #         expression: ZentFormComponentRef01
+  #       name:
+  #         type: literal
+  #         expression: name
+  #       required:
+  #         type: literal
+  #         expression: true
+  #       label:
+  #         type: literal
+  #         expression: 输入框
+  #   - ref: zentSwitchDirective
+  #     id: zentSwitchDirective01
+  #     input:
+  #       formId:
+  #         type: literal
+  #         expression: ZentFormComponentRef01
+  #       name:
+  #         type: literal
+  #         expression: isOpen
+  #       required:
+  #         type: literal
+  #         expression: true
+  #       label:
+  #         type: literal
+  #         expression: 开关
+  #   - ref: zentSelectDirective
+  #     id: zentSelectDirective01
+  #     input:
+  #       formId:
+  #         type: literal
+  #         expression: ZentFormComponentRef01
+  #       label:
+  #         type: literal
+  #         expression: 下拉选项
+  #       name:
+  #         type: literal
+  #         expression: option
+  #       required:
+  #         type: literal
+  #         expression: true
+  #       placeholder:
+  #         type: litertal
+  #         expression: 请选择
+  #       data:
+  #         type: literal
+  #         expression:
+  #           - value: Option 1
+  #             text: Option 1
+  #           - value: Option 2
+  #             text: Option 2
+  #   - ref: zentFormDirective
+  #     id: zentFormDirective01
+  #     input:
+  #       url:
+  #         type: literal
+  #         expression: https://www.youzan.com
+  #       formId:
+  #         type: literal
+  #         expression: ZentFormComponentRef01
+  #   - ref: zentSubmitButtonDirective
+  #     id: zentSubmitButtonDirective01
+  #     input:
+  #       formId:
+  #         type: literal
+  #         expression: ZentFormComponentRef01
+  #   - ref: CustomClickDemoDirective
+  #     id: CustomClickDemoDirective01
+  #     input:
+  #       host:
+  #         type: literal
+  #         expression: ZentBtnDemoCompRef02
+  #       eventType:
+  #         type: literal
+  #         expression: setState
+  #       attrName:
+  #         type: literal
+  #         expression: onClick
+  #       targetName:
+  #         type: literal
+  #         expression: zentBtn02Content
+  #       expression:
+  #         type: literal
+  #         expression: e => new Date().getTime()
   input:
     basic:
       width:
@@ -210,22 +210,22 @@ page:
         - 10vw
         - 80vw
         - 10vw
-  attach:
-    childRowStart:
-      type: childRefs
-      expression:
-        - id: ZentBtnDemoCompRef01
-          value: 3
-        - id: ZentBtnDemoCompRef02
-          value: 2
-        - id: ZentFormComponentRef01
-          value: 1
-    childColumnStart:
-      type: childRefs
-      expression:
-        - id: ZentBtnDemoCompRef01
-          value: 2
-        - id: ZentBtnDemoCompRef02
-          value: 2
-        - id: ZentFormComponentRef01
-          value: 2
+  # attach:
+  #   childRowStart:
+  #     type: childRefs
+  #     expression:
+  #       - id: ZentBtnDemoCompRef01
+  #         value: 3
+  #       - id: ZentBtnDemoCompRef02
+  #         value: 2
+  #       - id: ZentFormComponentRef01
+  #         value: 1
+  #   childColumnStart:
+  #     type: childRefs
+  #     expression:
+  #       - id: ZentBtnDemoCompRef01
+  #         value: 2
+  #       - id: ZentBtnDemoCompRef02
+  #         value: 2
+  #       - id: ZentFormComponentRef01
+  #         value: 2

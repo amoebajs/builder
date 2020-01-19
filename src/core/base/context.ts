@@ -5,7 +5,7 @@ import {
   ClassGenerator,
   FunctionGenerator,
   ImportGenerator,
-  JsxAttrGenerator,
+  JsxAttributeGenerator,
   JsxElementGenerator,
   VariableGenerator,
 } from "../typescript";
@@ -16,7 +16,7 @@ export const ContextItemsGroup = {
   class: ClassGenerator,
   function: FunctionGenerator,
   ["jsx-element"]: JsxElementGenerator,
-  ["jsx-attribute"]: JsxAttrGenerator,
+  ["jsx-attribute"]: JsxAttributeGenerator,
 };
 
 export interface IFinalScopedContext {
@@ -27,6 +27,14 @@ export interface IFinalScopedContext {
   classes: InstanceType<typeof ContextItemsGroup["class"]>[];
   // functions: ts.FunctionDeclaration[];
   functions: InstanceType<typeof ContextItemsGroup["function"]>[];
+}
+
+export interface IFinalAstContext {
+  imports: ts.ImportDeclaration[];
+  variables: ts.VariableStatement[];
+  classes: ts.ClassDeclaration[];
+  functions: ts.FunctionDeclaration[];
+  statements: ts.Statement[];
 }
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
@@ -41,6 +49,7 @@ export interface IScopedContext
 
 export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
+  public astContext!: IFinalAstContext;
   public provider!: T;
   public root!: IInnerCompnentChildRef;
   public components!: IComponentCreateOptions[];
@@ -53,5 +62,5 @@ export abstract class SourceFileContext<T extends any> {
   public abstract getDependencies(): Record<string, string>;
   public abstract createRoot(options: ICompChildRefPluginOptions): Promise<void>;
   public abstract callCompilation(): Promise<void>;
-  public abstract createAST(): Promise<ts.SourceFile>;
+  public abstract createSourceFile(): Promise<ts.SourceFile>;
 }

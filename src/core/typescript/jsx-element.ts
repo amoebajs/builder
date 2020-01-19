@@ -2,7 +2,7 @@ import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../decorators";
 import { ExpressionGenerator } from "./expression";
-import { IJsxAttrDefine, JsxAttrGenerator } from "./jsx-attr";
+import { IJsxAttrDefine, JsxAttributeGenerator } from "./jsx-attribute";
 import { is } from "../../utils/is";
 
 export interface IJsxElementDefine {
@@ -14,7 +14,7 @@ export interface IJsxElementDefine {
 @Injectable(InjectScope.New)
 export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.JsxSelfClosingElement> {
   protected tagName!: string;
-  protected attrs: Record<string, JsxAttrGenerator> = {};
+  protected attrs: Record<string, JsxAttributeGenerator> = {};
   protected children: (string | JsxElementGenerator)[] = [];
 
   public setTagName(name: string) {
@@ -23,19 +23,26 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
   }
 
   public addJsxAttr(name: string, value: IJsxAttrDefine): this;
-  public addJsxAttr(attr: JsxAttrGenerator): this;
-  public addJsxAttr(name: string | JsxAttrGenerator, value?: IJsxAttrDefine) {
+  public addJsxAttr(attr: JsxAttributeGenerator): this;
+  public addJsxAttr(name: string | JsxAttributeGenerator, value?: IJsxAttrDefine) {
     if (typeof name === "string") {
-      this.attrs[name] = new JsxAttrGenerator().setName(name).setValue(value!);
+      this.attrs[name] = new JsxAttributeGenerator().setName(name).setValue(value!);
     } else {
       this.attrs[name["getName"]().text] = name;
     }
     return this;
   }
 
-  public addJsxAttrs(kvs: ([string, IJsxAttrDefine] | JsxAttrGenerator)[]) {
-    for (const i of kvs) {
-      is.array(i) ? this.addJsxAttr(i[0], i[1]) : this.addJsxAttr(i);
+  public addJsxAttrs(kvs: JsxAttributeGenerator[] | Record<string, IJsxAttrDefine>) {
+    if (is.array(kvs)) {
+      for (const i of kvs) {
+        this.addJsxAttr(i);
+      }
+    } else {
+      const entries = Object.entries(kvs);
+      for (const [k, v] of entries) {
+        this.addJsxAttr(k, v);
+      }
     }
     return this;
   }
@@ -73,8 +80,8 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
 }
 
 export function createJsxElement(node: IJsxElementDefine) {
-  const childNode = new JsxElementGenerator().setTagName(node.tagName);
-  Object.entries(node.attrs || {}).forEach(([name, attr]) => childNode.addJsxAttr(name, attr));
-  (node.children || []).forEach(e => childNode.addJsxChild(e));
-  return childNode;
+  return new JsxElementGenerator()
+    .setTagName(node.tagName)
+    .addJsxAttrs(node.attrs || {})
+    .addJsxChildren(node.children || []);
 }

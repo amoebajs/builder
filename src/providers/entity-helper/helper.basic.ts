@@ -1,11 +1,9 @@
+import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { Injectable } from "../../core/decorators";
-import { IBasicCompilationFinalContext, resolveSyntaxInsert } from "../../core";
+import { resolveSyntaxInsert } from "../../core";
 import { is } from "../../utils/is";
-import ts = require("typescript");
 import { Primitive } from "utility-types";
-import { createExportModifier, exists } from "../../utils";
-
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
   public createPropertyAccess(object: string, propertyChain: string) {
@@ -34,29 +32,29 @@ export class BasicHelper {
     }
   }
 
-  public createClassByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
-    return ts.createClassDeclaration(
-      [],
-      createExportModifier(!unExport),
-      ts.createIdentifier(name),
-      [],
-      exists([context.extendParent!, ...context.implementParents]),
-      exists([...context.fields, ...context.properties, ...context.methods]),
-    );
-  }
+  // public createClassByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  //   return ts.createClassDeclaration(
+  //     [],
+  //     createExportModifier(!unExport),
+  //     ts.createIdentifier(name),
+  //     [],
+  //     exists([context.extendParent!, ...context.implementParents]),
+  //     exists([...context.fields, ...context.properties, ...context.methods]),
+  //   );
+  // }
 
-  public createFunctionByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
-    return ts.createFunctionDeclaration(
-      undefined,
-      createExportModifier(!unExport),
-      undefined,
-      name,
-      undefined,
-      context.parameters,
-      undefined,
-      ts.createBlock(context.statements),
-    );
-  }
+  // public createFunctionByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  //   return ts.createFunctionDeclaration(
+  //     undefined,
+  //     createExportModifier(!unExport),
+  //     undefined,
+  //     name,
+  //     undefined,
+  //     context.parameters,
+  //     undefined,
+  //     ts.createBlock(context.statements),
+  //   );
+  // }
 
   /**
    * 创建命名空间导入

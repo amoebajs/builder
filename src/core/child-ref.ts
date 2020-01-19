@@ -72,6 +72,6 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   }
 
   protected async bootstrap(): Promise<any> {
-    return await this.__provider.attachInstance(<any>this);
+    return await this.__provider.attachInstance(this.__context, <any>this);
   }
 }

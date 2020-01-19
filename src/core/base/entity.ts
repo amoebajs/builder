@@ -10,7 +10,7 @@ import {
   MapValueType,
 } from "./common";
 import { BasicError } from "../../errors";
-import { ContextItemsGroup, IFinalScopedContext, SourceFileContext } from "./context";
+import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
 import { IFrameworkDepts } from "../decorators";
 import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";
 import { IInnerComponent } from "../component";
@@ -19,13 +19,6 @@ import { IInnerDirective } from "../directive";
 // export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
 
 export type EntityType = "directive" | "component" | "childref" | "componentChildRef" | "directiveChildRef" | "entity";
-
-export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
-  scope: string | symbol;
-  parent: string | symbol;
-  type: TYPE;
-  container: ENTITY;
-}
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
@@ -88,8 +81,32 @@ export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
 }
 
 export interface IBasicEntityProvider {
-  attachInstance(ref: IInnerCompnentChildRef): Promise<IInnerComponent>;
-  attachInstance(ref: IInnerDirectiveChildRef): Promise<IInnerDirective>;
+  attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerCompnentChildRef,
+  ): Promise<IInnerComponent>;
+  attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerDirectiveChildRef,
+  ): Promise<IInnerDirective>;
+  resolveExtensionsMetadata(template: InjectDIToken<any>): {};
+  afterImportsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    imports: ts.ImportDeclaration[],
+  ): ts.ImportDeclaration[];
+  afterVariablesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    variables: ts.VariableStatement[],
+  ): ts.VariableStatement[];
+  afterClassesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    classes: ts.ClassDeclaration[],
+  ): ts.ClassDeclaration[];
+  afterFunctionsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: ts.FunctionDeclaration[],
+  ): ts.FunctionDeclaration[];
+  afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
 }
 
 export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
@@ -151,8 +168,8 @@ export interface IEwsEntityPrivates<E extends EntityType = EntityType> {
   readonly __scope: string;
   readonly __parent: string;
   readonly __etype: E;
-  readonly __context: SourceFileContext<any>;
-  readonly __injector: Injector;
+  __context: SourceFileContext<any>;
+  injector: Injector;
   __addChildElements<A extends any>(
     target: keyof IFinalScopedContext,
     args: A[],
@@ -179,7 +196,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   protected __etype: EntityType = "entity";
   protected __state: T = <T>{};
   protected __context!: SourceFileContext<any>;
-  protected __injector!: Injector;
+  protected injector!: Injector;
 
   public get entityId() {
     return this["__scope"];
@@ -207,7 +224,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   protected createNode<K extends keyof typeof ContextItemsGroup>(type: K): InstanceType<typeof ContextItemsGroup[K]> {
-    return this.__injector.get(<any>ContextItemsGroup[type]);
+    return this.injector.get(<any>ContextItemsGroup[type]);
   }
 
   protected getState<K extends keyof T>(key: K, defaultValue: T[K] | null = null): T[K] {
