@@ -21,8 +21,8 @@ export class ReactEntityProvider extends BasicEntityProvider {
 
   public afterImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ts.ImportDeclaration[]) {
     imports.unshift(
-      this.helper.createNamespaceImport("react", REACT.NS),
-      this.helper.createNamespaceImport("react-dom", REACT.DomNS),
+      this.helper.createNamespaceImport("react", REACT.NS).emit(),
+      this.helper.createNamespaceImport("react-dom", REACT.DomNS).emit(),
     );
     return super.afterImportsCreated(context, imports);
   }

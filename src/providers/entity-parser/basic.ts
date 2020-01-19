@@ -384,21 +384,21 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     const combinedImportDeclarations: ts.ImportDeclaration[] = [];
     for (const [moduleName, imports] of Object.entries(record)) {
       for (const namespaceImport of imports.namespace) {
-        combinedImportDeclarations.push(helper.createNamespaceImport(moduleName, namespaceImport));
+        combinedImportDeclarations.push(helper.createNamespaceImport(moduleName, namespaceImport).emit());
       }
       for (const defaultImport of imports.default) {
         combinedImportDeclarations.push(
-          helper.createImport(moduleName, defaultImport, imports.named.length ? imports.named : undefined),
+          helper.createImport(moduleName, defaultImport, imports.named.length ? imports.named : undefined).emit(),
         );
         // 具名导入跟随默认导入创建完成后删除，避免接下来重复创建
         imports.named = [];
       }
       if (imports.named.length) {
         // 如果没有默认导入，此处创建具名导入
-        combinedImportDeclarations.push(helper.createImport(moduleName, undefined, imports.named));
+        combinedImportDeclarations.push(helper.createImport(moduleName, undefined, imports.named).emit());
       }
       if (!imports.named.length && !imports.default.length && !imports.namespace.length) {
-        combinedImportDeclarations.push(helper.createImport(moduleName));
+        combinedImportDeclarations.push(helper.createImport(moduleName).emit());
       }
     }
     return combinedImportDeclarations;

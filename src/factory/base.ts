@@ -32,6 +32,7 @@ import {
   ImportGenerator,
   JsxAttributeGenerator,
   JsxElementGenerator,
+  JsxExpressionGenerator,
   NodeGenerator,
   StatementGenerator,
   VariableGenerator,
@@ -92,6 +93,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(FunctionGenerator);
     this.useProvider(ImportGenerator);
     this.useProvider(VariableGenerator);
+    this.useProvider(JsxExpressionGenerator);
     this.useProvider(JsxAttributeGenerator);
     this.useProvider(JsxElementGenerator);
   }

@@ -59,6 +59,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 
   public async callCompilation(): Promise<void> {
+    await this.root.bootstrap();
     const entries = Array.from(this.scopedContext.entries());
     for (const [, e] of entries) {
       // console.log(k);
@@ -106,7 +107,6 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     for (const iterator of options.directives) {
       ref["__refDirectives"].push(await this._createDirectiveRef(iterator, <any>ref));
     }
-    await ref["bootstrap"]();
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 

@@ -40,6 +40,7 @@ export class ReactRender {
   public appendRootVariable(name: string, initilizer: ts.Expression) {
     this.parentRef["addCommonStatement"](name, initilizer);
   }
+
   public appendJsxStyles(entityId: string, value: Record<string, unknown>) {
     let objExpression = this.helper.createObjectLiteral(value);
     const gen = this.getElementById(entityId);
@@ -49,7 +50,7 @@ export class ReactRender {
     gen.pushTransformerBeforeEmit(element => {
       const openEle = ts.isJsxSelfClosingElement(element) ? element : element.openingElement;
       const target = openEle.attributes.properties.filter(
-        i => i.name && ts.isIdentifier(i.name) && i.name.text === name,
+        i => i.name && ts.isIdentifier(i.name) && i.name.text === "style",
       );
       const oldAttr = target[0] && ts.isJsxAttribute(target[0]) ? target[0] : null;
       if (oldAttr) {

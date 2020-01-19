@@ -102,7 +102,7 @@ export class BasicHelper {
         }
       });
     }
-    return gen;
+    return gen.setModulePath(moduleName);
   }
 
   public createObjectLiteral(object: Record<string, unknown>) {

@@ -3,9 +3,9 @@ components:
   - module: ambjs-common-module
     name: css-grid-container
     id: CssGridPageDemoRoot
-  # - module: zent-module
-  #   name: zent-button
-  #   id: ZentBtnDemoComponent
+  - module: zent-module
+    name: zent-button
+    id: ZentBtnDemoComponent
   # - module: zent-module
   #   name: zent-form
   #   id: ZentFormComponent
@@ -34,48 +34,48 @@ directives:
 page:
   ref: CssGridPageDemoRoot
   id: CssGridPageDemoRoot01
-  # children:
-  #   - ref: ZentFormComponent
-  #     id: ZentFormComponentRef01
-  #     props:
-  #       form:
-  #         type: state
-  #         expression: form
-  #   - ref: ZentBtnDemoComponent
-  #     id: ZentBtnDemoCompRef01
-  #     props:
-  #       loading:
-  #         type: state
-  #         expression: zentBtn01Loading
-  #       children:
-  #         type: literal
-  #         syntaxType: string
-  #         expression: BUTTON01
-  #       size:
-  #         type: literal
-  #         syntaxType: string
-  #         expression: large
-  #       type:
-  #         type: state
-  #         expression: zentBtnType
-  #   - ref: ZentBtnDemoComponent
-  #     id: ZentBtnDemoCompRef02
-  #     props:
-  #       loading:
-  #         type: literal
-  #         syntaxType: boolean
-  #         expression: false
-  #       children:
-  #         type: state
-  #         expression: zentBtn02Content
-  #       size:
-  #         type: literal
-  #         syntaxType: string
-  #         expression: large
-  #       type:
-  #         type: literal
-  #         syntaxType: string
-  #         expression: primary
+  children:
+    #   - ref: ZentFormComponent
+    #     id: ZentFormComponentRef01
+    #     props:
+    #       form:
+    #         type: state
+    #         expression: form
+    - ref: ZentBtnDemoComponent
+      id: ZentBtnDemoCompRef01
+      props:
+        loading:
+          type: state
+          expression: zentBtn01Loading
+        children:
+          type: literal
+          syntaxType: string
+          expression: BUTTON01
+        size:
+          type: literal
+          syntaxType: string
+          expression: large
+        type:
+          type: state
+          expression: zentBtnType
+    - ref: ZentBtnDemoComponent
+      id: ZentBtnDemoCompRef02
+      props:
+        loading:
+          type: literal
+          syntaxType: boolean
+          expression: false
+        children:
+          type: state
+          expression: zentBtn02Content
+        size:
+          type: literal
+          syntaxType: string
+          expression: large
+        type:
+          type: literal
+          syntaxType: string
+          expression: primary
   # directives:
   #   - ref: zentInputDirective
   #     id: zentInputDirective01
@@ -210,22 +210,22 @@ page:
         - 10vw
         - 80vw
         - 10vw
-  # attach:
-  #   childRowStart:
-  #     type: childRefs
-  #     expression:
-  #       - id: ZentBtnDemoCompRef01
-  #         value: 3
-  #       - id: ZentBtnDemoCompRef02
-  #         value: 2
-  #       - id: ZentFormComponentRef01
-  #         value: 1
-  #   childColumnStart:
-  #     type: childRefs
-  #     expression:
-  #       - id: ZentBtnDemoCompRef01
-  #         value: 2
-  #       - id: ZentBtnDemoCompRef02
-  #         value: 2
-  #       - id: ZentFormComponentRef01
-  #         value: 2
+  attach:
+    childRowStart:
+      type: childRefs
+      expression:
+        - id: ZentBtnDemoCompRef01
+          value: 3
+        - id: ZentBtnDemoCompRef02
+          value: 2
+        - id: ZentFormComponentRef01
+          value: 1
+    childColumnStart:
+      type: childRefs
+      expression:
+        - id: ZentBtnDemoCompRef01
+          value: 2
+        - id: ZentBtnDemoCompRef02
+          value: 2
+        - id: ZentFormComponentRef01
+          value: 2

@@ -15,7 +15,9 @@ import {
 } from "../../core/typescript";
 
 export type JsxAttributeValueType = number | string | boolean | ts.Expression;
+export type JsxAttributeSyntaxTextType = string | ts.Expression;
 export type JsxAttributeType = JsxAttributeValueType | Record<string, JsxAttributeValueType>;
+export type JsxAttributeSyntaxType = JsxAttributeSyntaxTextType | Record<string, JsxAttributeSyntaxTextType>;
 
 export enum BasicState {
   TagName = "renderTageName",
@@ -79,11 +81,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.CommonStatements, []);
   }
 
-  protected async onChildrenPostRender() {
-    await super.onChildrenPostRender();
+  protected async onChildrenRender() {
+    await super.onChildrenRender();
     const children = this.getChildren();
     for (const child of children) {
-      const ele = this.helper.createViewElement(child.component, { key: child.id });
+      const ele = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
       const props = child.props || {};
       for (const key in props) {
         if (props.hasOwnProperty(key)) {
@@ -103,7 +105,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           }
         }
       }
-      this.addRenderChildren(child.id, this.helper.createViewElement(child.component, { key: child.id }));
+      this.addRenderChildren(child.id, ele);
     }
   }
 
@@ -134,7 +136,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
-  protected addRenderAttrWithValue(name: string, value: JsxAttributeValueType) {
+  protected addAttributeWithValue(name: string, value: JsxAttributeValueType) {
     this.getState(BasicState.TagAttrs).push(
       this.createNode("jsx-attribute")
         .setName(name)
@@ -142,12 +144,29 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
-  protected addRenderAttrsWithMap(map: Record<string, JsxAttributeType>) {
+  protected addAttributeWithSyntaxText(name: string, value: JsxAttributeSyntaxTextType) {
+    this.getState(BasicState.TagAttrs).push(
+      this.createNode("jsx-attribute")
+        .setName(name)
+        .setValue(typeof value === "string" ? value : () => value),
+    );
+  }
+
+  protected addAttributesWithMap(map: Record<string, JsxAttributeType>) {
+    const entries = Object.entries(map);
+    for (const [name, attr] of entries) {
+      typeof attr === "object" && !ts.isJsxExpression(<any>attr)
+        ? this.addRenderAttrWithObject(name, <any>attr)
+        : this.addAttributeWithValue(name, <any>attr);
+    }
+  }
+
+  protected addAttributesWithSyntaxMap(map: Record<string, JsxAttributeSyntaxType>) {
     const entries = Object.entries(map);
     for (const [name, attr] of entries) {
       typeof attr === "object"
         ? this.addRenderAttrWithObject(name, <any>attr)
-        : this.addRenderAttrWithValue(name, attr);
+        : this.addAttributeWithSyntaxText(name, attr);
     }
   }
 

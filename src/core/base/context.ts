@@ -57,6 +57,7 @@ export abstract class SourceFileContext<T extends any> {
   public components!: IComponentCreateOptions[];
   public directives!: IDirectiveCreateOptions[];
   public dependencies!: Record<string, string>;
+  public defaultCompRefRecord: Record<string, string> = {};
   public abstract setProvider(provider: string): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;

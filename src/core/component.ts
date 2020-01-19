@@ -6,6 +6,7 @@ import {
   IEwsEntityPrivates,
   IEwsEntityProtectedHooks,
   IPureObject,
+  SourceFileContext,
 } from "./base";
 import { IInnerCompnentChildRef as IChildRef } from "./child-ref";
 import { BasicComposition, IInnerComposite } from "./libs";
@@ -166,7 +167,7 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
 
   protected getChildren(): IChildElement[] {
     return this.__children.map(i => ({
-      component: i.__refId,
+      component: decideComponentName(this.__context, i),
       id: i.__entityId,
       props: { ...i.__options.props },
     }));
@@ -221,4 +222,29 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   }
 
   //#endregion
+}
+
+/**
+ * ## 优化代码：决定是否可以移除重复的组件
+ *
+ * - 不可以移除：defaultEntityId === __entityId
+ *
+ * @author Big Mogician
+ * @export
+ * @param {SourceFileContext<any>} context
+ * @param {IChildRef} i
+ * @returns
+ */
+export function decideComponentName(context: SourceFileContext<any>, i: IChildRef) {
+  const inputLen = Object.keys(i.__options.input).length;
+  let defaultEntityId = i.__entityId;
+  // inputs 参数未定义，不重复生成组件
+  if (inputLen === 0) {
+    defaultEntityId = context.defaultCompRefRecord[i.__refId];
+    if (defaultEntityId === void 0) {
+      defaultEntityId = i.__entityId;
+      context.defaultCompRefRecord[i.__refId] = i.__entityId;
+    }
+  }
+  return defaultEntityId;
 }

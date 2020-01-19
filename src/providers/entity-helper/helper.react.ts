@@ -7,7 +7,7 @@ import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
-import { IJsxElementDefine, createJsxElement } from "../../core/typescript/jsx-element";
+import { IJsxElementDefine, JsxElementGenerator, createJsxElement } from "../../core/typescript/jsx-element";
 import { ImportGenerator } from "../../core/typescript";
 
 export interface IFrontLibImports {
@@ -44,7 +44,11 @@ export class ReactHelper extends BasicHelper {
     attrs: Record<string, IJsxAttrDefine> = {},
     children: IJsxElementDefine[] = [],
   ) {
-    return createJsxElement({ tagName: tagnname, attrs, children });
+    return this.injector
+      .get(JsxElementGenerator)
+      .setTagName(tagnname)
+      .addJsxAttrs(attrs)
+      .addJsxChildren(children);
   }
 
   public createJsxElement(
