@@ -127,9 +127,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected addAttributesWithMap(map: Record<string, JsxAttributeType>) {
     const entries = Object.entries(map);
     for (const [name, attr] of entries) {
-      typeof attr === "object" && !ts.isJsxExpression(<any>attr)
-        ? this.addRenderAttrWithObject(name, <any>attr)
-        : this.addAttributeWithValue(name, <any>attr);
+      this.addAttributeWithValue(name, <any>attr);
     }
   }
 

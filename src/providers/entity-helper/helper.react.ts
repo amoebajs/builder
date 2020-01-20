@@ -7,7 +7,7 @@ import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
-import { IJsxElementDefine, JsxElementGenerator, createJsxElement } from "../../core/typescript/jsx-element";
+import { IJsxElementDefine, JsxElementGenerator } from "../../core/typescript/jsx-element";
 import { ImportGenerator } from "../../core/typescript";
 
 export interface IFrontLibImports {
@@ -26,10 +26,9 @@ export interface IFrontLibImportOptions {
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
-  public createObjectAttr(value: { [prop: string]: number | string | boolean | ts.Expression }) {
-    const kvs: [string, string | number | boolean | ts.Expression][] = Object.keys(value).map(k => [k, value[k]]);
+  public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
     return ts.createObjectLiteral(
-      kvs.map(([n, v]) =>
+      Object.entries(value).map(([n, v]) =>
         ts.createPropertyAssignment(
           ts.createIdentifier(n),
           resolveSyntaxInsert(typeof v, v, (_, e) => e),

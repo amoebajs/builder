@@ -6,13 +6,13 @@ components:
   - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
-  # - module: zent-module
-  #   name: zent-form
-  #   id: ZentFormComponent
+  - module: zent-module
+    name: zent-form
+    id: ZentFormComponent
 directives:
-  # - module: zent-module
-  #   name: zent-base-css
-  #   id: ZentBaseCssDemoDirective
+  - module: zent-module
+    name: zent-base-css
+    id: ZentBaseCssDemoDirective
   # - module: zent-module
   #   name: zent-input
   #   id: zentInputDirective
@@ -35,12 +35,12 @@ page:
   ref: CssGridPageDemoRoot
   id: CssGridPageDemoRoot01
   children:
-    #   - ref: ZentFormComponent
-    #     id: ZentFormComponentRef01
-    #     props:
-    #       form:
-    #         type: state
-    #         expression: form
+    - ref: ZentFormComponent
+      id: ZentFormComponentRef01
+      props:
+        form:
+          type: state
+          expression: form
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       props:
