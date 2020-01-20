@@ -6,11 +6,10 @@ import {
   IInnerCompnentChildRef,
   IInnerComponent,
   IInnerDirective,
+  IInnerDirectiveChildRef,
   IPureObject,
   Injectable,
   SourceFileContext,
-  callComponentLifecycle,
-  decideComponentName,
 } from "../../core";
 
 @Injectable(InjectScope.New)
@@ -31,9 +30,7 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
   protected async bootstrap() {
     const instance: IInnerDirective = await super.bootstrap();
     await instance.onInit();
-    await instance.onPreAttach();
     await instance.onAttach();
-    await instance.onPostAttach();
     return instance;
   }
 }
@@ -53,15 +50,62 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     this["__etype"] = "componentChildRef";
   }
 
+  protected async onInit() {
+    await super.onInit();
+    const refs: (IInnerCompnentChildRef | IInnerDirectiveChildRef)[] = [
+      ...this.__refComponents,
+      ...this.__refDirectives,
+    ];
+    for (const ref of refs) {
+      await ref.onInit();
+    }
+  }
+
   protected async bootstrap() {
-    const componentName = decideComponentName(this.__context, <any>this);
     const instance: IInnerComponent = await super.bootstrap();
-    for (const child of this.__refComponents) {
-      instance.__children.push(child);
+    await instance.onInit();
+    const componentName = decideComponentName(this.__context, <any>this);
+    if (componentName !== this.__entityId) {
+      return instance;
     }
-    if (componentName === this.__entityId) {
-      await callComponentLifecycle(instance);
+    for (const component of this.__refComponents) {
+      instance.__children.push({
+        component: decideComponentName(this.__context, component),
+        id: component.__entityId,
+        props: { ...component.__options.props },
+      });
+      await component.bootstrap();
     }
+    await instance.onChildrenRender();
+    for (const directive of this.__refDirectives) {
+      await directive.bootstrap();
+    }
+    await instance.onRender();
     return instance;
   }
+}
+
+/**
+ * ## 优化代码：决定是否可以移除重复的组件
+ *
+ * - 不可以移除：defaultEntityId === __entityId
+ *
+ * @author Big Mogician
+ * @export
+ * @param {SourceFileContext<any>} context
+ * @param {IChildRef} i
+ * @returns
+ */
+function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef) {
+  const inputLen = Object.keys(i.__options.input).length;
+  let defaultEntityId = i.__entityId;
+  // inputs 参数未定义，不重复生成组件
+  if (inputLen === 0) {
+    defaultEntityId = context.defaultCompRefRecord[i.__refId];
+    if (defaultEntityId === void 0) {
+      defaultEntityId = i.__entityId;
+      context.defaultCompRefRecord[i.__refId] = i.__entityId;
+    }
+  }
+  return defaultEntityId;
 }

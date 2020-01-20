@@ -79,8 +79,8 @@ export class CssGridContainer extends ReactComponent {
     this.initState();
   }
 
-  protected async onPreRender() {
-    await super.onPreRender();
+  protected async onChildrenRender() {
+    await super.onChildrenRender();
     this.visitAndNotifyChildKey(key => {
       const styles: Record<string, unknown> = {};
       const cStart = this.childColumnStart.get(key);

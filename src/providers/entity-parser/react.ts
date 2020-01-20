@@ -1,13 +1,11 @@
 import ts from "typescript";
 import { Injector } from "@bonbons/di";
 import { BasicEntityProvider } from "./basic";
-import { IInnerComponent } from "../../core/component";
 import { REACT } from "../../utils";
 import { EntityConstructor, Injectable } from "../../core/decorators";
-import { BasicDirective } from "../../core/directive";
-import { ReactComponent, ReactDirective } from "../entities";
+import { ReactDirective } from "../entities";
 import { ReactHelper } from "../entity-helper";
-import { IBasicEntityProvider, SourceFileContext } from "../../core";
+import { IBasicEntityProvider, IInnerCompnentChildRef, IInnerDirectiveChildRef, SourceFileContext } from "../../core";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
@@ -15,9 +13,23 @@ export class ReactEntityProvider extends BasicEntityProvider {
     super(injector, helper);
   }
 
-  // protected createRootComponent(model: IInnerComponent, context: IFinalScopedContext, isExport = true): ts.Statement {
-  //   return this.helper.createFunctionByContext(!isExport, model.entityId, context);
-  // }
+  public async attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerCompnentChildRef | IInnerDirectiveChildRef,
+  ): Promise<any> {
+    const instance = await super.attachInstance(context, ref);
+    if (ref.__etype === "directiveChildRef") {
+      const directive: ReactDirective = instance;
+      Object.defineProperty(directive, "__parentRef", {
+        enumerable: true,
+        configurable: false,
+        get() {
+          return ref.__parentRef && ref.__parentRef.__instanceRef;
+        },
+      });
+    }
+    return instance;
+  }
 
   public afterImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ts.ImportDeclaration[]) {
     imports.unshift(
@@ -79,16 +91,16 @@ export class ReactEntityProvider extends BasicEntityProvider {
   //   return super.onInputPropertiesInit(_, __);
   // }
 
-  public attachDirective(parent: IInnerComponent, target: BasicDirective): BasicDirective;
-  public attachDirective(parent: ReactComponent, target: ReactDirective): ReactDirective;
-  public attachDirective(parent: IInnerComponent | ReactComponent, target: ReactDirective) {
-    Object.defineProperty(target, "__parentRef", {
-      enumerable: true,
-      configurable: false,
-      get() {
-        return parent;
-      },
-    });
-    return target;
-  }
+  // public attachDirective(parent: IInnerComponent, target: BasicDirective): BasicDirective;
+  // public attachDirective(parent: ReactComponent, target: ReactDirective): ReactDirective;
+  // public attachDirective(parent: IInnerComponent | ReactComponent, target: ReactDirective) {
+  //   Object.defineProperty(target, "__parentRef", {
+  //     enumerable: true,
+  //     configurable: false,
+  //     get() {
+  //       return parent;
+  //     },
+  //   });
+  //   return target;
+  // }
 }

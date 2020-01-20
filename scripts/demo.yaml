@@ -76,95 +76,95 @@ page:
           type: literal
           syntaxType: string
           expression: primary
-  # directives:
-  #   - ref: zentInputDirective
-  #     id: zentInputDirective01
-  #     input:
-  #       formId:
-  #         type: literal
-  #         expression: ZentFormComponentRef01
-  #       name:
-  #         type: literal
-  #         expression: name
-  #       required:
-  #         type: literal
-  #         expression: true
-  #       label:
-  #         type: literal
-  #         expression: 输入框
-  #   - ref: zentSwitchDirective
-  #     id: zentSwitchDirective01
-  #     input:
-  #       formId:
-  #         type: literal
-  #         expression: ZentFormComponentRef01
-  #       name:
-  #         type: literal
-  #         expression: isOpen
-  #       required:
-  #         type: literal
-  #         expression: true
-  #       label:
-  #         type: literal
-  #         expression: 开关
-  #   - ref: zentSelectDirective
-  #     id: zentSelectDirective01
-  #     input:
-  #       formId:
-  #         type: literal
-  #         expression: ZentFormComponentRef01
-  #       label:
-  #         type: literal
-  #         expression: 下拉选项
-  #       name:
-  #         type: literal
-  #         expression: option
-  #       required:
-  #         type: literal
-  #         expression: true
-  #       placeholder:
-  #         type: litertal
-  #         expression: 请选择
-  #       data:
-  #         type: literal
-  #         expression:
-  #           - value: Option 1
-  #             text: Option 1
-  #           - value: Option 2
-  #             text: Option 2
-  #   - ref: zentFormDirective
-  #     id: zentFormDirective01
-  #     input:
-  #       url:
-  #         type: literal
-  #         expression: https://www.youzan.com
-  #       formId:
-  #         type: literal
-  #         expression: ZentFormComponentRef01
-  #   - ref: zentSubmitButtonDirective
-  #     id: zentSubmitButtonDirective01
-  #     input:
-  #       formId:
-  #         type: literal
-  #         expression: ZentFormComponentRef01
-  #   - ref: CustomClickDemoDirective
-  #     id: CustomClickDemoDirective01
-  #     input:
-  #       host:
-  #         type: literal
-  #         expression: ZentBtnDemoCompRef02
-  #       eventType:
-  #         type: literal
-  #         expression: setState
-  #       attrName:
-  #         type: literal
-  #         expression: onClick
-  #       targetName:
-  #         type: literal
-  #         expression: zentBtn02Content
-  #       expression:
-  #         type: literal
-  #         expression: e => new Date().getTime()
+  directives:
+    - ref: CustomClickDemoDirective
+      id: CustomClickDemoDirective01
+      input:
+        host:
+          type: literal
+          expression: ZentBtnDemoCompRef02
+        eventType:
+          type: literal
+          expression: setState
+        attrName:
+          type: literal
+          expression: onClick
+        targetName:
+          type: literal
+          expression: zentBtn02Content
+        expression:
+          type: literal
+          expression: e => new Date().getTime()
+    #   - ref: zentInputDirective
+    #     id: zentInputDirective01
+    #     input:
+    #       formId:
+    #         type: literal
+    #         expression: ZentFormComponentRef01
+    #       name:
+    #         type: literal
+    #         expression: name
+    #       required:
+    #         type: literal
+    #         expression: true
+    #       label:
+    #         type: literal
+    #         expression: 输入框
+    #   - ref: zentSwitchDirective
+    #     id: zentSwitchDirective01
+    #     input:
+    #       formId:
+    #         type: literal
+    #         expression: ZentFormComponentRef01
+    #       name:
+    #         type: literal
+    #         expression: isOpen
+    #       required:
+    #         type: literal
+    #         expression: true
+    #       label:
+    #         type: literal
+    #         expression: 开关
+    #   - ref: zentSelectDirective
+    #     id: zentSelectDirective01
+    #     input:
+    #       formId:
+    #         type: literal
+    #         expression: ZentFormComponentRef01
+    #       label:
+    #         type: literal
+    #         expression: 下拉选项
+    #       name:
+    #         type: literal
+    #         expression: option
+    #       required:
+    #         type: literal
+    #         expression: true
+    #       placeholder:
+    #         type: litertal
+    #         expression: 请选择
+    #       data:
+    #         type: literal
+    #         expression:
+    #           - value: Option 1
+    #             text: Option 1
+    #           - value: Option 2
+    #             text: Option 2
+    #   - ref: zentFormDirective
+    #     id: zentFormDirective01
+    #     input:
+    #       url:
+    #         type: literal
+    #         expression: https://www.youzan.com
+    #       formId:
+    #         type: literal
+    #         expression: ZentFormComponentRef01
+    #   - ref: zentSubmitButtonDirective
+    #     id: zentSubmitButtonDirective01
+    #     input:
+    #       formId:
+    #         type: literal
+    #         expression: ZentFormComponentRef01
   input:
     basic:
       width:

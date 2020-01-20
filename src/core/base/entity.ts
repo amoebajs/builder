@@ -263,62 +263,6 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__getChildElements("functions") || [];
   }
 
-  // protected addMethods(args: ts.MethodDeclaration[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("methods", args, type);
-  // }
-
-  // protected getMethods() {
-  //   return this.__getChildElements("methods") || [];
-  // }
-
-  // protected addProperties(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("properties", args, type);
-  // }
-
-  // protected getProperties() {
-  //   return this.__getChildElements("properties") || [];
-  // }
-
-  // protected addFields(args: ts.PropertyDeclaration[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("fields", args, type);
-  // }
-
-  // protected getFields() {
-  //   return this.__getChildElements("fields") || [];
-  // }
-
-  // protected addImplementParents(args: ts.HeritageClause[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("implementParents", args, type);
-  // }
-
-  // protected getImplementParents() {
-  //   return this.__getChildElements("implementParents") || [];
-  // }
-
-  // protected setExtendParent(arg: ts.HeritageClause | null) {
-  //   return this.__addChildElements("extendParent", [arg], "reset");
-  // }
-
-  // protected getExtendParent() {
-  //   return this.__getChildElements("extendParent") || null;
-  // }
-
-  // protected addStatements(arg: ts.Statement[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("statements", arg, type);
-  // }
-
-  // protected getStatements() {
-  //   return this.__getChildElements("statements");
-  // }
-
-  // protected addParameters(arg: ts.ParameterDeclaration[], type: IBasicComponentAppendType = "push") {
-  //   return this.__addChildElements("parameters", arg, type);
-  // }
-
-  // protected getParameters() {
-  //   return this.__getChildElements("parameters");
-  // }
-
   //#endregion
 
   private __addChildElements<A extends any>(
@@ -338,10 +282,6 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
         }),
       );
     }
-    // if (target === "extendParent") {
-    //   context.container[<"extendParent">target] = args[0];
-    //   return;
-    // }
     if (type === "reset") {
       context.container[target] = <any>args;
     } else {

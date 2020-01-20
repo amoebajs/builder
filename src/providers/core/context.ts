@@ -59,6 +59,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 
   public async callCompilation(): Promise<void> {
+    await this.root.onInit();
     await this.root.bootstrap();
     const entries = Array.from(this.scopedContext.entries());
     for (const [, e] of entries) {
@@ -116,7 +117,6 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     const { value } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
     this._setBaseChildRefInfo(ref, options, value, parent);
     ref["__options"] = options.options;
-    await ref["bootstrap"]();
     return <IInnerDirectiveChildRef>(<unknown>ref);
   }
 

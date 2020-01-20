@@ -26,6 +26,7 @@ export interface IBasicChildRefPrivates {
   readonly __options: {};
   readonly __provider: IBasicEntityProvider;
   readonly __parentRef: IInnerCompnentChildRef | undefined;
+  readonly __instanceRef: any;
 }
 
 export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"componentChildRef"> {
@@ -61,6 +62,7 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   protected __options: IBasicChildRefPrivates["__options"] = {};
   protected __provider!: IBasicChildRefPrivates["__provider"];
   protected __parentRef!: IBasicChildRefPrivates["__parentRef"];
+  protected __instanceRef!: IBasicChildRefPrivates["__instanceRef"];
 
   constructor() {
     super();
@@ -68,10 +70,13 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   }
 
   protected async onInit() {
-    return Promise.resolve();
+    console.log("init --> " + this.__refId + " : " + this.__entityId);
   }
 
   protected async bootstrap(): Promise<any> {
-    return await this.__provider.attachInstance(this.__context, <any>this);
+    console.log("bootstrap --> " + this.__refId + " : " + this.__entityId);
+    const instance = await this.__provider.attachInstance(this.__context, <any>this);
+    this.__instanceRef = instance;
+    return instance;
   }
 }

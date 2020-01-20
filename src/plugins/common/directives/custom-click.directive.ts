@@ -25,6 +25,7 @@ export class CustomClickDirective extends ReactDirective {
     try {
       this.render.appendJsxAttribute(this.host!, this.attrName!, ts.createJsxExpression(undefined, this.resolveExpr()));
     } catch (error) {
+      // console.log(error);
       /** ignore */
     }
   }

@@ -27,5 +27,5 @@ export abstract class NodeGenerator<T extends ts.Node = ts.Node> {
 }
 
 export function createTypeListNode(type: string[]) {
-  return ts.createTypeReferenceNode(type.join(" | "), []);
+  return type.length === 0 ? undefined : ts.createTypeReferenceNode(type.join(" | "), []);
 }

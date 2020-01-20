@@ -27,7 +27,7 @@ export class VariableGenerator extends StatementGenerator<ts.VariableStatement> 
     if (typeof options === "string") options = { name: options, type: "any" };
     const index = Object.keys(this.variables).length;
     const vbName = options.name || "_n" + (index + 1);
-    const fieldType = is.array(options.type) ? options.type : [options.type || "any"];
+    const fieldType = is.array(options.type) ? options.type : !options.type ? [] : [options.type];
     this.variables[vbName] = {
       type: fieldType,
       arrayBinding: options.arrayBinding || [],

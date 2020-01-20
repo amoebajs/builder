@@ -81,34 +81,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.CommonStatements, []);
   }
 
-  protected async onChildrenRender() {
-    await super.onChildrenRender();
-    const children = this.getChildren();
-    for (const child of children) {
-      const ele = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
-      const props = child.props || {};
-      for (const key in props) {
-        if (props.hasOwnProperty(key)) {
-          const element = props[key];
-          switch (element.type) {
-            case "state":
-              ele.addJsxAttr(key, <string>element.expression);
-              break;
-            case "props":
-              ele.addJsxAttr(key, "props." + <string>element.expression);
-              break;
-            case "literal":
-              ele.addJsxAttr(key, () => this.helper.createLiteral(element.expression));
-              break;
-            default:
-              break;
-          }
-        }
-      }
-      this.addRenderChildren(child.id, ele);
-    }
-  }
-
   protected async onRender() {
     await super.onRender();
     this.createFunctionRender([]);
@@ -235,6 +207,33 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           return node;
         }),
     ]);
+  }
+
+  protected async onChildrenRender() {
+    const children = this.getChildren();
+    for (const child of children) {
+      const ele = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
+      const props = child.props || {};
+      for (const key in props) {
+        if (props.hasOwnProperty(key)) {
+          const element = props[key];
+          switch (element.type) {
+            case "state":
+              ele.addJsxAttr(key, <string>element.expression);
+              break;
+            case "props":
+              ele.addJsxAttr(key, "props." + <string>element.expression);
+              break;
+            case "literal":
+              ele.addJsxAttr(key, () => this.helper.createLiteral(element.expression));
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      this.addRenderChildren(child.id, ele);
+    }
   }
 
   private initReact16UseHooks() {
