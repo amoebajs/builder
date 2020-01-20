@@ -139,6 +139,7 @@ export function createEntityId() {
 export interface IEwsEntity {
   readonly entityId: string;
   setEntityId(id: string): this;
+  setParentId(id: string): this;
 }
 
 export interface IEwsEntityGetters {
@@ -199,17 +200,17 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   protected injector!: Injector;
 
   public get entityId() {
-    return this["__scope"];
+    return this.__scope;
   }
 
   public setEntityId(id: string): this {
     if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
-    this["__scope"] = id;
+    this.__scope = id;
     return this;
   }
 
   public setParentId(id: string): this {
-    this["__parent"] = id;
+    this.__parent = id;
     return this;
   }
 

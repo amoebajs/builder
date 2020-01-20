@@ -22,9 +22,9 @@ directives:
   # - module: zent-module
   #   name: zent-select
   #   id: zentSelectDirective
-  # - module: zent-module
-  #   name: zent-form
-  #   id: zentFormDirective
+  - module: zent-module
+    name: zent-form
+    id: zentFormDirective
   # - module: zent-module
   #   name: zent-action-button
   #   id: zentSubmitButtonDirective
@@ -150,15 +150,15 @@ page:
     #             text: Option 1
     #           - value: Option 2
     #             text: Option 2
-    #   - ref: zentFormDirective
-    #     id: zentFormDirective01
-    #     input:
-    #       url:
-    #         type: literal
-    #         expression: https://www.youzan.com
-    #       formId:
-    #         type: literal
-    #         expression: ZentFormComponentRef01
+    - ref: zentFormDirective
+      id: zentFormDirective01
+      input:
+        url:
+          type: literal
+          expression: https://www.youzan.com
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
     #   - ref: zentSubmitButtonDirective
     #     id: zentSubmitButtonDirective01
     #     input:

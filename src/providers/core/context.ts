@@ -3,16 +3,27 @@ import { InjectScope, Injector } from "@bonbons/di";
 import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap } from "../../providers";
 import { EntityConstructor, Injectable } from "../../core/decorators";
 import {
+  EntityType,
   IBasicEntityProvider,
   ICompChildRefPluginOptions,
   IComponentCreateOptions,
   IDirecChildRefPluginOptions,
   IDirectiveCreateOptions,
+  IFinalScopedContext,
   IInnerCompnentChildRef,
   IInnerDirectiveChildRef,
+  IScopeStructure,
+  IScopedContext,
   SourceFileContext,
 } from "../../core";
 import { NotFoundError } from "../../errors";
+
+interface IContextTreeNode {
+  scopeid: string | symbol;
+  parentid?: string | symbol;
+  container: Partial<IFinalScopedContext>;
+  children: IContextTreeNode[];
+}
 
 @Injectable(InjectScope.New)
 export class SourceFileBasicContext<T extends IBasicEntityProvider> extends SourceFileContext<T> {
@@ -62,17 +73,42 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     await this.root.onInit();
     await this.root.bootstrap();
     const entries = Array.from(this.scopedContext.entries());
-    for (const [, e] of entries) {
-      // console.log(k);
-      // console.log(e);
-      if (e.type === "component") {
-        const { imports = [], functions = [], classes = [], variables = [] } = e.container;
-        this.astContext.imports.push(...imports.map(i => i.emit()));
-        this.astContext.functions.push(...functions.map(i => i.emit()));
-        this.astContext.classes.push(...classes.map(i => i.emit()));
-        this.astContext.variables.push(...variables.map(i => i.emit()));
-      }
+    this.setSourcenamespace(
+      this.findAndSetChildrenContext(
+        entries.map<IContextTreeNode>(([id, scope]) => ({
+          scopeid: id,
+          parentid: scope.parent,
+          container: scope.container,
+          children: [],
+        })),
+        void 0,
+      )!,
+    );
+    this.callStatementsHooks();
+  }
+
+  private findAndSetChildrenContext(structures: IContextTreeNode[], parentid: string | symbol | undefined) {
+    const target = structures.find(i => i.parentid === parentid);
+    if (target) {
+      this.findAndSetChildrenContext(structures, target.scopeid);
+      target.children = structures.filter(i => i.parentid === target.scopeid);
     }
+    return target;
+  }
+
+  private setSourcenamespace(node: IContextTreeNode) {
+    for (const iterator of node.children) {
+      this.setSourcenamespace(iterator);
+    }
+    // 暂时没有控制范围
+    const { imports = [], functions = [], classes = [], variables = [] } = node.container;
+    this.astContext.imports.push(...imports.map(i => i.emit()));
+    this.astContext.functions.push(...functions.map(i => i.emit()));
+    this.astContext.classes.push(...classes.map(i => i.emit()));
+    this.astContext.variables.push(...variables.map(i => i.emit()));
+  }
+
+  private callStatementsHooks() {
     this.astContext = {
       imports: this.provider.afterImportsCreated(this, this.astContext.imports),
       variables: this.provider.afterVariablesCreated(this, this.astContext.variables),
@@ -133,8 +169,8 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     ref["__context"] = this;
     ref["__provider"] = this.provider;
     if (parent) {
+      ref.setParentId(parent.__scope);
       ref["__parentRef"] = parent;
-      ref["__parent"] = parent.__scope;
     }
     return ref;
   }

@@ -11,8 +11,8 @@ export class ZentFormDirective extends ReactDirective {
 
   protected async onAttach() {
     const form = this.render.getElementById(this.formId);
+    console.log(form);
     if (form) {
-      this.render.setElementById(this.formId, form);
       this.addImports([
         ...this.helper.createFrontLibImports({
           libRoot: "es",
