@@ -1,7 +1,6 @@
-import { Attach, Component, Group, Input } from "../../../core/decorators";
+import { Attach, Component, Group, Input, PropAttach } from "#core";
+import { BasicState, ReactComponent } from "#providers";
 import { DOMS } from "../../../utils";
-import { BasicState, ReactComponent } from "../../../providers";
-import { PropAttach } from "../../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })

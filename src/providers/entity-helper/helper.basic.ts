@@ -1,10 +1,9 @@
 import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
-import { Injectable } from "../../core/decorators";
-import { resolveSyntaxInsert } from "../../core";
-import { is } from "../../utils/is";
+import { ImportGenerator, Injectable, resolveSyntaxInsert } from "#core";
+import { is } from "#utils/is";
 import { Primitive } from "utility-types";
-import { ImportGenerator } from "../../core/typescript";
+
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
   constructor(protected injector: Injector) {}

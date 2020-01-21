@@ -1,5 +1,7 @@
-import { Injectable } from "../../core/decorators";
+import { Injectable } from "#core";
 import { Prettier } from "./prettier.contract";
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 @Injectable()
 export class PrettierWebProvider implements Prettier {

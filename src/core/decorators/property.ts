@@ -1,7 +1,7 @@
 import { InjectDIToken } from "@bonbons/di";
 import { merge } from "lodash";
-import { IPropertyBase, IPropertyGroupBase } from "../../core/base";
 import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
+import { IPropertyBase, IPropertyGroupBase } from "../base/common";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";

@@ -1,6 +1,7 @@
 import ts from "typescript";
 import uuid from "uuid/v4";
 import { InjectDIToken, Injector } from "@bonbons/di";
+import { BasicError } from "#errors";
 import {
   IComponentAttachMap,
   IComponentInputMap,
@@ -9,7 +10,6 @@ import {
   IPureObject,
   MapValueType,
 } from "./common";
-import { BasicError } from "../../errors";
 import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
 import { IFrameworkDepts } from "../decorators";
 import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";

@@ -1,13 +1,5 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
-  EntityConstructor,
-  IConstructor,
-  IFrameworkDepts,
-  Injectable,
-  getInjectScope,
-  resolveDepts,
-} from "../core/decorators";
-import {
   BasicComponentChildRef,
   BasicDirectiveChildRef,
   BasicEntityProvider,
@@ -22,21 +14,27 @@ import {
   ReactRender,
   SourceFileBasicContext,
   WebpackConfig,
-} from "../providers";
-import { CommonModule, ZentModule } from "../plugins";
-import { SourceFileContext } from "../core";
+} from "#providers";
+import { CommonModule, ZentModule } from "#plugins";
 import {
   DeclarationGenerator,
+  EntityConstructor,
   ExpressionGenerator,
   FunctionGenerator,
+  IConstructor,
+  IFrameworkDepts,
   ImportGenerator,
+  Injectable,
   JsxAttributeGenerator,
   JsxElementGenerator,
   JsxExpressionGenerator,
   NodeGenerator,
+  SourceFileContext,
   StatementGenerator,
   VariableGenerator,
-} from "../core/typescript";
+  getInjectScope,
+  resolveDepts,
+} from "#core";
 
 export interface IFactoryOptions {
   trace: boolean;

@@ -1,8 +1,6 @@
 import { InjectScope } from "@bonbons/di";
-import { IPureObject } from "../../core/base";
-import { BasicDirective } from "../../core/directive";
+import { BasicDirective, IPureObject, Injectable } from "#core";
 import { ReactComponent } from "./component.react";
-import { Injectable } from "../../core/decorators";
 import { ReactHelper, ReactRender } from "../entity-helper";
 
 @Injectable(InjectScope.New)

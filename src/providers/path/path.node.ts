@@ -1,5 +1,5 @@
 import * as path from "path";
-import { Injectable } from "../../core/decorators";
+import { Injectable } from "#core";
 import { Path } from "./path.contract";
 
 @Injectable()

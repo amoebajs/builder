@@ -1,8 +1,8 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { is } from "#utils/is";
 import { Injectable } from "../decorators";
 import { StatementGenerator } from "./statement";
-import { is } from "../../utils/is";
 import { createTypeListNode } from "./node";
 
 export interface IVariableDefine {

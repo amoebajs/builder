@@ -1,6 +1,8 @@
 import { Plugin } from "webpack";
-import { Injectable } from "../../../core/decorators";
+import { Injectable } from "#core/decorators";
 import { WebpackPlugins } from "./plugins.contract";
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 @Injectable()
 export class WebpackPluginsWebProvider implements WebpackPlugins {

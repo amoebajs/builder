@@ -1,8 +1,8 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { is } from "#utils/is";
 import { Injectable } from "../decorators";
 import { DeclarationGenerator, createDeclarationExport } from "./declaration";
-import { is } from "../../utils/is";
 import { createTypeListNode } from "./node";
 import { StatementGenerator } from "./statement";
 

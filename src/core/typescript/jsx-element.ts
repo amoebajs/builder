@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
+import { is } from "#utils/is";
 import { Injectable } from "../decorators";
 import { ExpressionGenerator } from "./expression";
 import { IJsxAttrDefine, JsxAttributeGenerator } from "./jsx-attribute";
-import { is } from "../../utils/is";
 import { JsxExpressionGenerator } from "./jsx-expression";
 
 export interface IJsxElementDefine {
