@@ -34,14 +34,6 @@ export interface IWebpackOptions {
   plugins?: Plugin[];
 }
 
-export const defaultTransformers = [
-  {
-    libraryName: "zent",
-    libraryDirectory: "es",
-    style: (n: string) => n.replace("zent/es", "zent/css") + ".css",
-  },
-];
-
 @Injectable()
 export class WebpackConfig {
   constructor(protected path: Path, protected plugins: WebpackPlugins) {}
@@ -85,11 +77,6 @@ export class WebpackConfig {
                   transpileOnly: true,
                   configFile: options.typescript?.tsconfig ?? "tsconfig.jsx.json",
                   compilerOptions: { module: "es2015" },
-                  getCustomTransformers: () => ({
-                    before: [
-                      this.plugins.createTsImportPlugin(options.typescript?.importPlugins ?? defaultTransformers),
-                    ],
-                  }),
                 },
               },
             ],

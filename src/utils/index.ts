@@ -22,10 +22,13 @@ export const REACT = {
   StatelessComponent: "StatelessComponent",
   Fragment: "React.Fragment",
   Render: "render",
+  UseState: "useState",
+  UseCallback: "useCallback",
+  UseEffect: "useEffect",
 };
 
 export interface IJsxAttrs {
-  [key: string]: ts.Expression | string | number | boolean | null;
+  [key: string]: ts.Expression | string | number | boolean | undefined;
 }
 
 const AnyType = ts.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword);

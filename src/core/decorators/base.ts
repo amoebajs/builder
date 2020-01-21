@@ -19,7 +19,7 @@ export interface IModuleContract {
   provider: keyof IFrameworkDepts;
   components: EntityConstructor<any>[];
   directives: EntityConstructor<any>[];
-  dependencies: { [name: string]: string | string[] };
+  dependencies: Record<string, string>;
 }
 
 export interface IBasicI18NContract {
@@ -31,7 +31,7 @@ export interface IBasicI18NContract {
 }
 
 export interface IFrameworkDepts {
-  react: { [name: string]: string };
+  react: Record<string, string>;
 }
 
 export type IFrameworkStructure<T> = {
@@ -65,7 +65,7 @@ export function resolveModule(target: EntityConstructor<any>, defaults: Partial<
   return <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults;
 }
 
-export function resolveParams<T extends IBasicI18NContract>(params: string | { [prop: string]: any }): Partial<T> {
+export function resolveParams<T extends IBasicI18NContract>(params?: string | Partial<IBasicI18NContract>): Partial<T> {
   let decoParams: Partial<T> = {};
   if (typeof params === "string") decoParams.name = params;
   else if (typeof params === "object") decoParams = <any>{ ...params };

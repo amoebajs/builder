@@ -1,13 +1,11 @@
 import ts from "typescript";
 import { Injector } from "@bonbons/di";
-import { BasicEntityProvider, IPropertiesOptions } from "./basic";
-import { IInnerComponent } from "../../core/component";
+import { BasicEntityProvider } from "./basic";
 import { REACT } from "../../utils";
 import { EntityConstructor, Injectable } from "../../core/decorators";
-import { BasicDirective } from "../../core/directive";
-import { ReactComponent, ReactDirective } from "../entities";
-import { IBasicCompilationFinalContext } from "../../core";
+import { ReactDirective } from "../entities";
 import { ReactHelper } from "../entity-helper";
+import { IBasicEntityProvider, IInnerCompnentChildRef, IInnerDirectiveChildRef, SourceFileContext } from "../../core";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {
@@ -15,34 +13,41 @@ export class ReactEntityProvider extends BasicEntityProvider {
     super(injector, helper);
   }
 
-  protected createRootComponent(
-    model: IInnerComponent,
-    context: IBasicCompilationFinalContext,
-    isExport = true,
-  ): ts.Statement {
-    return this.helper.createFunction(!isExport, model.entityId, context);
+  public async attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerCompnentChildRef | IInnerDirectiveChildRef,
+  ): Promise<any> {
+    const instance = await super.attachInstance(context, ref);
+    if (ref.__etype === "directiveChildRef") {
+      const directive: ReactDirective = instance;
+      Object.defineProperty(directive, "__parentRef", {
+        enumerable: true,
+        configurable: false,
+        get() {
+          return ref.__parentRef && ref.__parentRef.__instanceRef;
+        },
+      });
+    }
+    return instance;
   }
 
-  protected onImportsUpdate(model: IInnerComponent, imports: ts.ImportDeclaration[]) {
-    return super.onImportsUpdate(model, imports, [
-      this.helper.createImport("react", REACT.NS),
-      this.helper.createImport("react-dom", REACT.DomNS),
-    ]);
+  public afterImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ts.ImportDeclaration[]) {
+    imports.unshift(
+      this.helper.createNamespaceImport("react", REACT.NS).emit(),
+      this.helper.createNamespaceImport("react-dom", REACT.DomNS).emit(),
+    );
+    return super.afterImportsCreated(context, imports);
   }
 
-  protected emitFunctionComponentContext(context: Partial<IBasicCompilationFinalContext>) {
-    return context;
-  }
-
-  protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]) {
-    return [
+  public afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]) {
+    return super.afterAllCreated(context, [
       ...statements,
       ts.createExpressionStatement(
         ts.createCall(
           ts.createPropertyAccess(ts.createIdentifier(REACT.DomNS), ts.createIdentifier("render")),
           [],
           [
-            this.helper.createJsxElement(model.entityId, [], {}),
+            this.helper.createJsxElement(context.root.entityId, [], {}),
             ts.createCall(
               ts.createPropertyAccess(ts.createIdentifier("document"), ts.createIdentifier("getElementById")),
               [],
@@ -51,27 +56,10 @@ export class ReactEntityProvider extends BasicEntityProvider {
           ],
         ),
       ),
-    ];
+    ]);
   }
 
   public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {
     return super.resolveExtensionsMetadata(_);
-  }
-
-  protected onInputPropertiesInit(_: EntityConstructor<any>, __: IPropertiesOptions) {
-    return super.onInputPropertiesInit(_, __);
-  }
-
-  public attachDirective(parent: IInnerComponent, target: BasicDirective): BasicDirective;
-  public attachDirective(parent: ReactComponent, target: ReactDirective): ReactDirective;
-  public attachDirective(parent: IInnerComponent | ReactComponent, target: ReactDirective) {
-    Object.defineProperty(target, "__parentRef", {
-      enumerable: true,
-      configurable: false,
-      get() {
-        return parent;
-      },
-    });
-    return target;
   }
 }

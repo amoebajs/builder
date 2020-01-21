@@ -1,8 +1,7 @@
-import ts from "typescript";
-import { Attach, Component, Group, Input } from "../../core/decorators";
-import { DOMS, TYPES } from "../../utils";
-import { ReactComponent } from "../../providers";
-import { PropAttach } from "../../core/libs/attach.basic";
+import { Attach, Component, Group, Input } from "../../../core/decorators";
+import { DOMS } from "../../../utils";
+import { BasicState, ReactComponent } from "../../../providers";
+import { PropAttach } from "../../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })
@@ -13,11 +12,20 @@ export class CssGridContainer extends ReactComponent {
   @Input({ group: "basic", displayName: "组件默认状态" })
   public defaultComponentState: any = {};
 
+  @Input({ group: "basic", displayName: "背景色" })
+  public backgroundColor: string = "#fcfcfc";
+
+  @Input({ group: "basic", displayName: "宽度" })
+  public width: string = "100%";
+
+  @Input({ group: "basic", displayName: "高度" })
+  public height: string = "100vh";
+
   @Input({ name: "useGridRowRepeat", displayName: "使用Grid行重复" })
-  public use_GridRowRepeat: boolean = true;
+  public useGridRowRepeat: boolean = true;
 
   @Input({ displayName: "使用Grid列重复" })
-  public use_GridColumnRepeat: boolean = true;
+  public useGridColumnRepeat: boolean = true;
 
   @Input({ displayName: "Grid行数量" })
   public gridTemplateRowsCount: number = 1;
@@ -57,32 +65,41 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    const rootElement = this.getState("rootElement");
-    rootElement.name = DOMS.Div;
-    rootElement.attrs["style"] = this.helper.createObjectAttr({
-      height: "100vh",
+    this.addRenderAttrWithObject("style", {
       display: "grid",
-      gridTemplateColumns: this.use_GridRowRepeat ? this.calcColnmnsRepeat() : this.calcColumnsSize(),
-      gridTemplateRows: this.use_GridColumnRepeat ? this.calcRowsRepeat() : this.calcRowsSize(),
+      height: this.height,
+      width: this.width,
+      backgroundColor: this.backgroundColor,
+      gridTemplateColumns: this.useGridRowRepeat ? this.calcColnmnsRepeat() : this.calcColumnsSize(),
+      gridTemplateRows: this.useGridColumnRepeat ? this.calcRowsRepeat() : this.calcRowsSize(),
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });
-    this.setState("rootElement", rootElement);
+    this.setState(BasicState.TagName, DOMS.Div);
     this.initState();
-    this.initExtends();
+  }
+
+  protected async onChildrenRender() {
+    await super.onChildrenRender();
+    this.visitAndNotifyChildKey(key => {
+      const styles: Record<string, unknown> = {};
+      const cStart = this.childColumnStart.get(key);
+      if (cStart) {
+        styles["gridColumnStart"] = cStart;
+      }
+      const rStart = this.childRowStart.get(key);
+      if (rStart) {
+        styles["gridRowStart"] = rStart;
+      }
+      this.render.appendJsxStyles(key, styles);
+    });
   }
 
   private initState() {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
-      this.addImports([this.helper.createImport("react", ["useState"])]);
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
-        let type: undefined | string;
-        if (key === "zentBtnType") {
-          type = "IButtonType";
-          this.addImports([this.helper.createImport("zent", ["IButtonType"])]);
-        }
-        this.addReactUseState(key, value, type);
+        this.addUseState(key, value);
       }
     }
   }
@@ -101,11 +118,5 @@ export class CssGridContainer extends ReactComponent {
 
   private calcRowsRepeat(): string | number {
     return `repeat(${this.gridTemplateRowsCount}, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
-  }
-
-  public initExtends() {
-    if (this.useComponentState) {
-      this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component]));
-    }
   }
 }
