@@ -1,4 +1,4 @@
-import { Module } from "../../core/decorators";
+import { Module } from "#core";
 import { ZentBaseCssDirective } from "./base/zent-base-css.directive";
 import { ZentButtonComponent } from "./button/zent-button.component";
 import { ZentFormComponent } from "./form/zent-form.component";

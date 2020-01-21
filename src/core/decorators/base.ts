@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { InjectDIToken, InjectScope, getDependencies } from "@bonbons/di";
-import { IDescriptionMeta, IWeakDescriptionMeta } from "../../core/base";
+import { IDescriptionMeta, IWeakDescriptionMeta } from "../base";
 
 export const PROVIDER_SCOPE = "ambjs::provider-scope";
 export const MODULE_DEFINE = "ambjs::module_define";

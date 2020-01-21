@@ -1,10 +1,10 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
+import { IFrameworkDepts, Injectable } from "#core/decorators";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
 import { BasicEntityProvider } from "./entity-parser";
-import { IFrameworkDepts, Injectable } from "../core/decorators";
 import { IWebpackOptions, WebpackBuild, WebpackConfig, WebpackPlugins } from "./webpack";
 import { Prettier } from "./prettier/prettier.contract";
 import {

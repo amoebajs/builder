@@ -1,8 +1,8 @@
 import ts from "typescript";
-import { Directive, Input } from "../../../core/decorators";
-import { ReactDirective } from "../../../providers";
-import { TYPES } from "../../../utils";
+import { Directive, Input } from "#core";
+import { ReactDirective } from "#providers";
 import capitalize from "lodash/capitalize";
+import { TYPES } from "../../../utils";
 
 @Directive({ name: "custom-click" })
 export class CustomClickDirective extends ReactDirective {

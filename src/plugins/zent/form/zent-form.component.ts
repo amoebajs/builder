@@ -1,7 +1,7 @@
-import { Component, Input } from "../../../core/decorators";
-import { BasicState, ReactComponent } from "../../../providers";
+import { Component, Input } from "#core";
+import { BasicState, ReactComponent } from "#providers";
 import { IJsxAttrs } from "../../../utils";
-// import { CompositionList } from "../../../core";
+// import { CompositionList } from "#core";
 // import { ZentBaseCssDirective } from "../base/zent-base-css.directive";
 
 export const enum SupportedFormFields {

@@ -1,4 +1,4 @@
-import { is } from "../../utils/is";
+import { is } from "#utils/is";
 import { EntityConstructor } from "../decorators";
 import { IDirectivePluginOptions, ITypedSyntaxExpressionMap, createEntityId } from "../base";
 import { BasicDirective } from "../directive";

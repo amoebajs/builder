@@ -1,5 +1,5 @@
 import { Plugin } from "webpack";
-import { Injectable } from "../../core/decorators";
+import { Injectable } from "#core/decorators";
 import { Path } from "../path/path.contract";
 import { IWebpackTemplateOptions, WebpackPlugins } from "./plugins/plugins.contract";
 

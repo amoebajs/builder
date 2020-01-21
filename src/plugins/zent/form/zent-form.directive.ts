@@ -1,5 +1,5 @@
-import { Directive, Input } from "../../../core/decorators";
-import { ReactDirective } from "../../../providers";
+import { Directive, Input } from "#core";
+import { ReactDirective } from "#providers";
 import ts from "typescript";
 
 @Directive({ name: "zent-form", dependencies: { "zan-pc-ajax": "^4.0.0" } })

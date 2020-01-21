@@ -1,4 +1,4 @@
-import { Module } from "../../core/decorators";
+import { Module } from "#core";
 import { CssGridContainer } from "./components/css-grid.component";
 import { CustomClickDirective } from "./directives/custom-click.directive";
 

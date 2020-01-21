@@ -1,5 +1,7 @@
-import { Injectable } from "../../core/decorators";
+import { Injectable } from "#core";
 import { Path } from "./path.contract";
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 @Injectable()
 export class PathWebProvider implements Path {

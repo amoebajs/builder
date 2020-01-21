@@ -1,18 +1,19 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { capitalize } from "lodash";
-import { IPureObject, resolveSyntaxInsert } from "../../core/base";
-import { REACT, TYPES } from "../../utils";
-import { BasicComponent } from "../../core/component";
-import { Injectable } from "../../core/decorators";
-import { ReactHelper, ReactRender } from "../entity-helper";
 import {
+  BasicComponent,
+  IPureObject,
+  Injectable,
   JsxAttributeGenerator,
   JsxElementGenerator,
   JsxExpressionGenerator,
   StatementGenerator,
   VariableGenerator,
-} from "../../core/typescript";
+  resolveSyntaxInsert,
+} from "#core";
+import { ReactHelper, ReactRender } from "../entity-helper";
+import { REACT, TYPES } from "../../utils";
 
 export type JsxAttributeValueType = number | string | boolean | ts.Expression;
 export type JsxAttributeSyntaxTextType = string | ts.Expression;

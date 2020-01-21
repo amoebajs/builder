@@ -1,11 +1,17 @@
 import ts from "typescript";
 import { Injector } from "@bonbons/di";
-import { BasicEntityProvider } from "./basic";
-import { REACT } from "../../utils";
-import { EntityConstructor, Injectable } from "../../core/decorators";
+import {
+  EntityConstructor,
+  IBasicEntityProvider,
+  IInnerCompnentChildRef,
+  IInnerDirectiveChildRef,
+  Injectable,
+  SourceFileContext,
+} from "#core";
 import { ReactDirective } from "../entities";
 import { ReactHelper } from "../entity-helper";
-import { IBasicEntityProvider, IInnerCompnentChildRef, IInnerDirectiveChildRef, SourceFileContext } from "../../core";
+import { BasicEntityProvider } from "./basic";
+import { REACT } from "../../utils";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {

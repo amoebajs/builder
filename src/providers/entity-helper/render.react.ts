@@ -1,9 +1,9 @@
 import ts from "typescript";
-import { NotFoundError } from "../../errors";
-import { ReactComponent } from "..";
-import { Injectable } from "../../core";
+import { NotFoundError } from "#errors";
+import { Injectable } from "#core";
 import { InjectScope } from "@bonbons/di";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
+import { ReactComponent } from "../entities";
 
 @Injectable(InjectScope.New)
 export class ReactRender {

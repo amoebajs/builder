@@ -1,5 +1,5 @@
 import { Plugin } from "webpack";
-import { Injectable } from "../../../core/decorators";
+import { Injectable } from "#core/decorators";
 
 export interface IWebpackTemplateScriptOptions {
   type: "inline-javascript" | "src-javascript";

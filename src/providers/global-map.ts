@@ -1,3 +1,4 @@
+import { InjectDIToken } from "@bonbons/di";
 import {
   EntityConstructor,
   IComponentContract,
@@ -13,10 +14,9 @@ import {
   resolveModule,
   resolvePropertyGroups,
   resolveProps,
-} from "../core/decorators";
-import { BasicError } from "../errors";
+} from "#core/decorators";
+import { BasicError } from "#errors";
 import { BasicEntityProvider, wrapMetaIntoCtor } from "./entity-parser";
-import { InjectDIToken } from "@bonbons/di";
 
 export interface IMetadataGroup {
   entity: IDirectiveContract | IComponentContract | IModuleContract;
