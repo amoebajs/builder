@@ -3,7 +3,8 @@ import * as fs from "fs-extra";
 import chalk from "chalk";
 import webpack from "webpack";
 import WebpackDevServer from "webpack-dev-server";
-import { Factory, IWebpackOptions } from "../src";
+import { Factory } from "../src";
+import { IWebpackOptions } from "../src";
 import { writeDeptsFile } from "../src/providers/webpack/builder/build.node";
 
 const ENV_MODE = process.env.ENV_MODE || "build";

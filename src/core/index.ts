@@ -5,3 +5,4 @@ export * from "./decorators";
 export * from "./directive";
 export * from "./libs";
 export * from "./typescript";
+export * from "./react";

@@ -52,6 +52,8 @@ export interface ITypedSyntaxExpression<E extends unknown = never, P extends unk
   expression: P;
 }
 
+export type RecordValue<T> = T extends Record<string, infer P> ? P : never;
+
 /**
  * 基本可扩展参数结构体的字典类型
  */

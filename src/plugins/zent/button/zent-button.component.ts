@@ -1,21 +1,20 @@
 import { Component } from "#core";
-import { BasicState, ReactComponent } from "#providers";
+import { ReactComponent } from "#providers";
 
 @Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
 export class ZentButtonComponent extends ReactComponent {
   protected async onInit() {
     await super.onInit();
     const ButtonRefName = "Button";
-    const helper = this.helper;
     this.addImports(
-      helper.createFrontLibImports({
+      this.helper.createFrontLibImports({
         libRoot: "es",
         styleRoot: "css",
         module: "zent",
         imports: [ButtonRefName],
       }),
     );
-    this.setState(BasicState.TagName, ButtonRefName);
+    this.setTagName(ButtonRefName);
     // this.addAttributesWithMap({
     //   style: helper.createReactPropsAccess("style", { defaultValue: false }),
     //   className: helper.createReactPropsAccess("className", { defaultValue: "" }),
@@ -53,6 +52,6 @@ export class ZentButtonComponent extends ReactComponent {
       download: "props.download",
       onClick: "props.onClick",
     });
-    this.setState(BasicState.PushedNodes, [this.createNode("jsx-expression").setExpression("props.children")]);
+    this.addRenderPushedChild(this.createNode("jsx-expression").setExpression("props.children"));
   }
 }
