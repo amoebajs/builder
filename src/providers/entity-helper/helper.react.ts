@@ -6,6 +6,9 @@ import { IJsxAttrs } from "../../utils";
 import { is } from "../../utils/is";
 import { Injectable } from "../../core/decorators";
 import { camelCase, kebabCase } from "lodash";
+import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
+import { IJsxElementDefine, JsxElementGenerator } from "../../core/typescript/jsx-element";
+import { ImportGenerator } from "../../core/typescript";
 
 export interface IFrontLibImports {
   default?: string;
@@ -23,10 +26,9 @@ export interface IFrontLibImportOptions {
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
-  public createObjectAttr(value: { [prop: string]: number | string | boolean | ts.Expression }) {
-    const kvs: [string, string | number | boolean | ts.Expression][] = Object.keys(value).map(k => [k, value[k]]);
+  public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
     return ts.createObjectLiteral(
-      kvs.map(([n, v]) =>
+      Object.entries(value).map(([n, v]) =>
         ts.createPropertyAssignment(
           ts.createIdentifier(n),
           resolveSyntaxInsert(typeof v, v, (_, e) => e),
@@ -34,6 +36,18 @@ export class ReactHelper extends BasicHelper {
       ),
       true,
     );
+  }
+
+  public createViewElement(
+    tagnname: string,
+    attrs: Record<string, IJsxAttrDefine> = {},
+    children: IJsxElementDefine[] = [],
+  ) {
+    return this.injector
+      .get(JsxElementGenerator)
+      .setTagName(tagnname)
+      .addJsxAttrs(attrs)
+      .addJsxChildren(children);
   }
 
   public createJsxElement(
@@ -117,6 +131,12 @@ export class ReactHelper extends BasicHelper {
     return expr;
   }
 
+  public createReactPropsMixinAccess(propName: string, obj: Record<string, string | number | boolean | ts.Expression>) {
+    const access = this.createPropertyAccess("props", propName);
+    const objExp = this.createObjectAttr(obj);
+    return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
+  }
+
   public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
     return ts.createCall(
       ts.createIdentifier(name),
@@ -125,9 +145,13 @@ export class ReactHelper extends BasicHelper {
     );
   }
 
+  public updateJsxElementAttr(gen: JsxElementGenerator, name: string, value: ts.StringLiteral | ts.JsxExpression) {
+    gen.pushTransformerBeforeEmit(element => updateJsxElementAttr(element, name, value));
+  }
+
   public createFrontLibImports(options: IFrontLibImportOptions) {
     const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
-    const importList: ts.ImportDeclaration[] = [];
+    const importList: ImportGenerator[] = [];
     const nameCaseParser = nameCase === "kebab" ? kebabCase : camelCase;
     if (is.array(imports)) {
       for (const iterator of imports) {
@@ -154,4 +178,41 @@ export class ReactHelper extends BasicHelper {
     }
     return importList;
   }
+}
+
+export function updateJsxElementAttr(
+  element: ts.JsxSelfClosingElement | ts.JsxElement,
+  name: string,
+  value: ts.StringLiteral | ts.JsxExpression,
+) {
+  if (ts.isJsxSelfClosingElement(element)) {
+    return updateSelfCloseingJsxElementAttr(element, name, value);
+  } else {
+    return updateOpenedJsxElementAttr(element, name, value);
+  }
+}
+
+function updateSelfCloseingJsxElementAttr(
+  element: ts.JsxSelfClosingElement,
+  name: string,
+  value: ts.StringLiteral | ts.JsxExpression,
+) {
+  const openEle = element;
+  const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
+  const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
+    ...props,
+    ts.createJsxAttribute(ts.createIdentifier(name), value),
+  ]);
+  return ts.updateJsxSelfClosingElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
+}
+
+function updateOpenedJsxElementAttr(element: ts.JsxElement, name: string, value: ts.StringLiteral | ts.JsxExpression) {
+  const openEle = element.openingElement;
+  const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
+  const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
+    ...props,
+    ts.createJsxAttribute(ts.createIdentifier(name), value),
+  ]);
+  const newElement = ts.updateJsxOpeningElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
+  return ts.updateJsxElement(element, newElement, element.children, element.closingElement);
 }

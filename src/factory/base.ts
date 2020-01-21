@@ -8,7 +8,8 @@ import {
   resolveDepts,
 } from "../core/decorators";
 import {
-  BasicChildRef,
+  BasicComponentChildRef,
+  BasicDirectiveChildRef,
   BasicEntityProvider,
   BasicHelper,
   Builder,
@@ -19,9 +20,23 @@ import {
   ReactEntityProvider,
   ReactHelper,
   ReactRender,
+  SourceFileBasicContext,
   WebpackConfig,
 } from "../providers";
-import { CommonComponentModule, CommonDirectiveModule } from "../plugins";
+import { CommonModule, ZentModule } from "../plugins";
+import { SourceFileContext } from "../core";
+import {
+  DeclarationGenerator,
+  ExpressionGenerator,
+  FunctionGenerator,
+  ImportGenerator,
+  JsxAttributeGenerator,
+  JsxElementGenerator,
+  JsxExpressionGenerator,
+  NodeGenerator,
+  StatementGenerator,
+  VariableGenerator,
+} from "../core/typescript";
 
 export interface IFactoryOptions {
   trace: boolean;
@@ -63,18 +78,30 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(HtmlBundle);
     this.useProvider(Builder);
     this.useProvider(BasicEntityProvider);
-    this.useProvider(BasicChildRef);
     this.useProvider(ReactDirective);
     this.useProvider(ReactComponent);
     this.useProvider(BasicHelper);
     this.useProvider(ReactHelper);
     this.useProvider(ReactRender);
+    this.useProvider(BasicDirectiveChildRef);
+    this.useProvider(BasicComponentChildRef);
+    this.useProvider(SourceFileContext, SourceFileBasicContext);
+    this.useProvider(NodeGenerator);
+    this.useProvider(StatementGenerator);
+    this.useProvider(DeclarationGenerator);
+    this.useProvider(ExpressionGenerator);
+    this.useProvider(FunctionGenerator);
+    this.useProvider(ImportGenerator);
+    this.useProvider(VariableGenerator);
+    this.useProvider(JsxExpressionGenerator);
+    this.useProvider(JsxAttributeGenerator);
+    this.useProvider(JsxElementGenerator);
   }
 
   /** @override can be overrided */
   protected initModules() {
-    this.useModule(CommonComponentModule);
-    this.useModule(CommonDirectiveModule);
+    this.useModule(CommonModule);
+    this.useModule(ZentModule);
   }
 
   /** @override can be overrided */

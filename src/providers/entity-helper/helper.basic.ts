@@ -1,13 +1,14 @@
-import { InjectScope } from "@bonbons/di";
+import ts from "typescript";
+import { InjectScope, Injector } from "@bonbons/di";
 import { Injectable } from "../../core/decorators";
-import { IBasicCompilationFinalContext, resolveSyntaxInsert } from "../../core";
+import { resolveSyntaxInsert } from "../../core";
 import { is } from "../../utils/is";
-import ts = require("typescript");
 import { Primitive } from "utility-types";
-import { createExportModifier, exists } from "../../utils";
-
+import { ImportGenerator } from "../../core/typescript";
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
+  constructor(protected injector: Injector) {}
+
   public createPropertyAccess(object: string, propertyChain: string) {
     return ts.createPropertyAccess(ts.createIdentifier(object), propertyChain);
   }
@@ -34,29 +35,29 @@ export class BasicHelper {
     }
   }
 
-  public createClassByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
-    return ts.createClassDeclaration(
-      [],
-      createExportModifier(!unExport),
-      ts.createIdentifier(name),
-      [],
-      exists([context.extendParent!, ...context.implementParents]),
-      exists([...context.fields, ...context.properties, ...context.methods]),
-    );
-  }
+  // public createClassByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  //   return ts.createClassDeclaration(
+  //     [],
+  //     createExportModifier(!unExport),
+  //     ts.createIdentifier(name),
+  //     [],
+  //     exists([context.extendParent!, ...context.implementParents]),
+  //     exists([...context.fields, ...context.properties, ...context.methods]),
+  //   );
+  // }
 
-  public createFunctionByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
-    return ts.createFunctionDeclaration(
-      undefined,
-      createExportModifier(!unExport),
-      undefined,
-      name,
-      undefined,
-      context.parameters,
-      undefined,
-      ts.createBlock(context.statements),
-    );
-  }
+  // public createFunctionByContext(unExport: boolean, name: string, context: IBasicCompilationFinalContext) {
+  //   return ts.createFunctionDeclaration(
+  //     undefined,
+  //     createExportModifier(!unExport),
+  //     undefined,
+  //     name,
+  //     undefined,
+  //     context.parameters,
+  //     undefined,
+  //     ts.createBlock(context.statements),
+  //   );
+  // }
 
   /**
    * 创建命名空间导入
@@ -68,12 +69,10 @@ export class BasicHelper {
    * @param {string} namespace 命名空间
    */
   public createNamespaceImport(moduleName: string, namespace: string) {
-    return ts.createImportDeclaration(
-      undefined,
-      undefined,
-      ts.createImportClause(undefined, ts.createNamespaceImport(ts.createIdentifier(namespace))),
-      ts.createStringLiteral(moduleName),
-    );
+    return this.injector
+      .get(ImportGenerator)
+      .setNamespaceName(namespace)
+      .setModulePath(moduleName);
   }
 
   /**
@@ -87,33 +86,23 @@ export class BasicHelper {
    * @param {Array<string | string[]>} named 具名导出，单个具名导出项为类型为[string, string]时会创建别名
    */
   public createImport(moduleName: string, defaultName?: string, named?: Array<string | string[]>) {
-    return ts.createImportDeclaration(
-      undefined,
-      undefined,
-      defaultName || named
-        ? ts.createImportClause(
-            defaultName ? ts.createIdentifier(defaultName) : undefined,
-            named &&
-              ts.createNamedImports(
-                named.map(named => {
-                  let propertyName: string | undefined;
-                  let name: string;
-                  if (is.string(named)) {
-                    name = named;
-                  } else {
-                    propertyName = named[0];
-                    name = named[1];
-                  }
-                  return ts.createImportSpecifier(
-                    propertyName ? ts.createIdentifier(propertyName) : undefined,
-                    ts.createIdentifier(name),
-                  );
-                }),
-              ),
-          )
-        : undefined,
-      ts.createStringLiteral(moduleName),
-    );
+    const gen = this.injector.get(ImportGenerator);
+    if (defaultName) gen.setDefaultName(defaultName);
+    if (named) {
+      named.forEach(named => {
+        let propertyName: string | undefined;
+        let name: string;
+        if (is.string(named)) {
+          name = named;
+          gen.addNamedBinding(name);
+        } else {
+          propertyName = named[0];
+          name = named[1];
+          gen.addNamedBinding(name, propertyName);
+        }
+      });
+    }
+    return gen.setModulePath(moduleName);
   }
 
   public createObjectLiteral(object: Record<string, unknown>) {

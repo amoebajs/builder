@@ -3,7 +3,7 @@ export {
   BasicDirective,
   IComponent,
   BasicComponent,
-  IChildRef,
+  IBasicChildRef,
   PropAttach,
   EntityConstructor,
   Component,

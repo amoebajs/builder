@@ -1,5 +1,5 @@
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
 
 @Directive({ name: "zent-base-css" })
 export class ZentBaseCssDirective extends ReactDirective {
@@ -8,7 +8,7 @@ export class ZentBaseCssDirective extends ReactDirective {
 
   protected async onAttach() {
     try {
-      this.addImports([this.helper.createImport(`zent/css/${this.target}.css`)]);
+      this.addImports([this.createNode("import").setModulePath(`zent/css/${this.target}.css`)]);
     } catch (error) {
       /** ignore */
     }

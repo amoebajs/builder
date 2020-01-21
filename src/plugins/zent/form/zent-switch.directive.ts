@@ -1,6 +1,6 @@
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
-import ts = require("typescript");
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
+import ts from "typescript";
 
 const COMPONENT_NAME = "FormSwitchField";
 
@@ -32,23 +32,17 @@ export class ZentSwitchDirective extends ReactDirective {
       }),
       this.helper.createImport("zent/css/switch.css"),
     ]);
-    let form = this.render.getElementById(this.formId);
+    const form = this.render.getElementById(this.formId);
     if (form) {
-      form = ts.updateJsxElement(
-        form,
-        form.openingElement,
-        [...form.children, this.createFormFieldJsxElement()],
-        form.closingElement,
+      form.addJsxChild(
+        this.createNode("jsx-element")
+          .setTagName(COMPONENT_NAME)
+          .addJsxAttrs({
+            name: `"${this.name}"`,
+            label: `"${this.label}"`,
+            required: String(this.required),
+          }),
       );
-      this.render.setElementById(this.formId, form);
     }
-  }
-
-  private createFormFieldJsxElement() {
-    return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      name: this.name,
-      label: this.label,
-      required: this.required,
-    });
   }
 }

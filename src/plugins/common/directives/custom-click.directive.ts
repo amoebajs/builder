@@ -1,7 +1,7 @@
 import ts from "typescript";
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
-import { TYPES } from "../../utils";
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
+import { TYPES } from "../../../utils";
 import capitalize from "lodash/capitalize";
 
 @Directive({ name: "custom-click" })
@@ -25,6 +25,7 @@ export class CustomClickDirective extends ReactDirective {
     try {
       this.render.appendJsxAttribute(this.host!, this.attrName!, ts.createJsxExpression(undefined, this.resolveExpr()));
     } catch (error) {
+      // console.log(error);
       /** ignore */
     }
   }

@@ -24,6 +24,7 @@ export const REACT = {
   Render: "render",
   UseState: "useState",
   UseCallback: "useCallback",
+  UseEffect: "useEffect",
 };
 
 export interface IJsxAttrs {

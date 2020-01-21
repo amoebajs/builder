@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { Directive, Input } from "../../core/decorators";
-import { ReactDirective } from "../../providers";
+import { Directive, Input } from "../../../core/decorators";
+import { ReactDirective } from "../../../providers";
 
 export interface ISelectData {
   value: any;
@@ -42,26 +42,22 @@ export class ZentSelectDirective extends ReactDirective {
       }),
       helper.createImport("zent/css/select.css"),
     ]);
-    let form = this.render.getElementById(this.formId);
+    const form = this.render.getElementById(this.formId);
     if (form) {
-      form = ts.updateJsxElement(
-        form,
-        form.openingElement,
-        [
-          ...form.children,
-          helper.createJsxElement(COMPONENT_NAME, [], {
-            name: this.name,
-            label: this.label,
-            required: this.required,
-            props: helper.createObjectLiteral({
-              placeholder: this.placeholder,
-              data: this.data,
-            }),
+      form.addJsxChild(
+        this.createNode("jsx-element")
+          .setTagName(COMPONENT_NAME)
+          .addJsxAttrs({
+            name: `"${this.name}"`,
+            label: `"${this.label}"`,
+            required: String(this.required),
+            props: () =>
+              helper.createObjectLiteral({
+                placeholder: this.placeholder,
+                data: this.data,
+              }),
           }),
-        ],
-        form.closingElement,
       );
-      this.render.setElementById(this.formId, form);
     }
   }
 }

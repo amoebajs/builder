@@ -13,7 +13,7 @@ export function resolveComponent(target: EntityConstructor<any>, defaults: Parti
 export interface IComponentContract extends IBasicI18NContract {
   name: string | null;
   displayName: string | null;
-  dependencies: { [name: string]: string | string[] };
+  dependencies: Record<string, string>;
 }
 
 const defaults: IComponentContract = {
