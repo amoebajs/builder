@@ -23,6 +23,10 @@ export class JsxElementGenerator extends ExpressionGenerator<ts.JsxElement | ts.
     return this;
   }
 
+  public getJsxAttr(name: string) {
+    return this.attrs[name] || null;
+  }
+
   public addJsxAttr(name: string, value: IJsxAttrDefine): this;
   public addJsxAttr(attr: JsxAttributeGenerator): this;
   public addJsxAttr(name: string | JsxAttributeGenerator, value?: IJsxAttrDefine) {

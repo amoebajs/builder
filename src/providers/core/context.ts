@@ -13,7 +13,6 @@ import {
   IInnerCompnentChildRef,
   IInnerDirectiveChildRef,
   IScopeStructure,
-  IScopedContext,
   SourceFileContext,
 } from "../../core";
 import { NotFoundError } from "../../errors";
@@ -72,35 +71,41 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   public async callCompilation(): Promise<void> {
     await this.root.onInit();
     await this.root.bootstrap();
-    const entries = Array.from(this.scopedContext.entries());
-    this.setSourcenamespace(
-      this.findAndSetChildrenContext(
-        entries.map<IContextTreeNode>(([id, scope]) => ({
-          scopeid: id,
-          parentid: scope.parent,
-          container: scope.container,
-          children: [],
-        })),
-        void 0,
-      )!,
+    this.emitScopedStatements(
+      this.createContextTreeNodes(
+        Array.from(this.scopedContext.values()),
+        this.scopedContext.get(this.root.__entityId)!,
+      ),
     );
     this.callStatementsHooks();
   }
 
-  private findAndSetChildrenContext(structures: IContextTreeNode[], parentid: string | symbol | undefined) {
-    const target = structures.find(i => i.parentid === parentid);
-    if (target) {
-      this.findAndSetChildrenContext(structures, target.scopeid);
-      target.children = structures.filter(i => i.parentid === target.scopeid);
+  private createContextTreeNodes(
+    structures: IScopeStructure<EntityType, Partial<IFinalScopedContext>>[],
+    parent: IScopeStructure<EntityType, Partial<IFinalScopedContext>>,
+  ): IContextTreeNode {
+    const result: IContextTreeNode = {
+      scopeid: parent.scope,
+      parentid: parent.parent,
+      container: parent.container,
+      children: [],
+    };
+    const list = structures.filter(i => i.parent === parent.scope);
+    for (const each of list) {
+      const found = this.createContextTreeNodes(
+        structures.filter(i => i.parent !== parent.scope),
+        each,
+      );
+      if (found) result.children.push(found);
     }
-    return target;
+    return result;
   }
 
-  private setSourcenamespace(node: IContextTreeNode) {
+  private emitScopedStatements(node: IContextTreeNode) {
     for (const iterator of node.children) {
-      this.setSourcenamespace(iterator);
+      this.emitScopedStatements(iterator);
     }
-    // 暂时没有控制范围
+    // 暂时没有控制范围, component / directive
     const { imports = [], functions = [], classes = [], variables = [] } = node.container;
     this.astContext.imports.push(...imports.map(i => i.emit()));
     this.astContext.functions.push(...functions.map(i => i.emit()));

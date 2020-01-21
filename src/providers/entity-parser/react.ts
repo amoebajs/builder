@@ -59,48 +59,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
     ]);
   }
 
-  // protected emitFunctionComponentContext(context: Partial<IFinalScopedContext>) {
-  //   return context;
-  // }
-
-  // protected onStatementsEmitted(model: IInnerComponent, statements: ts.Statement[]) {
-  //   return [
-  //     ...statements,
-  //     ts.createExpressionStatement(
-  //       ts.createCall(
-  //         ts.createPropertyAccess(ts.createIdentifier(REACT.DomNS), ts.createIdentifier("render")),
-  //         [],
-  //         [
-  //           this.helper.createJsxElement(model.entityId, [], {}),
-  //           ts.createCall(
-  //             ts.createPropertyAccess(ts.createIdentifier("document"), ts.createIdentifier("getElementById")),
-  //             [],
-  //             [ts.createStringLiteral("app")],
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   ];
-  // }
-
   public resolveExtensionsMetadata(_: EntityConstructor<any>): { [name: string]: any } {
     return super.resolveExtensionsMetadata(_);
   }
-
-  // protected onInputPropertiesInit(_: IInnerEwsEntity, __: IPropertiesOptions) {
-  //   return super.onInputPropertiesInit(_, __);
-  // }
-
-  // public attachDirective(parent: IInnerComponent, target: BasicDirective): BasicDirective;
-  // public attachDirective(parent: ReactComponent, target: ReactDirective): ReactDirective;
-  // public attachDirective(parent: IInnerComponent | ReactComponent, target: ReactDirective) {
-  //   Object.defineProperty(target, "__parentRef", {
-  //     enumerable: true,
-  //     configurable: false,
-  //     get() {
-  //       return parent;
-  //     },
-  //   });
-  //   return target;
-  // }
 }

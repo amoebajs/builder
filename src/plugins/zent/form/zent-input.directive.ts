@@ -38,49 +38,29 @@ export class ZentInputDirective extends ReactDirective {
       }),
       this.helper.createImport("zent/css/input.css"),
     ]);
-    let form = this.render.getElementById(this.formId);
+    const form = this.render.getElementById(this.formId);
     if (form) {
-      form = ts.updateJsxElement(
-        form,
-        form.openingElement,
-        [...form.children, this.createFormFieldJsxElement()],
-        form.closingElement,
+      form.addJsxChild(
+        this.createNode("jsx-element")
+          .setTagName(COMPONENT_NAME)
+          .addJsxAttrs({
+            name: `"${this.name}"`,
+            label: `"${this.label}"`,
+            required: String(this.required),
+            props: () =>
+              this.helper.createObjectLiteral({
+                placeholder: this.placeholder,
+              }),
+          }),
+        // .addJsxAttr("name", `"${this.name}"`)
+        // .addJsxAttr("label", `"${this.label}"`)
+        // .addJsxAttr("required", this.required.toString())
+        // .addJsxAttr("props", () =>
+        //   this.helper.createObjectLiteral({
+        //     placeholder: this.placeholder,
+        //   }),
+        // ),
       );
-      this.render.setElementById(this.formId, form);
     }
-  }
-
-  // protected async onPostAttach() {
-  //   if (this.relatedFieldName) {
-  //     const { helper } = this;
-  //     const form = this.render.getElementById(this.formId);
-  //     if (form) {
-  //       const fieldValueElement = helper.createJsxElement("FieldValue", [], { name: this.relatedFieldName }, [
-  //         ts.createJsxExpression(
-  //           undefined,
-  //           ts.createArrowFunction(
-  //             undefined,
-  //             undefined,
-  //             [ts.createParameter(undefined, undefined, undefined, "value")],
-  //             undefined,
-  //             undefined,
-  //             ts.createParen(this.createFormFieldJsxElement()),
-  //           ),
-  //         ),
-  //       ]);
-  //       // ts.updateJsxElement();
-  //     }
-  //   }
-  // }
-
-  private createFormFieldJsxElement() {
-    return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      name: this.name,
-      label: this.label,
-      required: this.required,
-      props: this.helper.createObjectLiteral({
-        placeholder: this.placeholder,
-      }),
-    });
   }
 }

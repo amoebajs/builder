@@ -27,7 +27,7 @@ export class ZentActionButtonDirective extends ReactDirective {
   @Input()
   text: string = "提交";
 
-  ON_CLICK_CALLBACK_NAME = `${this.entityId}_onClick`;
+  ON_CLICK_CALLBACK_NAME = () => `${this.entityId}_onClick`;
 
   protected async onAttach() {
     this.addImports(
@@ -38,33 +38,39 @@ export class ZentActionButtonDirective extends ReactDirective {
         imports: ["Button", "Notify"],
       }),
     );
-    let form = this.render.getElementById(this.formId);
-    if (form) {
-      const formAttribute = form.openingElement.attributes.properties.find(
-        attr => ts.isJsxAttribute(attr) && attr.name.text === "form",
-      ) as ts.JsxAttribute | undefined;
-      const formName = ((formAttribute?.initializer as ts.JsxExpression).expression as ts.Identifier).text;
-      this.render.appendRootCallback(
-        this.ON_CLICK_CALLBACK_NAME,
-        generateOnSubmitFunction(formName, "https://www.youzan.com"),
-        [formName],
-      );
-      form = ts.updateJsxElement(
-        form,
-        form.openingElement,
-        [...form.children, this.createSubmitButtonJsxElement()],
-        form.closingElement,
-      );
-      this.render.setElementById(this.formId, form);
-    }
+    const { form, formName } = this.getFormVariableName();
+    if (!formName) return;
+    this.render.appendRootCallback(
+      this.ON_CLICK_CALLBACK_NAME(),
+      generateOnSubmitFunction(formName, "https://www.youzan.com"),
+      [formName],
+    );
+    form!.addJsxChild(
+      this.createNode("jsx-element")
+        .setTagName(COMPONENT_NAME)
+        .addJsxAttrs({
+          children: `"${this.text}"`,
+          htmlType: '"submit"',
+          type: '"primary"',
+          onClick: () => ts.createIdentifier(this.ON_CLICK_CALLBACK_NAME()),
+        }),
+    );
   }
 
-  private createSubmitButtonJsxElement() {
-    return this.helper.createJsxElement(COMPONENT_NAME, [], {
-      children: this.text,
-      htmlType: "submit",
-      type: "primary",
-      onClick: ts.createIdentifier(this.ON_CLICK_CALLBACK_NAME),
-    });
+  private getFormVariableName() {
+    const form = this.render.getElementById(this.formId);
+    if (!form) return { form: null, formName: null };
+    const formAttrGen = form.getJsxAttr("form")!;
+    const value = formAttrGen.getValue();
+    let formName!: string;
+    if (typeof value === "string") {
+      formName = value;
+    } else if (typeof value === "function") {
+      const expre: any = value();
+      if (expre.text && typeof expre.text === "string") {
+        formName = expre.text;
+      }
+    }
+    return { form, formName: formName || null };
   }
 }

@@ -145,6 +145,10 @@ export class ReactHelper extends BasicHelper {
     );
   }
 
+  public updateJsxElementAttr(gen: JsxElementGenerator, name: string, value: ts.StringLiteral | ts.JsxExpression) {
+    gen.pushTransformerBeforeEmit(element => updateJsxElementAttr(element, name, value));
+  }
+
   public createFrontLibImports(options: IFrontLibImportOptions) {
     const { imports = [], module: modulePath, libRoot, libName, styleRoot, nameCase = "kebab" } = options;
     const importList: ImportGenerator[] = [];
@@ -174,4 +178,41 @@ export class ReactHelper extends BasicHelper {
     }
     return importList;
   }
+}
+
+export function updateJsxElementAttr(
+  element: ts.JsxSelfClosingElement | ts.JsxElement,
+  name: string,
+  value: ts.StringLiteral | ts.JsxExpression,
+) {
+  if (ts.isJsxSelfClosingElement(element)) {
+    return updateSelfCloseingJsxElementAttr(element, name, value);
+  } else {
+    return updateOpenedJsxElementAttr(element, name, value);
+  }
+}
+
+function updateSelfCloseingJsxElementAttr(
+  element: ts.JsxSelfClosingElement,
+  name: string,
+  value: ts.StringLiteral | ts.JsxExpression,
+) {
+  const openEle = element;
+  const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
+  const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
+    ...props,
+    ts.createJsxAttribute(ts.createIdentifier(name), value),
+  ]);
+  return ts.updateJsxSelfClosingElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
+}
+
+function updateOpenedJsxElementAttr(element: ts.JsxElement, name: string, value: ts.StringLiteral | ts.JsxExpression) {
+  const openEle = element.openingElement;
+  const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
+  const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
+    ...props,
+    ts.createJsxAttribute(ts.createIdentifier(name), value),
+  ]);
+  const newElement = ts.updateJsxOpeningElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
+  return ts.updateJsxElement(element, newElement, element.children, element.closingElement);
 }

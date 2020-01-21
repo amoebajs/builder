@@ -79,4 +79,4 @@ export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRe
 export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
 
 /** comp-child的prop参数字典类型：字面量+状态 */
-export type IComponentPropMap = ITypedSyntaxExpressionMap<"literal" | "state" | "props">;
+export type IComponentPropMap = ITypedSyntaxExpressionMap<"literal" | "state" | "props" | "directiveRef", any>;

@@ -1,36 +1,48 @@
 provider: react
+framework:
+  sdk: "0.0.1"
 components:
   - module: ambjs-common-module
     name: css-grid-container
     id: CssGridPageDemoRoot
+    version: "0.0.1"
   - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
+    version: "0.0.1"
   - module: zent-module
     name: zent-form
     id: ZentFormComponent
+    version: "0.0.1"
 directives:
   - module: zent-module
     name: zent-base-css
     id: ZentBaseCssDemoDirective
-  # - module: zent-module
-  #   name: zent-input
-  #   id: zentInputDirective
-  # - module: zent-module
-  #   name: zent-switch
-  #   id: zentSwitchDirective
-  # - module: zent-module
-  #   name: zent-select
-  #   id: zentSelectDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-input
+    id: ZentInputDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-switch
+    id: ZentSwitchDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-select
+    id: ZentSelectDirective
+    version: "0.0.1"
   - module: zent-module
     name: zent-form
-    id: zentFormDirective
-  # - module: zent-module
-  #   name: zent-action-button
-  #   id: zentSubmitButtonDirective
+    id: ZentFormDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-action-button
+    id: ZentSubmitButtonDirective
+    version: "0.0.1"
   - module: ambjs-common-module
     name: custom-click
     id: CustomClickDemoDirective
+    version: "0.0.1"
 page:
   ref: CssGridPageDemoRoot
   id: CssGridPageDemoRoot01
@@ -39,8 +51,10 @@ page:
       id: ZentFormComponentRef01
       props:
         form:
-          type: state
-          expression: form
+          type: directiveRef
+          expression:
+            ref: ZentFormDirective01
+            expression: form
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       props:
@@ -95,63 +109,63 @@ page:
         expression:
           type: literal
           expression: e => new Date().getTime()
-    #   - ref: zentInputDirective
-    #     id: zentInputDirective01
-    #     input:
-    #       formId:
-    #         type: literal
-    #         expression: ZentFormComponentRef01
-    #       name:
-    #         type: literal
-    #         expression: name
-    #       required:
-    #         type: literal
-    #         expression: true
-    #       label:
-    #         type: literal
-    #         expression: 输入框
-    #   - ref: zentSwitchDirective
-    #     id: zentSwitchDirective01
-    #     input:
-    #       formId:
-    #         type: literal
-    #         expression: ZentFormComponentRef01
-    #       name:
-    #         type: literal
-    #         expression: isOpen
-    #       required:
-    #         type: literal
-    #         expression: true
-    #       label:
-    #         type: literal
-    #         expression: 开关
-    #   - ref: zentSelectDirective
-    #     id: zentSelectDirective01
-    #     input:
-    #       formId:
-    #         type: literal
-    #         expression: ZentFormComponentRef01
-    #       label:
-    #         type: literal
-    #         expression: 下拉选项
-    #       name:
-    #         type: literal
-    #         expression: option
-    #       required:
-    #         type: literal
-    #         expression: true
-    #       placeholder:
-    #         type: litertal
-    #         expression: 请选择
-    #       data:
-    #         type: literal
-    #         expression:
-    #           - value: Option 1
-    #             text: Option 1
-    #           - value: Option 2
-    #             text: Option 2
-    - ref: zentFormDirective
-      id: zentFormDirective01
+    - ref: ZentInputDirective
+      id: ZentInputDirective01
+      input:
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+        name:
+          type: literal
+          expression: name
+        required:
+          type: literal
+          expression: true
+        label:
+          type: literal
+          expression: 输入框
+    - ref: ZentSwitchDirective
+      id: ZentSwitchDirective01
+      input:
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+        name:
+          type: literal
+          expression: isOpen
+        required:
+          type: literal
+          expression: true
+        label:
+          type: literal
+          expression: 开关
+    - ref: ZentSelectDirective
+      id: ZentSelectDirective01
+      input:
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
+        label:
+          type: literal
+          expression: 下拉选项
+        name:
+          type: literal
+          expression: option
+        required:
+          type: literal
+          expression: true
+        placeholder:
+          type: litertal
+          expression: 请选择
+        data:
+          type: literal
+          expression:
+            - value: Option 1
+              text: Option 1
+            - value: Option 2
+              text: Option 2
+    - ref: ZentFormDirective
+      id: ZentFormDirective01
       input:
         url:
           type: literal
@@ -159,12 +173,12 @@ page:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    #   - ref: zentSubmitButtonDirective
-    #     id: zentSubmitButtonDirective01
-    #     input:
-    #       formId:
-    #         type: literal
-    #         expression: ZentFormComponentRef01
+    - ref: ZentSubmitButtonDirective
+      id: ZentSubmitButtonDirective01
+      input:
+        formId:
+          type: literal
+          expression: ZentFormComponentRef01
   input:
     basic:
       width:

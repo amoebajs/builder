@@ -15,6 +15,11 @@ export class JsxAttributeGenerator extends DeclarationGenerator<ts.JsxAttributeL
     return this;
   }
 
+  public getValue() {
+    if (!this.jsxAttr) return null;
+    return this.jsxAttr;
+  }
+
   protected create(): ts.JsxAttributeLike {
     return ts.createJsxAttribute(
       this.getName(),

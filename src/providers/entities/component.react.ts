@@ -27,7 +27,8 @@ export enum BasicState {
   UseStates = "compUseStates",
   UseCallbacks = "compUseCallbacks",
   UseEffects = "compUseEffects",
-  CommonStatements = "compStatements",
+  UnshiftVariables = "unshiftVariables",
+  PushedVariables = "pushedVariables",
 }
 
 export type IBasicReactContainerState<T = IPureObject> = T & {
@@ -38,7 +39,8 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
-  [BasicState.CommonStatements]: StatementGenerator<any>[];
+  [BasicState.PushedVariables]: StatementGenerator<any>[];
+  [BasicState.UnshiftVariables]: StatementGenerator<any>[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -48,8 +50,12 @@ type TY = IBasicReactContainerState<{}>;
 export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
   private __elementMap: Map<string | symbol, JsxElementGenerator> = new Map();
 
-  protected get statements() {
-    return this.getState(BasicState.CommonStatements);
+  protected get unshiftVariables() {
+    return this.getState(BasicState.UnshiftVariables);
+  }
+
+  protected get pushedVariables() {
+    return this.getState(BasicState.PushedVariables);
   }
 
   protected get useStates() {
@@ -78,12 +84,13 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.UseStates, []);
     this.setState(BasicState.UseCallbacks, []);
     this.setState(BasicState.UseEffects, []);
-    this.setState(BasicState.CommonStatements, []);
+    this.setState(BasicState.UnshiftVariables, []);
+    this.setState(BasicState.PushedVariables, []);
   }
 
   protected async onRender() {
     await super.onRender();
-    this.createFunctionRender([]);
+    this.createFunctionRender();
   }
 
   protected visitAndChangeChildNode(visitor: (key: string, node: JsxElementGenerator) => void) {
@@ -171,16 +178,25 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
-  protected addCommonStatement(name: string, initilizer: ts.Expression) {
-    this.statements.push(
+  protected addUnshiftvariable(name: string, initilizer?: ts.Expression) {
+    this.unshiftVariables.push(
       this.createNode("variable").addField({
         name,
-        initValue: () => initilizer,
+        initValue: initilizer && (() => initilizer),
       }),
     );
   }
 
-  private createFunctionRender(statements: StatementGenerator<any>[] = []) {
+  protected addPushedvariable(name: string, initilizer?: ts.Expression) {
+    this.pushedVariables.push(
+      this.createNode("variable").addField({
+        name,
+        initValue: initilizer && (() => initilizer),
+      }),
+    );
+  }
+
+  private createFunctionRender() {
     this.initReact16UseHooks();
     this.addFunctions([
       this.createNode("function")
@@ -197,10 +213,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
                 ...this.getState(BasicState.PushedNodes),
               ]),
             (<StatementGenerator<any>[]>[])
+              .concat(this.unshiftVariables)
               .concat(this.useStates)
               .concat(this.useCallbacks)
               .concat(this.useEffects)
-              .concat(statements),
+              .concat(this.pushedVariables),
           );
           return node;
         }),
@@ -224,6 +241,12 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
               break;
             case "literal":
               ele.addJsxAttr(key, () => this.helper.createLiteral(element.expression));
+              break;
+            // 引用指令内容，暂时没有实现Output相关功能
+            case "directiveRef":
+              ele.addJsxAttr(key, () =>
+                this.helper.createLiteral(element.expression.ref + "_" + element.expression.expression),
+              );
               break;
             default:
               break;

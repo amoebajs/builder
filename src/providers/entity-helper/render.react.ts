@@ -3,7 +3,7 @@ import { NotFoundError } from "../../errors";
 import { ReactComponent } from "..";
 import { Injectable } from "../../core";
 import { InjectScope } from "@bonbons/di";
-import { ReactHelper } from "./helper.react";
+import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 
 @Injectable(InjectScope.New)
 export class ReactRender {
@@ -26,7 +26,7 @@ export class ReactRender {
     if (!target) {
       throw new NotFoundError(`target entity [${entityId}] is not found`);
     }
-    target.pushTransformerBeforeEmit(element => updateJsxElementAttr(element, name, value));
+    this.helper.updateJsxElementAttr(target, name, value);
   }
 
   public appendRootState(name: string, defaultValue: unknown) {
@@ -37,8 +37,8 @@ export class ReactRender {
     this.parentRef["addUseCallback"](name, callback, deps);
   }
 
-  public appendRootVariable(name: string, initilizer: ts.Expression) {
-    this.parentRef["addCommonStatement"](name, initilizer);
+  public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
+    this.parentRef[type === "push" ? "addPushedvariable" : "addUnshiftvariable"](name, initilizer);
   }
 
   public appendJsxStyles(entityId: string, value: Record<string, unknown>) {
@@ -73,29 +73,4 @@ export class ReactRender {
 
 function isIdentiferEqual(source?: any, compare?: any) {
   return source && compare && ts.isIdentifier(source) && ts.isIdentifier(compare) && source.text === compare.text;
-}
-
-function updateJsxElementAttr(
-  element: ts.JsxSelfClosingElement | ts.JsxElement,
-  name: string,
-  value: ts.StringLiteral | ts.JsxExpression,
-) {
-  if (ts.isJsxSelfClosingElement(element)) {
-    const openEle = element;
-    const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
-    const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
-      ...props,
-      ts.createJsxAttribute(ts.createIdentifier(name), value),
-    ]);
-    return ts.updateJsxSelfClosingElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
-  } else {
-    const openEle = element.openingElement;
-    const props = openEle.attributes.properties.filter(i => i.name && ts.isIdentifier(i.name) && i.name.text !== name);
-    const newAttrs = ts.updateJsxAttributes(openEle.attributes, [
-      ...props,
-      ts.createJsxAttribute(ts.createIdentifier(name), value),
-    ]);
-    const newElement = ts.updateJsxOpeningElement(openEle, openEle.tagName, openEle.typeArguments, newAttrs);
-    return ts.updateJsxElement(element, newElement, element.children, element.closingElement);
-  }
 }
