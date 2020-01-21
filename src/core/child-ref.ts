@@ -70,11 +70,11 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   }
 
   protected async onInit() {
-    console.log("init --> " + this.__refId + " : " + this.__entityId);
+    // console.log("init --> " + this.__refId + " : " + this.__entityId);
   }
 
   protected async bootstrap(): Promise<any> {
-    console.log("bootstrap --> " + this.__refId + " : " + this.__entityId);
+    // console.log("bootstrap --> " + this.__refId + " : " + this.__entityId);
     const instance = await this.__provider.attachInstance(this.__context, <any>this);
     this.__instanceRef = instance;
     return instance;
