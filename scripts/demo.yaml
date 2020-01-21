@@ -1,25 +1,60 @@
+provider: react
+framework:
+  sdk: "0.0.1"
 components:
+  - module: ambjs-common-module
+    name: css-grid-container
+    id: CssGridPageDemoRoot
+    version: "0.0.1"
   - module: zent-module
     name: zent-button
     id: ZentBtnDemoComponent
+    version: "0.0.1"
   - module: zent-module
     name: zent-form
     id: ZentFormComponent
+    version: "0.0.1"
+directives:
+  - module: zent-module
+    name: zent-base-css
+    id: ZentBaseCssDemoDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-input
+    id: ZentInputDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-switch
+    id: ZentSwitchDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-select
+    id: ZentSelectDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-form
+    id: ZentFormDirective
+    version: "0.0.1"
+  - module: zent-module
+    name: zent-action-button
+    id: ZentSubmitButtonDirective
+    version: "0.0.1"
+  - module: ambjs-common-module
+    name: custom-click
+    id: CustomClickDemoDirective
+    version: "0.0.1"
 page:
-  module: ambjs-common-module
-  name: css-grid-container
-  id: "CssGridPageDemoRoot"
+  ref: CssGridPageDemoRoot
+  id: CssGridPageDemoRoot01
   children:
     - ref: ZentFormComponent
       id: ZentFormComponentRef01
       props:
-        # layout:
-        #   type: literal
-        #   syntaxType: string
-        #   expression: vertical
         form:
-          type: state
-          expression: form
+          type: directiveRef
+          expression:
+            ref: ZentFormDirective01
+            expression: form
     - ref: ZentBtnDemoComponent
       id: ZentBtnDemoCompRef01
       props:
@@ -56,12 +91,26 @@ page:
           syntaxType: string
           expression: primary
   directives:
-    # - module: zent-module
-    #   name: zent-base-css
-    #   id: ZentBaseCssDemoDirective
-    - module: zent-module
-      name: zent-input
-      id: zentInputDirective
+    - ref: CustomClickDemoDirective
+      id: CustomClickDemoDirective01
+      input:
+        host:
+          type: literal
+          expression: ZentBtnDemoCompRef02
+        eventType:
+          type: literal
+          expression: setState
+        attrName:
+          type: literal
+          expression: onClick
+        targetName:
+          type: literal
+          expression: zentBtn02Content
+        expression:
+          type: literal
+          expression: e => new Date().getTime()
+    - ref: ZentInputDirective
+      id: ZentInputDirective01
       input:
         formId:
           type: literal
@@ -75,9 +124,8 @@ page:
         label:
           type: literal
           expression: 输入框
-    - module: zent-module
-      name: zent-switch
-      id: zentSwitchDirective
+    - ref: ZentSwitchDirective
+      id: ZentSwitchDirective01
       input:
         formId:
           type: literal
@@ -91,9 +139,8 @@ page:
         label:
           type: literal
           expression: 开关
-    - module: zent-module
-      name: zent-select
-      id: zentSelectDirective
+    - ref: ZentSelectDirective
+      id: ZentSelectDirective01
       input:
         formId:
           type: literal
@@ -117,9 +164,8 @@ page:
               text: Option 1
             - value: Option 2
               text: Option 2
-    - module: zent-module
-      name: zent-form
-      id: zentFormDirective
+    - ref: ZentFormDirective
+      id: ZentFormDirective01
       input:
         url:
           type: literal
@@ -127,32 +173,12 @@ page:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: zent-module
-      name: zent-action-button
-      id: zentSubmitButtonDirective
+    - ref: ZentSubmitButtonDirective
+      id: ZentSubmitButtonDirective01
       input:
         formId:
           type: literal
           expression: ZentFormComponentRef01
-    - module: ambjs-common-module
-      name: custom-click
-      id: CustomClickDemoDirective
-      input:
-        host:
-          type: literal
-          expression: ZentBtnDemoCompRef02
-        eventType:
-          type: literal
-          expression: setState
-        attrName:
-          type: literal
-          expression: onClick
-        targetName:
-          type: literal
-          expression: zentBtn02Content
-        expression:
-          type: literal
-          expression: e => new Date().getTime()
   input:
     basic:
       width:

@@ -11,6 +11,10 @@ export abstract class NodeGenerator<T extends ts.Node = ts.Node> {
     return this;
   }
 
+  protected exist<M>(arr: (M | undefined)[]): M[] {
+    return <M[]>arr.filter(i => !!i);
+  }
+
   protected abstract create(): T;
 
   public emit() {
@@ -20,4 +24,8 @@ export abstract class NodeGenerator<T extends ts.Node = ts.Node> {
     }
     return node;
   }
+}
+
+export function createTypeListNode(type: string[]) {
+  return type.length === 0 ? undefined : ts.createTypeReferenceNode(type.join(" | "), []);
 }

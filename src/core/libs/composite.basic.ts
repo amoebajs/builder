@@ -1,7 +1,6 @@
 import { is } from "../../utils/is";
 import { EntityConstructor } from "../decorators";
-import { ITypedSyntaxExpressionMap, createEntityId } from "../base";
-import { IDirectivePluginOptions } from "../../providers";
+import { IDirectivePluginOptions, ITypedSyntaxExpressionMap, createEntityId } from "../base";
 import { BasicDirective } from "../directive";
 
 export type ICompositionCreateQuickOptions = Record<string, unknown>;

@@ -1,7 +1,6 @@
-import ts from "typescript";
 import { Attach, Component, Group, Input } from "../../../core/decorators";
-import { DOMS, TYPES } from "../../../utils";
-import { ReactComponent } from "../../../providers";
+import { DOMS } from "../../../utils";
+import { BasicState, ReactComponent } from "../../../providers";
 import { PropAttach } from "../../../core/libs/attach.basic";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
@@ -66,9 +65,7 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    const rootElement = this.getState("rootElement");
-    rootElement.name = DOMS.Div;
-    rootElement.attrs["style"] = this.helper.createObjectAttr({
+    this.addRenderAttrWithObject("style", {
       display: "grid",
       height: this.height,
       width: this.width,
@@ -78,13 +75,12 @@ export class CssGridContainer extends ReactComponent {
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });
-    this.setState("rootElement", rootElement);
+    this.setState(BasicState.TagName, DOMS.Div);
     this.initState();
-    this.initExtends();
   }
 
-  protected async onPreRender() {
-    await super.onPreRender();
+  protected async onChildrenRender() {
+    await super.onChildrenRender();
     this.visitAndNotifyChildKey(key => {
       const styles: Record<string, unknown> = {};
       const cStart = this.childColumnStart.get(key);
@@ -103,7 +99,7 @@ export class CssGridContainer extends ReactComponent {
     if (this.useComponentState && typeof this.defaultComponentState === "object") {
       const state = this.defaultComponentState || {};
       for (const [key, value] of Object.entries(state)) {
-        this.addReactUseState(key, value);
+        this.addUseState(key, value);
       }
     }
   }
@@ -122,11 +118,5 @@ export class CssGridContainer extends ReactComponent {
 
   private calcRowsRepeat(): string | number {
     return `repeat(${this.gridTemplateRowsCount}, ${this.gridTemplateRowsFrs.map(i => `${i}fr`).join(" ")})`;
-  }
-
-  public initExtends() {
-    if (this.useComponentState) {
-      this.setExtendParent(ts.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [TYPES.Component]));
-    }
   }
 }

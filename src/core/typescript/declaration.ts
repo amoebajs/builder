@@ -14,22 +14,22 @@ export abstract class DeclarationGenerator<T extends ts.Declaration = ts.Declara
     return ts.createIdentifier(this.name);
   }
 
-  protected getExportModifiers(): ts.Modifier[] {
-    return !this.exportType
-      ? []
-      : [
-          ts.createModifier(ts.SyntaxKind.ExportKeyword),
-          ...(this.exportType === "default" ? [ts.createModifier(ts.SyntaxKind.DefaultKeyword)] : []),
-        ];
-  }
-
   public setName(name: string) {
     this.name = name;
     return this;
   }
 
-  public setExportType(isExport: boolean, isDefault = false) {
-    this.exportType = !isExport ? false : isDefault ? "default" : "named";
+  public setExport(type: "named" | "default" | false) {
+    this.exportType = type;
     return this;
   }
+}
+
+export function createDeclarationExport(type: DeclarationExportType) {
+  return !type
+    ? []
+    : [
+        ts.createModifier(ts.SyntaxKind.ExportKeyword),
+        ...(type === "default" ? [ts.createModifier(ts.SyntaxKind.DefaultKeyword)] : []),
+      ];
 }

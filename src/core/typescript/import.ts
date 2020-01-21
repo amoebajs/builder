@@ -69,7 +69,10 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
           Object.entries(this.namedBinds).map(([n, a]) => createNamedAsImport(a, n)),
         );
       }
-      importClause = ts.createImportClause(defaultName, nameBindings);
+      importClause =
+        Object.keys(this.namedBinds).length === 0 && is.nullOrUndefined(this.defaultName)
+          ? void 0
+          : ts.createImportClause(defaultName, nameBindings);
     } else {
       importClause = ts.createImportClause(void 0, ts.createNamespaceImport(ts.createIdentifier(this.namespaceName)));
     }

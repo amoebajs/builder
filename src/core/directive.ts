@@ -3,9 +3,7 @@ import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProte
 export interface IDirective extends IEwsEntity {}
 
 export interface IDirectiveProtectedHooks extends IEwsEntityProtectedHooks {
-  onPreAttach(): Promise<void>;
   onAttach(): Promise<void>;
-  onPostAttach(): Promise<void>;
 }
 
 export interface IDirectivePrivates extends IEwsEntityPrivates<"directive"> {
@@ -22,22 +20,8 @@ export abstract class BasicDirective<T extends IPureObject = IPureObject> extend
   }
 
   /** @override */
-  protected async onInit(): Promise<void> {
-    return Promise.resolve();
-  }
+  protected async onInit(): Promise<void> {}
 
   /** @override */
-  protected onPreAttach(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onAttach(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  /** @override */
-  protected onPostAttach(): Promise<void> {
-    return Promise.resolve();
-  }
+  protected async onAttach(): Promise<void> {}
 }
