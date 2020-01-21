@@ -1,5 +1,5 @@
-import { Attach, Component, Group, Input, PropAttach } from "#core";
-import { BasicState, ReactComponent } from "#providers";
+import { Attach, Component, Group, Input, JsxElementGenerator, PropAttach } from "#core";
+import { ReactComponent } from "#providers";
 import { DOMS } from "../../../utils";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
@@ -64,7 +64,8 @@ export class CssGridContainer extends ReactComponent {
 
   protected async onInit() {
     await super.onInit();
-    this.addRenderAttrWithObject("style", {
+    this.setTagName(DOMS.Div);
+    this.addAttributeWithObject("style", {
       display: "grid",
       height: this.height,
       width: this.width,
@@ -74,24 +75,22 @@ export class CssGridContainer extends ReactComponent {
       gridRowGap: `${this.gridRowGap}px`,
       gridColumnGap: `${this.gridColumnGap}px`,
     });
-    this.setState(BasicState.TagName, DOMS.Div);
     this.initState();
   }
 
-  protected async onChildrenRender() {
-    await super.onChildrenRender();
-    this.visitAndNotifyChildKey(key => {
-      const styles: Record<string, unknown> = {};
-      const cStart = this.childColumnStart.get(key);
-      if (cStart) {
-        styles["gridColumnStart"] = cStart;
-      }
-      const rStart = this.childRowStart.get(key);
-      if (rStart) {
-        styles["gridRowStart"] = rStart;
-      }
-      this.render.appendJsxStyles(key, styles);
-    });
+  protected onChildrenVisit(key: string, _: JsxElementGenerator) {
+    const styles: Record<string, unknown> = {};
+    const cStart = this.childColumnStart.get(key);
+    if (cStart) {
+      styles["gridColumnStart"] = cStart;
+    }
+    const rStart = this.childRowStart.get(key);
+    if (rStart) {
+      styles["gridRowStart"] = rStart;
+    }
+    this.render.appendJsxStyles(key, styles);
+    // 后续支持非ast修改
+    // _.addJsxAttr("style");
   }
 
   private initState() {

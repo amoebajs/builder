@@ -3,11 +3,14 @@ import { InjectScope } from "@bonbons/di";
 import { capitalize } from "lodash";
 import {
   BasicComponent,
+  BasicState,
+  IComponentPropMap,
   IPureObject,
   Injectable,
   JsxAttributeGenerator,
   JsxElementGenerator,
   JsxExpressionGenerator,
+  RecordValue,
   StatementGenerator,
   VariableGenerator,
   resolveSyntaxInsert,
@@ -20,21 +23,10 @@ export type JsxAttributeSyntaxTextType = string | ts.Expression;
 export type JsxAttributeType = JsxAttributeValueType | Record<string, JsxAttributeValueType>;
 export type JsxAttributeSyntaxType = JsxAttributeSyntaxTextType | Record<string, JsxAttributeSyntaxTextType>;
 
-export enum BasicState {
-  TagName = "renderTageName",
-  TagAttrs = "renderTagAttrs",
-  UnshiftNodes = "renderUnshiftNodes",
-  PushedNodes = "renderPushedNodes",
-  UseStates = "compUseStates",
-  UseCallbacks = "compUseCallbacks",
-  UseEffects = "compUseEffects",
-  UnshiftVariables = "unshiftVariables",
-  PushedVariables = "pushedVariables",
-}
-
 export type IBasicReactContainerState<T = IPureObject> = T & {
-  [BasicState.TagName]: string;
-  [BasicState.TagAttrs]: JsxAttributeGenerator[];
+  [BasicState.RenderTagName]: string;
+  [BasicState.RenderTagAttrs]: JsxAttributeGenerator[];
+  [BasicState.RenderChildrenMap]: Map<string | symbol, JsxElementGenerator>;
   [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
@@ -49,8 +41,6 @@ type TY = IBasicReactContainerState<{}>;
 
 @Injectable(InjectScope.New)
 export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
-  private __elementMap: Map<string | symbol, JsxElementGenerator> = new Map();
-
   protected get unshiftVariables() {
     return this.getState(BasicState.UnshiftVariables);
   }
@@ -71,6 +61,30 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     return this.getState(BasicState.UseEffects);
   }
 
+  protected get renderTagName() {
+    return this.getState(BasicState.RenderTagName);
+  }
+
+  protected get renderAttributes() {
+    return this.getState(BasicState.RenderTagAttrs);
+  }
+
+  protected get renderChildMap() {
+    return this.getState(BasicState.RenderChildrenMap);
+  }
+
+  protected get renderChildNodes() {
+    return Array.from(this.getState(BasicState.RenderChildrenMap).values());
+  }
+
+  protected get renderUnshiftChildNodes() {
+    return this.getState(BasicState.UnshiftNodes);
+  }
+
+  protected get renderPushedChildNodes() {
+    return this.getState(BasicState.PushedNodes);
+  }
+
   constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
     super();
   }
@@ -78,8 +92,9 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected async onInit() {
     await super.onInit();
     this.render["parentRef"] = this;
-    this.setState(BasicState.TagName, REACT.Fragment);
-    this.setState(BasicState.TagAttrs, []);
+    this.setState(BasicState.RenderTagName, REACT.Fragment);
+    this.setState(BasicState.RenderTagAttrs, []);
+    this.setState(BasicState.RenderChildrenMap, new Map());
     this.setState(BasicState.UnshiftNodes, []);
     this.setState(BasicState.PushedNodes, []);
     this.setState(BasicState.UseStates, []);
@@ -94,22 +109,12 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.createFunctionRender();
   }
 
-  protected visitAndChangeChildNode(visitor: (key: string, node: JsxElementGenerator) => void) {
-    const childNodes = Array.from(this.__elementMap.entries());
-    for (const [key, node] of childNodes) {
-      visitor(<string>key, node);
-    }
+  protected setTagName(tagName: string) {
+    this.setState(BasicState.RenderTagName, tagName);
   }
 
-  protected visitAndNotifyChildKey(visitor: (key: string) => void) {
-    const childNodes = Array.from(this.__elementMap.keys());
-    for (const key of childNodes) {
-      visitor(<string>key);
-    }
-  }
-
-  protected addRenderAttrWithObject(name: string, obj: Record<string, JsxAttributeValueType>) {
-    this.getState(BasicState.TagAttrs).push(
+  protected addAttributeWithObject(name: string, obj: Record<string, JsxAttributeValueType>) {
+    this.renderAttributes.push(
       this.createNode("jsx-attribute")
         .setName(name)
         .setValue(() => this.helper.createObjectAttr(obj)),
@@ -117,7 +122,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   protected addAttributeWithValue(name: string, value: JsxAttributeValueType) {
-    this.getState(BasicState.TagAttrs).push(
+    this.renderAttributes.push(
       this.createNode("jsx-attribute")
         .setName(name)
         .setValue(() => resolveSyntaxInsert(typeof value, value, (_, e) => e)),
@@ -125,7 +130,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   protected addAttributeWithSyntaxText(name: string, value: JsxAttributeSyntaxTextType) {
-    this.getState(BasicState.TagAttrs).push(
+    this.renderAttributes.push(
       this.createNode("jsx-attribute")
         .setName(name)
         .setValue(typeof value === "string" ? value : () => value),
@@ -143,17 +148,21 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     const entries = Object.entries(map);
     for (const [name, attr] of entries) {
       typeof attr === "object"
-        ? this.addRenderAttrWithObject(name, <any>attr)
+        ? this.addAttributeWithObject(name, <any>attr)
         : this.addAttributeWithSyntaxText(name, attr);
     }
   }
 
   protected addRenderChildren(id: string, element: JsxElementGenerator) {
-    this.__elementMap.set(id, element);
+    this.getState(BasicState.RenderChildrenMap).set(id, element);
   }
 
-  protected getRenderChildren() {
-    return Array.from(this.__elementMap.values());
+  protected addRenderPushedChild(element: JsxElementGenerator | JsxExpressionGenerator) {
+    this.renderPushedChildNodes.push(element);
+  }
+
+  protected addRenderUnshiftChild(element: JsxElementGenerator | JsxExpressionGenerator) {
+    this.renderUnshiftChildNodes.push(element);
   }
 
   protected addUseState(name: string, defaultValue: unknown) {
@@ -179,7 +188,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
-  protected addUnshiftvariable(name: string, initilizer?: ts.Expression) {
+  protected addUnshiftVariable(name: string, initilizer?: ts.Expression) {
     this.unshiftVariables.push(
       this.createNode("variable").addField({
         name,
@@ -188,7 +197,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
-  protected addPushedvariable(name: string, initilizer?: ts.Expression) {
+  protected addPushedVariable(name: string, initilizer?: ts.Expression) {
     this.pushedVariables.push(
       this.createNode("variable").addField({
         name,
@@ -206,13 +215,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
         .pushTransformerBeforeEmit(node => {
           node.body = this.createComponentBlock(
             this.createNode("jsx-element")
-              .setTagName(this.getState(BasicState.TagName))
-              .addJsxAttrs(this.getState(BasicState.TagAttrs))
-              .addJsxChildren([
-                ...this.getState(BasicState.UnshiftNodes),
-                ...this.getRenderChildren(),
-                ...this.getState(BasicState.PushedNodes),
-              ]),
+              .setTagName(this.renderTagName)
+              .addJsxAttrs(this.renderAttributes)
+              .addJsxChildren(this.renderUnshiftChildNodes)
+              .addJsxChildren(this.renderChildNodes)
+              .addJsxChildren(this.renderPushedChildNodes),
             (<StatementGenerator<any>[]>[])
               .concat(this.unshiftVariables)
               .concat(this.useStates)
@@ -228,33 +235,41 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected async onChildrenRender() {
     const children = this.getChildren();
     for (const child of children) {
-      const ele = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
-      const props = child.props || {};
-      for (const key in props) {
-        if (props.hasOwnProperty(key)) {
-          const element = props[key];
-          switch (element.type) {
-            case "state":
-              ele.addJsxAttr(key, <string>element.expression);
-              break;
-            case "props":
-              ele.addJsxAttr(key, "props." + <string>element.expression);
-              break;
-            case "literal":
-              ele.addJsxAttr(key, () => this.helper.createLiteral(element.expression));
-              break;
-            // 引用指令内容，暂时没有实现Output相关功能
-            case "directiveRef":
-              ele.addJsxAttr(key, () =>
-                this.helper.createLiteral(element.expression.ref + "_" + element.expression.expression),
-              );
-              break;
-            default:
-              break;
-          }
+      const element = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
+      Object.entries(child.props || {}).forEach(([key, prop]) => this.onChildrenPropResolved(key, prop, element));
+      this.addRenderChildren(child.id, element);
+      if (this.onChildrenVisit) {
+        const newElement = this.onChildrenVisit(child.id, element);
+        if (newElement) {
+          this.addRenderChildren(child.id, newElement.addJsxAttr("key", `"${child.id}"`));
         }
       }
-      this.addRenderChildren(child.id, ele);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected onChildrenVisit(scope: string | symbol, element: JsxElementGenerator): JsxElementGenerator | void {
+    // can be overrided
+  }
+
+  protected onChildrenPropResolved(name: string, prop: RecordValue<IComponentPropMap>, element: JsxElementGenerator) {
+    const { type: propType, expression: e } = prop;
+    switch (propType) {
+      case "state":
+        element.addJsxAttr(name, e);
+        break;
+      case "props":
+        element.addJsxAttr(name, "props." + e);
+        break;
+      case "literal":
+        element.addJsxAttr(name, () => this.helper.createLiteral(e));
+        break;
+      // 引用指令内容，暂时没有实现Output相关功能
+      case "directiveRef":
+        element.addJsxAttr(name, () => this.helper.createLiteral(e.ref + "_" + e.expression));
+        break;
+      default:
+        break;
     }
   }
 

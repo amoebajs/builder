@@ -3,3 +3,4 @@ export { EntityConstructor, Component, Directive, Injectable, Module, Group, Inp
 export { IDirective, BasicDirective } from "./directive";
 export { IComponent, BasicComponent } from "./component";
 export { PropAttach } from "./libs";
+export { BasicState } from "./react";

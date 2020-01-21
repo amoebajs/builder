@@ -1,8 +1,8 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "scripts-build",
-    "baseUrl": "./",
+    "outDir": "../scripts-build",
+    "baseUrl": "../",
     "paths": {
       "#core": ["./src/core/index.ts"],
       "#errors": ["./src/errors/index.ts"],
@@ -17,5 +17,5 @@
       "#utils/*": ["./src/utils/*"]
     }
   },
-  "include": ["scripts"]
+  "include": ["."]
 }

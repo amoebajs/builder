@@ -1,5 +1,5 @@
 import { Component, Input } from "#core";
-import { BasicState, ReactComponent } from "#providers";
+import { ReactComponent } from "#providers";
 import { IJsxAttrs } from "../../../utils";
 // import { CompositionList } from "#core";
 // import { ZentBaseCssDirective } from "../base/zent-base-css.directive";
@@ -37,7 +37,6 @@ export class ZentFormComponent extends ReactComponent {
   protected async onInit() {
     await super.onInit();
     const COMPONENT_NAME = "Form";
-    const helper = this.helper;
     this.addImports(
       this.helper.createFrontLibImports({
         module: "zent",
@@ -46,16 +45,16 @@ export class ZentFormComponent extends ReactComponent {
         imports: [COMPONENT_NAME],
       }),
     );
-    this.setState(BasicState.TagName, COMPONENT_NAME);
+    this.setTagName(COMPONENT_NAME);
     this.addAttributesWithMap({
-      style: helper.createReactPropsMixinAccess("style", {
+      style: this.helper.createReactPropsMixinAccess("style", {
         backgroundColor: this.backgroundColor,
         padding: this.padding,
         margin: this.margin,
       }),
-      layout: helper.createReactPropsAccess("layout", { defaultValue: "horizontal" }),
-      form: helper.createReactPropsAccess("form"),
+      layout: this.helper.createReactPropsAccess("layout", { defaultValue: "horizontal" }),
+      form: this.helper.createReactPropsAccess("form"),
     });
-    this.setState(BasicState.PushedNodes, [this.createNode("jsx-expression").setExpression("props.children")]);
+    this.addRenderPushedChild(this.createNode("jsx-expression").setExpression("props.children"));
   }
 }

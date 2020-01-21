@@ -12,12 +12,12 @@ export class ReactRender {
   constructor(private helper: ReactHelper) {}
 
   public getElementById(entityId: string) {
-    const map = this.parentRef["__elementMap"];
+    const map = this.parentRef["renderChildMap"];
     return map.get(entityId) || null;
   }
 
   public setElementById(entityId: string, element: any) {
-    const map = this.parentRef["__elementMap"];
+    const map = this.parentRef["renderChildMap"];
     map.set(entityId, element);
   }
 
@@ -38,7 +38,7 @@ export class ReactRender {
   }
 
   public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
-    this.parentRef[type === "push" ? "addPushedvariable" : "addUnshiftvariable"](name, initilizer);
+    this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }
 
   public appendJsxStyles(entityId: string, value: Record<string, unknown>) {

@@ -197,9 +197,13 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
 
   public parse() {
     if (!this._completed) {
-      this._di.complete();
-      this._map.initMetadatas(p => this._di.get(p));
-      this._completed = true;
+      try {
+        this._di.complete();
+        this._map.initMetadatas(p => this._di.get(p));
+        this._completed = true;
+      } catch (error) {
+        console.log(error);
+      }
     }
     return this;
   }
