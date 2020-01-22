@@ -64,9 +64,12 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   protected async bootstrap() {
     const instance: IInnerComponent = await super.bootstrap();
     await instance.onInit();
-    const componentName = decideComponentName(this.__context, <any>this);
-    if (componentName !== this.__entityId) {
-      return instance;
+    // 非根组件，尝试优化shake重复代码
+    if (this.__context.root.__entityId !== this.__entityId) {
+      const componentName = decideComponentName(this.__context, <any>this);
+      if (componentName !== this.__entityId) {
+        return instance;
+      }
     }
     for (const component of this.__refComponents) {
       instance.__children.push({
@@ -98,9 +101,10 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
  */
 function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef) {
   const inputLen = Object.keys(i.__options.input).length;
+  const attachLen = Object.keys(i.__options.attach).length;
   let defaultEntityId = i.__entityId;
-  // inputs 参数未定义，不重复生成组件
-  if (inputLen === 0) {
+  // inputs/attaches 参数未定义，不重复生成组件
+  if (inputLen === 0 && attachLen === 0) {
     defaultEntityId = context.defaultCompRefRecord[i.__refId];
     if (defaultEntityId === void 0) {
       defaultEntityId = i.__entityId;

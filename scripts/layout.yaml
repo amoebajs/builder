@@ -1,0 +1,137 @@
+provider: react
+framework:
+  sdk: "0.0.1"
+components:
+  - module: ambjs-layout-module
+    name: grid-layout
+    id: GridLayout
+    version: 0.0.1-beta.0
+  - module: zent-module
+    name: zent-button
+    id: ZentButton
+    version: "0.0.1"
+directives:
+  - module: zent-module
+    name: zent-base-css
+    id: ZentCssImport
+    version: "0.0.1"
+page:
+  ref: GridLayout
+  id: GridLayoutPageRoot
+  children:
+    - ref: GridLayout
+      id: GridLayoutChild01
+      input:
+        backgroundColor:
+          type: literal
+          expression: "#fea500"
+    - ref: GridLayout
+      id: GridLayoutChild02
+      input:
+        backgroundColor:
+          type: literal
+          expression: "#323233"
+    - ref: GridLayout
+      id: GridLayoutChild03
+      input:
+        backgroundColor:
+          type: literal
+          expression: "rgb(254, 38, 76)"
+    - ref: GridLayout
+      id: GridLayoutChild04
+      input:
+        backgroundColor:
+          type: literal
+          expression: "rgb(54, 158, 106)"
+      children:
+        - ref: ZentButton
+          id: ZentButtonInstance01
+          props:
+            loading:
+              type: literal
+              syntaxType: boolean
+              expression: true
+            children:
+              type: literal
+              syntaxType: string
+              expression: BUTTON01
+            size:
+              type: literal
+              syntaxType: string
+              expression: large
+            type:
+              type: literal
+              syntaxType: string
+              expression: danger
+  directives:
+    - ref: ZentCssImport
+      id: ZentCssImportInstance01
+  input:
+    width:
+      type: literal
+      expression: 100vw
+    height:
+      type: literal
+      expression: 100vh
+    rowCount:
+      type: literal
+      expression: 2
+    columnCount:
+      type: literal
+      expression: 3
+    rowSizes:
+      type: literal
+      expression:
+        - [1, 50]
+        - [2, 50]
+    columnSizes:
+      type: literal
+      expression:
+        - [1, 30]
+        - [2, 40]
+        - [3, 30]
+  attach:
+    rowStart:
+      type: childRefs
+      expression:
+        - id: GridLayoutChild01
+          value: 1
+        - id: GridLayoutChild02
+          value: 1
+        - id: GridLayoutChild03
+          value: 2
+        - id: GridLayoutChild04
+          value: 2
+    columnStart:
+      type: childRefs
+      expression:
+        - id: GridLayoutChild01
+          value: 1
+        - id: GridLayoutChild02
+          value: 2
+        - id: GridLayoutChild03
+          value: 1
+        - id: GridLayoutChild04
+          value: 3
+    rowSpan:
+      type: childRefs
+      expression:
+        - id: GridLayoutChild01
+          value: 1
+        - id: GridLayoutChild02
+          value: 1
+        - id: GridLayoutChild03
+          value: 1
+        - id: GridLayoutChild04
+          value: 1
+    columnSpan:
+      type: childRefs
+      expression:
+        - id: GridLayoutChild01
+          value: 1
+        - id: GridLayoutChild02
+          value: 2
+        - id: GridLayoutChild03
+          value: 2
+        - id: GridLayoutChild04
+          value: 1

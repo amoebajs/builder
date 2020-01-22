@@ -1,7 +1,7 @@
 import { Component } from "#core";
 import { ReactComponent } from "#providers";
 
-@Component({ name: "zent-button", dependencies: { zent: "^7.1.0" } })
+@Component({ name: "zent-button" })
 export class ZentButtonComponent extends ReactComponent {
   protected async onInit() {
     await super.onInit();

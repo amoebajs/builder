@@ -134,10 +134,10 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
       if (attaches.hasOwnProperty(key)) {
         const attach = attaches[key];
         // invalid value or null value
-        if (!((<any>instance)[attach.name.value] instanceof PropAttach)) {
-          (<any>instance)[attach.name.value] = new PropAttach();
+        if (!((<any>instance)[attach.realName] instanceof PropAttach)) {
+          (<any>instance)[attach.realName] = new PropAttach();
         }
-        const propAttach: PropAttach = (<any>instance)[attach.name.value];
+        const propAttach: PropAttach = (<any>instance)[attach.realName];
         const syntaxStruct = options[key];
         // 暂时只支持childRefs模式
         if (is.nullOrUndefined(syntaxStruct) || syntaxStruct.type !== "childRefs") continue;

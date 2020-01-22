@@ -21,6 +21,7 @@ export interface IWebpackTypeScriptOptions {
 export interface IWebpackSandboxOptions {
   rootPath: string;
   dependencies: { [prop: string]: string };
+  registry: string;
 }
 
 export interface IWebpackOptions {

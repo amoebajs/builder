@@ -4,7 +4,9 @@ import jsyaml from "js-yaml";
 import chalk from "chalk";
 import { Factory } from "../src";
 
-const demoConf = jsyaml.load(fs.readFileSync(path.resolve(__dirname, "demo.yaml")).toString());
+const openfile = process.argv.find(i => i.startsWith("--open=")) || "--open=demo.yaml";
+
+const demoConf = jsyaml.load(fs.readFileSync(path.resolve(__dirname, openfile.slice(7))).toString());
 
 const buildFolder = path.resolve(process.cwd(), "build");
 
@@ -28,13 +30,13 @@ const builder = new Factory().builder;
 builder
   // .createSource({ configs: demoConf, transpile: { enabled: true, target: "es2015", module: "es2015", jsx: "react" } })
   .createSource({ configs: demoConf })
-  .then(({ sourceCode, depsJSON }) => {
+  .then(({ sourceCode, dependencies }) => {
     const endTime = new Date().getTime() - startTime;
     console.log("cost : " + endTime + "ms");
     fs.writeFileSync(path.resolve(outDir, MAIN), sourceCode, {
       encoding: "utf8",
     });
-    fs.writeFileSync(path.resolve(outDir, "dependencies.json"), depsJSON, {
+    fs.writeFileSync(path.resolve(outDir, "dependencies.json"), JSON.stringify(dependencies, null, "  "), {
       encoding: "utf8",
     });
     console.log("emit ---> " + path.resolve(outDir, MAIN));

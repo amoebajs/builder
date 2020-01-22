@@ -1,4 +1,5 @@
 import ts from "typescript";
+import { kebabCase } from "lodash";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { IFrameworkDepts, Injectable } from "#core/decorators";
 import { Path } from "./path/path.contract";
@@ -62,7 +63,7 @@ export interface ISourceCreateOptions {
 
 export interface ISourceCreateResult {
   sourceCode: string;
-  depsJSON: string;
+  dependencies: Record<string, string>;
 }
 
 export interface ICompileResult {
@@ -102,10 +103,7 @@ export class Builder {
     const sourceFile = await context.createSourceFile();
     const printer = ts.createPrinter();
     const sourceString = printer.printFile(sourceFile);
-    const result: ISourceCreateResult = {
-      sourceCode: sourceString,
-      depsJSON: JSON.stringify(context.dependencies, null, "  "),
-    };
+    const result = buildResult(sourceString, context.dependencies);
     if (parser !== "typescript") {
       transpileModule(<any>transpile, result);
     }
@@ -121,85 +119,20 @@ export class Builder {
   public buildSource(options: IWebpackOptions): Promise<void> {
     return this.webpackBuild.buildSource(options);
   }
+}
 
-  // private _resolveType(moduleName: string, templateName: string, type: "component" | "directive" | "root") {
-  //   const target = this.globalMap[type === "component" || type === "root" ? "getComponent" : "getDirective"](
-  //     moduleName,
-  //     templateName,
-  //   );
-  //   if (!target) {
-  //     throw new NotFoundError(`${type} [${moduleName}.${templateName}] not found`);
-  //   }
-  //   return target;
-  // }
-
-  // private _resolveCreateOptions(type: "component", options: IComponentCreateOptions): IComponentPluginOptions<any>;
-  // private _resolveCreateOptions(type: "directive", options: IDirectiveCreateOptions): IDirectivePluginOptions<any>;
-  // private _resolveCreateOptions(type: "root", options: IRootComponentCreateOptions): IRootPageCreateOptions<any>;
-  // private _resolveCreateOptions(
-  //   type: "component" | "directive" | "root",
-  //   options: IRootComponentCreateOptions | IDirectiveCreateOptions | IComponentCreateOptions,
-  // ): IComponentPluginOptions<any> | IDirectivePluginOptions<any> | IRootPageCreateOptions<any> {
-  //   const entity = this._resolveType(options.moduleName, options.templateName, type);
-  //   const comps: IComponentPluginOptions<any>[] = [];
-  //   const direcs: IDirectivePluginOptions<any>[] = [];
-  //   const childs: ICompChildRefPluginOptions[] = [];
-  //   let depts = { ...entity.metadata.entity.dependencies };
-  //   let attaches = {};
-  //   if (type === "root") {
-  //     const opts = <IRootComponentCreateOptions>options;
-  //     comps.push(...(opts.components || []).map(i => this._resolveCreateOptions("component", i)));
-  //     direcs.push(...(opts.directives || []).map(i => this._resolveCreateOptions("directive", i)));
-  //     childs.push(...(opts.children || []));
-  //     depts = this._resolveRootDepts(comps, direcs, depts, entity);
-  //     attaches = opts.attach || {};
-  //   }
-  //   return {
-  //     id: options.importId,
-  //     provider: <any>entity.provider!,
-  //     template: entity.value,
-  //     input: options.input,
-  //     attach: attaches,
-  //     components: comps,
-  //     directives: direcs,
-  //     children: childs,
-  //     dependencies: depts,
-  //   };
-  // }
-
-  // private _resolveRootDepts(
-  //   comps: IRootPageCreateOptions<any>[],
-  //   direcs: IRootPageCreateOptions<any>[],
-  //   depts: { [x: string]: string | string[] },
-  //   entity: IMapEntry<any>,
-  // ) {
-  //   const arrs = [...comps, ...direcs];
-  //   for (const iterator of arrs) {
-  //     depts = {
-  //       ...depts,
-  //       ...iterator.dependencies,
-  //     };
-  //   }
-  //   const moduleName = entity.moduleName!;
-  //   const moduleDepts = this.globalMap.getModule(moduleName).metadata.entity.dependencies;
-  //   depts = {
-  //     ...depts,
-  //     ...moduleDepts,
-  //   };
-  //   return depts;
-  // }
-
-  // private async _createComponentSource(options: IRootComponentCreateOptions): Promise<ICompileResult> {
-  //   const opts = this._resolveCreateOptions("root", options);
-  //   const context = this.injector.get<SourceFileContext<BasicEntityProvider>>(SourceFileContext);
-  //   context.setProvider(opts.provider);
-  //   const instance = context.provider.createInstance({ ...opts, passContext: context });
-  //   const sourceFile = await context.provider.callCompilation(opts.provider, instance, options.importId);
-  //   return {
-  //     sourceFile,
-  //     dependencies: opts.dependencies || {},
-  //   };
-  // }
+function buildResult(source: string, depts: Record<string, string>): ISourceCreateResult {
+  const dependencies: Record<string, string> = {};
+  for (const key in depts) {
+    if (depts.hasOwnProperty(key)) {
+      const version = depts[key];
+      dependencies[kebabCase(key)] = version;
+    }
+  }
+  return {
+    sourceCode: source,
+    dependencies,
+  };
 }
 
 function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, result: ISourceCreateResult) {

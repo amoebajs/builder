@@ -1,7 +1,7 @@
 import { InjectDIToken } from "@bonbons/di";
 import { merge } from "lodash";
 import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
-import { IPropertyBase, IPropertyGroupBase } from "../base/common";
+import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, IPropertyGroupBase } from "../base/common";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
@@ -9,7 +9,8 @@ export const PROP_GROUP_DEFINE = "ambjs::property_define_group";
 
 export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
-  allowValues: (string | number)[] | number[] | string[] | null;
+  useEnums: IMetaTypeEnumInfo | null;
+  useMap: IMetaTypeMapInfo | null;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -46,7 +47,8 @@ const defaultInput: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
-  allowValues: null,
+  useEnums: null,
+  useMap: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -66,7 +68,8 @@ const defaultAttach: IInputPropertyContract = {
   name: null,
   displayName: null,
   group: null,
-  allowValues: null,
+  useEnums: null,
+  useMap: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -127,8 +130,9 @@ function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: Inj
     group: groupMeta,
     description: descMeta,
     type: {
-      meta: !metadata.allowValues ? "enums" : getMetaOfConstructor(designType),
-      allows: metadata.allowValues,
+      meta: metadata.useMap !== null ? "map" : metadata.useEnums !== null ? "enums" : getMetaOfConstructor(designType),
+      enumsInfo: metadata.useEnums,
+      mapInfo: metadata.useMap,
       constructor: designType,
     },
   };

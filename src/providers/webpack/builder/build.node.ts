@@ -17,7 +17,7 @@ export class WebpackBuildNodeProvider implements WebpackBuild {
     let promise = Promise.resolve(0);
     if (options.sandbox) {
       const sandbox = options.sandbox;
-      promise = writeDeptsFile(this.fs, this.path, sandbox.rootPath!, sandbox.dependencies);
+      promise = writeDeptsFile(this.fs, this.path, sandbox.rootPath!, sandbox.dependencies, sandbox.registry);
     }
     return promise.then(
       () =>
@@ -41,15 +41,18 @@ export async function writeDeptsFile(
   path: Path,
   rootPath: string,
   dependencies: { [prop: string]: string } = {},
+  registry?: string,
 ) {
   return fs
     .writeFile(path.join(rootPath, "package.json"), JSON.stringify({ dependencies }, null, "  "))
-    .then(() => callYarnInstall(rootPath));
+    .then(() => callYarnInstall(rootPath, registry));
 }
 
-function callYarnInstall(sandboxPath: string): number | PromiseLike<number> {
+function callYarnInstall(sandboxPath: string, registry?: string): number | PromiseLike<number> {
+  const args: string[] = [];
+  if (registry) args.push(`--registry=${registry}`);
   return new Promise((resolve, reject) => {
-    spawn(yarn, {
+    spawn(yarn, args, {
       env: { ...process.env },
       cwd: sandboxPath,
       stdio: ["pipe", process.stdout, process.stderr],

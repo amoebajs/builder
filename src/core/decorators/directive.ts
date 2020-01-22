@@ -12,12 +12,14 @@ export function resolveDirective(target: EntityConstructor<any>, defaults: Parti
 
 export interface IDirectiveContract extends IBasicI18NContract {
   name: string | null;
+  version: string | number;
   displayName: string | null;
   dependencies: Record<string, string>;
 }
 
 const defaults: IDirectiveContract = {
   name: null,
+  version: "0.0.1",
   displayName: null,
   dependencies: {},
   description: null,

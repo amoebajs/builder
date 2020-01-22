@@ -41,7 +41,7 @@ export type IFrameworkStructure<T> = {
 export const defaultFrameworkDepts: IFrameworkDepts = {
   react: {
     react: "^16.12.0",
-    "react-dom": "^16.12.0",
+    reactDom: "^16.12.0",
   },
 };
 

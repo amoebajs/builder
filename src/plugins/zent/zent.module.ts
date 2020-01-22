@@ -21,5 +21,9 @@ import { ZentSwitchDirective } from "./form/zent-switch.directive";
     ZentSelectDirective,
     ZentSwitchDirective,
   ],
+  dependencies: {
+    zent: "^7.1.0",
+    zanPcAjax: "^4.0.0",
+  },
 })
 export class ZentModule {}

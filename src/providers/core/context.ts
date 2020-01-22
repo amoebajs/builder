@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
-import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap } from "#providers";
+import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap, IMapEntry } from "#providers";
 import { EntityConstructor, Injectable } from "#core";
 import {
   EntityType,
@@ -140,7 +140,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   private async _createComponentRef(options: ICompChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicComponentChildRef);
     const target = this.components.find(i => i.importId === options.refEntityId)!;
-    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
+    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     this._setBaseChildRefInfo(<any>ref, options, value, parent);
     ref["__options"] = options.options;
     for (const iterator of options.components) {
@@ -155,7 +155,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   private async _createDirectiveRef(options: IDirecChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicDirectiveChildRef);
     const target = this.directives.find(i => i.importId === options.refEntityId)!;
-    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
+    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     this._setBaseChildRefInfo(ref, options, value, parent);
     ref["__options"] = options.options;
     return <IInnerDirectiveChildRef>(<unknown>ref);
@@ -192,14 +192,27 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 
   private _resolveEntityDepts(target: IDirectiveCreateOptions | IComponentCreateOptions): Record<string, string> {
-    const { metadata } = this._resolveMetadataOfEntity(target.moduleName, target.templateName, target.type);
-    return metadata.entity.dependencies || {};
+    const { metadata: moduleMeta } = this._resolveMetadataOfEntity(target.moduleName, "module");
+    const { metadata } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
+    return {
+      ...moduleMeta.entity.dependencies,
+      ...metadata.entity.dependencies,
+    };
   }
 
-  private _resolveMetadataOfEntity(moduleName: string, templateName: string, type: "component" | "directive") {
-    const target = this.globalMap[type === "component" ? "getComponent" : "getDirective"](moduleName, templateName);
+  private _resolveMetadataOfEntity(
+    moduleName: string,
+    type: "component" | "directive" | "module",
+    templateName?: string,
+  ) {
+    let target!: IMapEntry<any>;
+    if (type === "module") {
+      target = this.globalMap.getModule(moduleName);
+    } else {
+      target = this.globalMap[type === "component" ? "getComponent" : "getDirective"](moduleName, templateName!);
+    }
     if (!target) {
-      throw new NotFoundError(`${type} [${moduleName}.${templateName}] not found`);
+      throw new NotFoundError(`${type} [${moduleName}${templateName && "."}${templateName}] not found`);
     }
     return target;
   }

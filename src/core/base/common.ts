@@ -27,11 +27,27 @@ export interface IEntityRefExpression {
   value: string;
 }
 
-export type TypeLiteralMeta = "object" | "string" | "number" | "boolean" | "enums";
+export type TypeLiteralMeta = "object" | "string" | "number" | "boolean" | "enums" | "map";
+
+export interface IMetaTypeMapItem {
+  type?: string;
+  validate?: RegExp | ((value: any) => boolean);
+}
+
+export interface IMetaTypeMapInfo {
+  key?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem;
+  value?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem;
+}
+
+export interface IMetaTypeEnumInfo {
+  allowValues?: any[];
+  validate?: (value: any) => boolean;
+}
 
 export interface IMetaType {
   meta: TypeLiteralMeta;
-  allows: (string | number)[] | number[] | string[] | null;
+  enumsInfo: IMetaTypeEnumInfo | null;
+  mapInfo: IMetaTypeMapInfo | null;
   constructor: any;
 }
 
