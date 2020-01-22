@@ -37,7 +37,8 @@ export class ZentButtonComponent extends ReactComponent {
     //   onClick: helper.createReactPropsAccess("onClick"),
     // });
     this.addAttributesWithSyntaxMap({
-      style: "props.style",
+      // 覆盖zent按钮的组合样式
+      style: "{ marginLeft: 0, ...props.style }",
       className: 'props.className || ""',
       type: 'props.type || "default"',
       size: 'props.size || "medium"',

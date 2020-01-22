@@ -6,6 +6,10 @@ components:
     name: grid-layout
     id: GridLayout
     version: 0.0.1-beta.0
+  - module: ambjs-layout-module
+    name: stack-layout
+    id: StackLayout
+    version: 0.0.1-beta.0
   - module: zent-module
     name: zent-button
     id: ZentButton
@@ -25,6 +29,53 @@ page:
         backgroundColor:
           type: literal
           expression: "#fea500"
+        padding:
+          type: literal
+          expression:
+            - [top, 10px]
+            - [left, 10px]
+            - [right, 10px]
+            - [bottom, 10px]
+      children:
+        - ref: StackLayout
+          id: StackLayoutChild01
+          input:
+            backgroundColor:
+              type: literal
+              expression: "#888888"
+            # direction:
+            #   type: literal
+            #   expression: row
+          children:
+            - ref: ZentButton
+              id: ZentButtonInstance02
+              props:
+                children:
+                  type: literal
+                  syntaxType: string
+                  expression: BUTTON01
+            - ref: ZentButton
+              id: ZentButtonInstance03
+              props:
+                children:
+                  type: literal
+                  syntaxType: string
+                  expression: BUTTON02
+                type:
+                  type: literal
+                  syntaxType: string
+                  expression: primary
+            - ref: ZentButton
+              id: ZentButtonInstance04
+              props:
+                children:
+                  type: literal
+                  syntaxType: string
+                  expression: BUTTON03
+                type:
+                  type: literal
+                  syntaxType: string
+                  expression: danger
     - ref: GridLayout
       id: GridLayoutChild02
       input:

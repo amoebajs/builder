@@ -31,18 +31,21 @@ export type TypeLiteralMeta = "object" | "string" | "number" | "boolean" | "enum
 
 export interface IMetaTypeMapItem {
   type?: string;
+  allowValues?: any[];
   validate?: RegExp | ((value: any) => boolean);
 }
 
 export interface IMetaTypeMapInfo {
-  key?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem;
-  value?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem;
+  key?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem["allowValues"] | IMetaTypeMapItem;
+  value?: IMetaTypeMapItem["type"] | IMetaTypeMapItem["validate"] | IMetaTypeMapItem["allowValues"] | IMetaTypeMapItem;
 }
 
-export interface IMetaTypeEnumInfo {
+export interface IMetaTypeEnumRule {
   allowValues?: any[];
   validate?: (value: any) => boolean;
 }
+
+export type IMetaTypeEnumInfo = IMetaTypeEnumRule | IMetaTypeEnumRule["allowValues"] | IMetaTypeEnumRule["validate"];
 
 export interface IMetaType {
   meta: TypeLiteralMeta;

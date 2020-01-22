@@ -1,14 +1,15 @@
 import { ReactComponent } from "#providers";
 import { Attach, Component, Input, JsxElementGenerator, PropAttach } from "#core";
 import { DOMS } from "#utils/index";
+import { Position, calcPosition } from "./stack-layout.component";
 
 @Component({ name: "grid-layout", version: "0.0.1-beta.0" })
 export class GridLayout extends ReactComponent {
   @Input({ name: "width" })
-  gridWidth: string = "100%";
+  gridWidth!: string;
 
   @Input({ name: "height" })
-  gridHeight: string = "100%";
+  gridHeight!: string;
 
   @Input({ name: "backgroundColor" })
   gridBackgroundColor: string = "transparent";
@@ -24,6 +25,24 @@ export class GridLayout extends ReactComponent {
 
   @Input({ name: "columnGap", displayName: "Grid列间隔" })
   gridColumnGap: string = "0px";
+
+  @Input({
+    name: "margin",
+    useMap: {
+      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
+      value: "string",
+    },
+  })
+  gridMargin: Array<[Position, string]> = [];
+
+  @Input({
+    name: "padding",
+    useMap: {
+      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
+      value: "string",
+    },
+  })
+  gridPadding: Array<[Position, string]> = [];
 
   @Input({
     name: "rowSizes",
@@ -63,6 +82,8 @@ export class GridLayout extends ReactComponent {
         display: "grid",
         height: this.gridHeight,
         width: this.gridWidth,
+        margin: calcPosition(this.gridMargin),
+        padding: calcPosition(this.gridPadding),
         backgroundColor: this.gridBackgroundColor,
         gridTemplateColumns: this.calcColumnsSize(),
         gridTemplateRows: this.calcRowsSize(),
@@ -84,7 +105,6 @@ export class GridLayout extends ReactComponent {
     if (rStart) {
       styles["gridRow"] = `${rStart} / span ${rSpan}`;
     }
-    console.log(styles);
     this.render.appendJsxStyles(key, styles);
     // 后续支持非ast修改
     // _.addJsxAttr("style");

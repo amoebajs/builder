@@ -26,12 +26,14 @@ export interface IFrontLibImportOptions {
 export class ReactHelper extends BasicHelper {
   public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
     return ts.createObjectLiteral(
-      Object.entries(value).map(([n, v]) =>
-        ts.createPropertyAssignment(
-          ts.createIdentifier(n),
-          resolveSyntaxInsert(typeof v, v, (_, e) => e),
+      Object.entries(value)
+        .filter(i => i[1] !== void 0)
+        .map(([n, v]) =>
+          ts.createPropertyAssignment(
+            ts.createIdentifier(n),
+            resolveSyntaxInsert(typeof v, v, (_, e) => e),
+          ),
         ),
-      ),
       true,
     );
   }
