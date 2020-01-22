@@ -37,7 +37,9 @@ export interface IComponentChildDefine extends IDirectiveChildDefine {
   props?: { [name: string]: any };
 }
 
-export interface IPageDefine extends IComponentChildDefine {}
+export interface IPageDefine extends IComponentChildDefine {
+  slot?: string;
+}
 
 export interface IPageCreateOptions {
   provider: keyof IFrameworkDepts;

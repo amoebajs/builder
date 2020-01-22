@@ -57,7 +57,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
             ts.createCall(
               ts.createPropertyAccess(ts.createIdentifier("document"), ts.createIdentifier("getElementById")),
               [],
-              [ts.createStringLiteral("app")],
+              [ts.createStringLiteral(context.rootSlot)],
             ),
           ],
         ),

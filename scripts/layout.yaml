@@ -22,6 +22,7 @@ directives:
 page:
   ref: GridLayout
   id: GridLayoutPageRoot
+  slot: app
   children:
     - ref: GridLayout
       id: GridLayoutChild01

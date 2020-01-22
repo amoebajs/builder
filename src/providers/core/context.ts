@@ -64,7 +64,8 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this.dependencies;
   }
 
-  public async createRoot(options: ICompChildRefPluginOptions): Promise<void> {
+  public async createRoot(options: ICompChildRefPluginOptions, slot = "app"): Promise<void> {
+    this.rootSlot = slot;
     this.root = await this._createComponentRef(options);
   }
 

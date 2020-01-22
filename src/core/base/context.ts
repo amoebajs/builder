@@ -54,6 +54,7 @@ export abstract class SourceFileContext<T extends any> {
   public astContext!: IFinalAstContext;
   public provider!: T;
   public root!: IInnerCompnentChildRef;
+  public rootSlot!: string;
   public components!: IComponentCreateOptions[];
   public directives!: IDirectiveCreateOptions[];
   public dependencies!: Record<string, string>;
@@ -63,7 +64,7 @@ export abstract class SourceFileContext<T extends any> {
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
   public abstract build(): this;
   public abstract getDependencies(): Record<string, string>;
-  public abstract createRoot(options: ICompChildRefPluginOptions): Promise<void>;
+  public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): Promise<void>;
   public abstract callCompilation(): Promise<void>;
   public abstract createSourceFile(): Promise<ts.SourceFile>;
 }
