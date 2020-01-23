@@ -7,6 +7,9 @@ export enum BasicState {
   UseStates = "compUseStates",
   UseCallbacks = "compUseCallbacks",
   UseEffects = "compUseEffects",
+  UseRefs = "compUseRefs",
+  UseMemos = "compUseMemos",
+  ContextInfo = "rootContextInfo",
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",
 }

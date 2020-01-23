@@ -25,6 +25,8 @@ export const REACT = {
   UseState: "useState",
   UseCallback: "useCallback",
   UseEffect: "useEffect",
+  UseRef: "useRef",
+  UseMemo: "useMemo",
 };
 
 export interface IJsxAttrs {

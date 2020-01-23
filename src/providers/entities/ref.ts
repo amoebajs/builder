@@ -79,10 +79,10 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
       });
       await component.bootstrap();
     }
-    await instance.onChildrenRender();
     for (const directive of this.__refDirectives) {
       await directive.bootstrap();
     }
+    await instance.onChildrenRender();
     await instance.onRender();
     return instance;
   }

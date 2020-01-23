@@ -37,6 +37,18 @@ export class ReactRender {
     this.parentRef["addUseCallback"](name, callback, deps);
   }
 
+  public appendRootRef(name: string, defaultValue: unknown) {
+    this.parentRef["addUseRef"](name, defaultValue);
+  }
+
+  public setRootState(name: string, value: unknown) {
+    this.parentRef["setState"](<any>name, value);
+  }
+
+  public getRootState(name: string) {
+    this.parentRef["getState"](<any>name);
+  }
+
   public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
     this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }

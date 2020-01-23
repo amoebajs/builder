@@ -32,6 +32,9 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
+  [BasicState.UseRefs]: VariableGenerator[];
+  [BasicState.UseMemos]: VariableGenerator[];
+  [BasicState.ContextInfo]: { name: string };
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
 };
@@ -59,6 +62,14 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
 
   protected get useEffects() {
     return this.getState(BasicState.UseEffects);
+  }
+
+  protected get useRefs() {
+    return this.getState(BasicState.UseRefs);
+  }
+
+  protected get useMemos() {
+    return this.getState(BasicState.UseMemos);
   }
 
   protected get renderTagName() {
@@ -100,8 +111,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.UseStates, []);
     this.setState(BasicState.UseCallbacks, []);
     this.setState(BasicState.UseEffects, []);
+    this.setState(BasicState.UseRefs, []);
+    this.setState(BasicState.UseMemos, []);
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
+    this.setState(BasicState.ContextInfo, { name: "props.CONTEXT" });
   }
 
   protected async onRender() {
@@ -188,6 +202,25 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     );
   }
 
+  protected addUseRef(name: string, defaultValue: unknown) {
+    this.useRefs.push(
+      this.createNode("variable").addField({
+        name,
+        // 临时支持对象表达式
+        initValue: () =>
+          ts.createCall(
+            ts.createIdentifier(REACT.UseRef),
+            [TYPES.Any],
+            [
+              "kind" in <any>defaultValue && ts.isObjectLiteralExpression(<any>defaultValue)
+                ? <ts.ObjectLiteralExpression>defaultValue
+                : this.helper.createLiteral(defaultValue),
+            ],
+          ),
+      }),
+    );
+  }
+
   protected addUnshiftVariable(name: string, initilizer?: ts.Expression) {
     this.unshiftVariables.push(
       this.createNode("variable").addField({
@@ -225,6 +258,8 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
               .concat(this.useStates)
               .concat(this.useCallbacks)
               .concat(this.useEffects)
+              .concat(this.useRefs)
+              .concat(this.useMemos)
               .concat(this.pushedVariables),
           );
           return node;
@@ -234,14 +269,16 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
 
   protected async onChildrenRender() {
     const children = this.getChildren();
+    const context = this.getState(BasicState.ContextInfo);
     for (const child of children) {
-      const element = this.helper.createViewElement(child.component, { key: `"${child.id}"` });
+      const defaultAttrs = { CONTEXT: `${context.name}`, key: `"${child.id}"` };
+      const element = this.helper.createViewElement(child.component, defaultAttrs);
       Object.entries(child.props || {}).forEach(([key, prop]) => this.onChildrenPropResolved(key, prop, element));
       this.addRenderChildren(child.id, element);
       if (this.onChildrenVisit) {
         const newElement = this.onChildrenVisit(child.id, element);
         if (newElement) {
-          this.addRenderChildren(child.id, newElement.addJsxAttr("key", `"${child.id}"`));
+          this.addRenderChildren(child.id, newElement.addJsxAttrs(defaultAttrs));
         }
       }
     }
@@ -254,9 +291,10 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
 
   protected onChildrenPropResolved(name: string, prop: RecordValue<IComponentPropMap>, element: JsxElementGenerator) {
     const { type: propType, expression: e } = prop;
+    const context = this.getState(BasicState.ContextInfo);
     switch (propType) {
       case "state":
-        element.addJsxAttr(name, e);
+        element.addJsxAttr(name, `${context}.state.` + e + ".value");
         break;
       case "props":
         element.addJsxAttr(name, "props." + e);
@@ -278,6 +316,8 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     if (this.useStates.length > 0) imports.push(REACT.UseState);
     if (this.useCallbacks.length > 0) imports.push(REACT.UseCallback);
     if (this.useEffects.length > 0) imports.push(REACT.UseEffect);
+    if (this.useRefs.length > 0) imports.push(REACT.UseRef);
+    if (this.useMemos.length > 0) imports.push(REACT.UseMemo);
     this.addImports(
       imports.map(name =>
         this.createNode("import")

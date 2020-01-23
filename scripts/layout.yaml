@@ -19,6 +19,10 @@ directives:
     name: zent-base-css
     id: ZentCssImport
     version: "0.0.1"
+  - module: ambjs-common-module
+    name: global-state
+    id: GlobalState
+    version: "0.0.1-beta.0"
 page:
   ref: GridLayout
   id: GridLayoutPageRoot
@@ -118,6 +122,15 @@ page:
   directives:
     - ref: ZentCssImport
       id: ZentCssImportInstance01
+    - ref: GlobalState
+      id: GlobalStateInstance01
+      input:
+        state:
+          type: literal
+          expression:
+            - [state01, 123456]
+            - [state02, jsdvbhsvd]
+            - [state03, { "a": 24523, "b": false }]
   input:
     width:
       type: literal
