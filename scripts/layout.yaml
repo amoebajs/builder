@@ -2,31 +2,67 @@ provider: react
 framework:
   sdk: "0.0.1"
 components:
-  - module: ambjs-layout-module
+  - id: GridLayout
     name: grid-layout
-    id: GridLayout
+    module: ambjs-layout-module
     version: 0.0.1-beta.0
-  - module: ambjs-layout-module
+  - id: StackLayout
     name: stack-layout
-    id: StackLayout
+    module: ambjs-layout-module
     version: 0.0.1-beta.0
-  - module: zent-module
+  - id: ZentButton
     name: zent-button
-    id: ZentButton
+    module: zent-module
     version: "0.0.1"
 directives:
-  - module: zent-module
-    name: zent-base-css
-    id: ZentCssImport
-    version: "0.0.1"
-  - module: ambjs-common-module
+  - id: GlobalState
     name: global-state
-    id: GlobalState
+    module: ambjs-common-module
     version: "0.0.1-beta.0"
+  - id: ZentCssImport
+    name: zent-base-css
+    module: zent-module
+    version: "0.0.1"
 page:
   ref: GridLayout
   id: GridLayoutPageRoot
   slot: app
+  input:
+    width:
+      type: literal
+      expression: 100vw
+    height:
+      type: literal
+      expression: 100vh
+    rowCount:
+      type: literal
+      expression: 2
+    columnCount:
+      type: literal
+      expression: 3
+    rowSizes:
+      type: literal
+      expression:
+        - [1, 50]
+        - [2, 50]
+    columnSizes:
+      type: literal
+      expression:
+        - [1, 30]
+        - [2, 40]
+        - [3, 30]
+  directives:
+    - ref: ZentCssImport
+      id: ZentCssImportInstance01
+    - ref: GlobalState
+      id: GlobalStateInstance01
+      input:
+        state:
+          type: literal
+          expression:
+            - [demoNumber, 123456]
+            - [buttonName, XXXXXXXXXX]
+            - [objectState, { "a": 24523, "b": false }]
   children:
     - ref: GridLayout
       id: GridLayoutChild01
@@ -48,9 +84,6 @@ page:
             backgroundColor:
               type: literal
               expression: "#888888"
-            # direction:
-            #   type: literal
-            #   expression: row
           children:
             - ref: ZentButton
               id: ZentButtonInstance02
@@ -104,13 +137,11 @@ page:
           id: ZentButtonInstance01
           props:
             loading:
-              type: literal
-              syntaxType: boolean
-              expression: true
+              type: state
+              expression: objectState.b
             children:
-              type: literal
-              syntaxType: string
-              expression: BUTTON01
+              type: state
+              expression: buttonName
             size:
               type: literal
               syntaxType: string
@@ -119,42 +150,6 @@ page:
               type: literal
               syntaxType: string
               expression: danger
-  directives:
-    - ref: ZentCssImport
-      id: ZentCssImportInstance01
-    - ref: GlobalState
-      id: GlobalStateInstance01
-      input:
-        state:
-          type: literal
-          expression:
-            - [state01, 123456]
-            - [state02, jsdvbhsvd]
-            - [state03, { "a": 24523, "b": false }]
-  input:
-    width:
-      type: literal
-      expression: 100vw
-    height:
-      type: literal
-      expression: 100vh
-    rowCount:
-      type: literal
-      expression: 2
-    columnCount:
-      type: literal
-      expression: 3
-    rowSizes:
-      type: literal
-      expression:
-        - [1, 50]
-        - [2, 50]
-    columnSizes:
-      type: literal
-      expression:
-        - [1, 30]
-        - [2, 40]
-        - [3, 30]
   attach:
     rowStart:
       type: childRefs

@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { NotFoundError } from "#errors";
-import { Injectable } from "#core";
+import { Injectable, JsxElementGenerator } from "#core";
 import { InjectScope } from "@bonbons/di";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { ReactComponent } from "../entities";
@@ -21,8 +21,12 @@ export class ReactRender {
     map.set(entityId, element);
   }
 
-  public appendJsxAttribute(entityId: string, name: string, value: ts.JsxExpression | ts.StringLiteral) {
-    const target = this.getElementById(entityId);
+  public appendJsxAttribute(
+    entityId: string | JsxElementGenerator,
+    name: string,
+    value: ts.JsxExpression | ts.StringLiteral,
+  ) {
+    const target = typeof entityId === "string" ? this.getElementById(entityId) : entityId;
     if (!target) {
       throw new NotFoundError(`target entity [${entityId}] is not found`);
     }
@@ -53,34 +57,38 @@ export class ReactRender {
     this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }
 
-  public appendJsxStyles(entityId: string, value: Record<string, unknown>) {
-    let objExpression = this.helper.createObjectLiteral(value);
-    const gen = this.getElementById(entityId);
+  public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {
+    const gen = typeof entityId === "string" ? this.getElementById(entityId) : entityId;
     if (!gen) {
       throw new NotFoundError(`target entity [${entityId}] is not found`);
     }
-    gen.pushTransformerBeforeEmit(element => {
-      const openEle = ts.isJsxSelfClosingElement(element) ? element : element.openingElement;
-      const target = openEle.attributes.properties.filter(
-        i => i.name && ts.isIdentifier(i.name) && i.name.text === "style",
-      );
-      const oldAttr = target[0] && ts.isJsxAttribute(target[0]) ? target[0] : null;
-      if (oldAttr) {
-        const oldExp = oldAttr.initializer;
-        if (oldExp && ts.isObjectLiteralExpression(oldExp)) {
-          const oldList = [...oldExp.properties];
-          objExpression.properties.forEach(each => {
-            const idx = oldList.findIndex(i => isIdentiferEqual(i.name, each.name));
-            if (idx >= 0) {
-              oldList[idx] = each;
-            }
-          });
-          objExpression = ts.updateObjectLiteral(oldExp, oldList);
-        }
-      }
-      return updateJsxElementAttr(element, "style", ts.createJsxExpression(undefined, objExpression));
-    });
+    gen.pushTransformerBeforeEmit(element => updateJsxElementStyle(element, this.helper.createObjectLiteral(value)));
   }
+}
+
+export function updateJsxElementStyle(
+  element: ts.JsxElement | ts.JsxSelfClosingElement,
+  obj: ts.ObjectLiteralExpression,
+) {
+  const openEle = ts.isJsxSelfClosingElement(element) ? element : element.openingElement;
+  const target = openEle.attributes.properties.filter(
+    i => i.name && ts.isIdentifier(i.name) && i.name.text === "style",
+  );
+  const oldAttr = target[0] && ts.isJsxAttribute(target[0]) ? target[0] : null;
+  if (oldAttr) {
+    const oldExp = oldAttr.initializer;
+    if (oldExp && ts.isObjectLiteralExpression(oldExp)) {
+      const oldList = [...oldExp.properties];
+      obj.properties.forEach(each => {
+        const idx = oldList.findIndex(i => isIdentiferEqual(i.name, each.name));
+        if (idx >= 0) {
+          oldList[idx] = each;
+        }
+      });
+      obj = ts.updateObjectLiteral(oldExp, oldList);
+    }
+  }
+  return updateJsxElementAttr(element, "style", ts.createJsxExpression(undefined, obj));
 }
 
 function isIdentiferEqual(source?: any, compare?: any) {

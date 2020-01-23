@@ -294,7 +294,8 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     const context = this.getState(BasicState.ContextInfo);
     switch (propType) {
       case "state":
-        element.addJsxAttr(name, `${context}.state.` + e + ".value");
+        const [p01, ...ps] = String(e).split(".");
+        element.addJsxAttr(name, `${context.name}.state.` + [p01, "value", ...ps].join("."));
         break;
       case "props":
         element.addJsxAttr(name, "props." + e);

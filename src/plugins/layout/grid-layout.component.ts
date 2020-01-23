@@ -93,7 +93,7 @@ export class GridLayout extends ReactComponent {
     });
   }
 
-  protected onChildrenVisit(key: string, _: JsxElementGenerator) {
+  protected onChildrenVisit(key: string, generator: JsxElementGenerator) {
     const styles: Record<string, string> = {};
     const cStart = this.childColumnStart.get(key)!;
     const cSpan = this.childColumnSpan.get(key)!;
@@ -105,9 +105,19 @@ export class GridLayout extends ReactComponent {
     if (rStart) {
       styles["gridRow"] = `${rStart} / span ${rSpan}`;
     }
-    this.render.appendJsxStyles(key, styles);
-    // 后续支持非ast修改
-    // _.addJsxAttr("style");
+    const styleAttr = generator.getJsxAttr("style");
+    // 没有style参数，直接创建
+    if (styleAttr === null) {
+      generator.addJsxAttr("style", () => this.helper.createObjectLiteral(styles));
+      return;
+    }
+    const style = styleAttr.getValue();
+    // style参数通过函数创建，这里使用后处理来直接修改AST结构
+    if (typeof style === "function") {
+      this.render.appendJsxStyles(generator, styles);
+    } else {
+      // 不存在或者不支持处理其他的情况
+    }
   }
 
   private calcRowsSize() {

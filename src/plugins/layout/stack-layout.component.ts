@@ -10,7 +10,7 @@ export enum StackDirection {
 export enum StackScroll {
   Disabled = "hidden",
   Auto = "auto",
-  Display = "visible",
+  Display = "scroll",
 }
 
 export enum ContentAlign {
