@@ -5,7 +5,7 @@ import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert }
 import { camelCase, kebabCase } from "lodash";
 import { IJsxAttrDefine } from "#core/typescript/jsx-attribute";
 import { IJsxElementDefine } from "#core/typescript/jsx-element";
-import { IJsxAttrs } from "../../utils";
+import { IJsxAttrs } from "#utils/constants";
 import { BasicHelper } from "./helper.basic";
 
 export interface IFrontLibImports {

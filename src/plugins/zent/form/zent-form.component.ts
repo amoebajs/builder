@@ -1,6 +1,6 @@
 import { Component, Input } from "#core";
 import { ReactComponent } from "#providers";
-import { IJsxAttrs } from "../../../utils";
+import { IJsxAttrs } from "#utils/constants";
 // import { CompositionList } from "#core";
 // import { ZentBaseCssDirective } from "../base/zent-base-css.directive";
 

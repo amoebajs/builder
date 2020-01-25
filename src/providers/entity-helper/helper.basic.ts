@@ -1,6 +1,5 @@
 import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
-// import { capitalize } from "lodash";
 import { ImportGenerator, Injectable, resolveSyntaxInsert } from "#core";
 import { is } from "#utils/is";
 import { Primitive } from "utility-types";
@@ -50,22 +49,6 @@ export class BasicHelper {
       .setNamespaceName(namespace)
       .setModulePath(moduleName);
   }
-
-  // public getNamespaceImport(moduleName: string, namespace: string) {
-  //   return moduleName
-  //     .split("/")
-  //     .map(i => capitalize(i.replace(/\./g, "_")))
-  //     .concat(["__Namespace__", capitalize(namespace)])
-  //     .join("");
-  // }
-
-  // public getNamedImport(moduleName: string, name: string, alias?: string) {
-  //   return moduleName
-  //     .split("/")
-  //     .map(i => capitalize(i.replace(/\./g, "_")))
-  //     .concat(["__Named__", capitalize(name)].concat(!alias ? [] : ["__ToName__", capitalize(alias)]))
-  //     .join("");
-  // }
 
   /**
    * 创建命名空间导入请使用 createNamespaceImport

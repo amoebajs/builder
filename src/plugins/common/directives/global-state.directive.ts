@@ -1,17 +1,20 @@
 import ts from "typescript";
 import { BasicState, Directive, Input } from "#core";
 import { ReactDirective } from "#providers";
-import { capitalize } from "lodash";
+import { classCase } from "#utils/case";
 
 @Directive({ name: "global-state", version: "0.0.1-beta.0" })
 export class GlobalStateDirective extends ReactDirective {
   @Input({ name: "state", useMap: { key: "string", value: "any" } })
   defaultStates: Array<[string, any]> = [];
 
+  @Input({ name: "name" })
+  defaultStateName: string = "__CONTEXT__";
+
   protected async onAttach() {
     await super.onAttach();
-    this.render.appendRootVariable("__STATE__", this.createContextBody());
-    this.render.setRootState(BasicState.ContextInfo, { name: "__STATE__" });
+    this.render.appendRootVariable(this.defaultStateName, this.createContextBody());
+    this.render.setRootState(BasicState.ContextInfo, { name: this.defaultStateName });
   }
 
   private createContextBody() {
@@ -26,7 +29,7 @@ export class GlobalStateDirective extends ReactDirective {
           name,
           ts.createObjectLiteral([
             ts.createPropertyAssignment("value", ts.createIdentifier(name)),
-            ts.createPropertyAssignment("setState", ts.createIdentifier("set" + capitalize(name))),
+            ts.createPropertyAssignment("setState", ts.createIdentifier("set" + classCase(name))),
           ]),
         );
       }),

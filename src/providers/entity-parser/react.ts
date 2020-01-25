@@ -8,10 +8,10 @@ import {
   Injectable,
   SourceFileContext,
 } from "#core";
+import { REACT } from "#utils/constants";
 import { ReactDirective } from "../entities";
 import { ReactHelper } from "../entity-helper";
 import { BasicEntityProvider } from "./basic";
-import { REACT } from "../../utils";
 
 @Injectable()
 export class ReactEntityProvider extends BasicEntityProvider {

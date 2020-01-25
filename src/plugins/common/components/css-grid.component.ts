@@ -1,6 +1,6 @@
 import { Attach, Component, Group, Input, JsxElementGenerator, PropAttach } from "#core";
 import { ReactComponent } from "#providers";
-import { DOMS } from "../../../utils";
+import { DOMS } from "#utils/constants";
 
 @Component({ name: "css-grid-container", displayName: "网格容器页面" })
 @Group({ name: "basic", displayName: "基础设置" })

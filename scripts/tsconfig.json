@@ -9,6 +9,7 @@
       "#factory": ["./src/factory/index.ts"],
       "#providers": ["./src/providers/index.ts"],
       "#plugins": ["./src/plugins/index.ts"],
+      "#utils": ["./src/utils/index.ts"],
       "#core/*": ["./src/core/*"],
       "#errors/*": ["./src/errors/*"],
       "#factory/*": ["./src/factory/*"],

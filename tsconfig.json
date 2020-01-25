@@ -18,6 +18,7 @@
       "#factory": ["./factory/index.ts"],
       "#providers": ["./providers/index.ts"],
       "#plugins": ["./plugins/index.ts"],
+      "#utils": ["./utils/index.ts"],
       "#core/*": ["./core/*"],
       "#errors/*": ["./errors/*"],
       "#factory/*": ["./factory/*"],

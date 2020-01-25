@@ -1,8 +1,8 @@
 import ts from "typescript";
 import { Directive, Input } from "#core";
 import { ReactDirective } from "#providers";
-import capitalize from "lodash/capitalize";
-import { TYPES } from "../../../utils";
+import { TYPES } from "#utils/constants";
+import { classCase } from "#utils/case";
 
 @Directive({ name: "custom-click" })
 export class CustomClickDirective extends ReactDirective {
@@ -43,7 +43,7 @@ export class CustomClickDirective extends ReactDirective {
         undefined,
         ts.createParen(
           ts.createCall(
-            ts.createIdentifier("set" + capitalize(this.targetName)),
+            ts.createIdentifier("set" + classCase(this.targetName)),
             [],
             [
               ts.createCall(

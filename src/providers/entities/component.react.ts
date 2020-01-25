@@ -1,6 +1,5 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
-import { capitalize } from "lodash";
 import {
   BasicComponent,
   BasicState,
@@ -15,8 +14,9 @@ import {
   VariableGenerator,
   resolveSyntaxInsert,
 } from "#core";
+import { REACT, TYPES } from "#utils/constants";
+import { classCase } from "#utils/case";
 import { ReactHelper, ReactRender } from "../entity-helper";
-import { REACT, TYPES } from "../../utils";
 
 export type JsxAttributeValueType = number | string | boolean | ts.Expression;
 export type JsxAttributeSyntaxTextType = string | ts.Expression;
@@ -182,7 +182,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   protected addUseState(name: string, defaultValue: unknown) {
     this.useStates.push(
       this.createNode("variable").addField({
-        arrayBinding: [name, "set" + capitalize(name)],
+        arrayBinding: [name, "set" + classCase(name)],
         initValue: () =>
           ts.createCall(ts.createIdentifier(REACT.UseState), [TYPES.Any], [this.helper.createLiteral(defaultValue)]),
       }),
