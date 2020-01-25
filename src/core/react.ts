@@ -12,4 +12,5 @@ export enum BasicState {
   ContextInfo = "rootContextInfo",
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",
+  FnsBeforeRender = "fnsBeforeRender",
 }

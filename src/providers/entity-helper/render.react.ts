@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { NotFoundError } from "#errors";
-import { Injectable, JsxElementGenerator } from "#core";
+import { BasicState, Injectable, JsxElementGenerator } from "#core";
 import { InjectScope } from "@bonbons/di";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { ReactComponent } from "../entities";
@@ -37,12 +37,32 @@ export class ReactRender {
     this.parentRef["addUseState"](name, defaultValue);
   }
 
+  public getRootStates() {
+    return this.parentRef["useStates"];
+  }
+
   public appendRootCallback(name: string, callback: Function | string, deps?: string[]) {
     this.parentRef["addUseCallback"](name, callback, deps);
   }
 
+  public getRootCallbacks() {
+    return this.parentRef["useCallbacks"];
+  }
+
+  public getRootEffects() {
+    return this.parentRef["useEffects"];
+  }
+
   public appendRootRef(name: string, defaultValue: unknown) {
     this.parentRef["addUseRef"](name, defaultValue);
+  }
+
+  public getRootRefs() {
+    return this.parentRef["useRefs"];
+  }
+
+  public getRootMemos() {
+    return this.parentRef["useMemos"];
   }
 
   public setRootState(name: string, value: unknown) {
@@ -50,11 +70,15 @@ export class ReactRender {
   }
 
   public getRootState(name: string) {
-    this.parentRef["getState"](<any>name);
+    return this.parentRef["getState"](<any>name);
   }
 
   public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
     this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
+  }
+
+  public appendRootFnBeforeRender(fn: Function) {
+    this.getRootState(BasicState.FnsBeforeRender).push(fn);
   }
 
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {

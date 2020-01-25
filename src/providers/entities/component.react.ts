@@ -37,6 +37,7 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.ContextInfo]: { name: string };
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
+  [BasicState.FnsBeforeRender]: Function[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
@@ -116,6 +117,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
     this.setState(BasicState.ContextInfo, { name: "props.CONTEXT" });
+    this.setState(BasicState.FnsBeforeRender, []);
   }
 
   protected async onRender() {
@@ -240,6 +242,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   private createFunctionRender() {
+    this.initFnsBeforeRender();
     this.initReact16UseHooks();
     this.addFunctions([
       this.createNode("function")
@@ -326,6 +329,13 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           .setModulePath(REACT.PackageName),
       ),
     );
+  }
+
+  private initFnsBeforeRender() {
+    const fns = this.getState(BasicState.FnsBeforeRender);
+    for (const fn of fns) {
+      fn();
+    }
   }
 
   private createComponentBlock(render: JsxElementGenerator, statements: StatementGenerator[] = []) {

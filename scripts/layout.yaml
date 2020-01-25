@@ -57,6 +57,9 @@ page:
     - ref: GlobalState
       id: GlobalStateInstance01
       input:
+        name:
+          type: literal
+          expression: AppContext
         state:
           type: literal
           expression:
