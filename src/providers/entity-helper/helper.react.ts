@@ -34,7 +34,6 @@ export class ReactHelper extends BasicHelper {
             resolveSyntaxInsert(typeof v, v, (_, e) => e),
           ),
         ),
-      true,
     );
   }
 

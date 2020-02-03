@@ -88,7 +88,7 @@ export class BasicHelper {
       const property = ts.createPropertyAssignment(key, expr);
       return property;
     });
-    const literal = ts.createObjectLiteral(properties, true);
+    const literal = ts.createObjectLiteral(properties);
     return literal;
   }
 
