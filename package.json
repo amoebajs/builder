@@ -5,7 +5,8 @@
   "types": "index.d.ts",
   "repository": "https://github.com/amoebajs/builder.git",
   "contributors": [
-    "bigmogician <bigmogician@outlook.com>"
+    "bigmogician <bigmogician@outlook.com>",
+    "pigwang <pigw4ng@gmail.com>"
   ],
   "license": "AGPL-3.0-only",
   "scripts": {
