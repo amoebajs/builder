@@ -16,7 +16,8 @@ import {
   resolveProps,
 } from "#core/decorators";
 import { BasicError } from "#errors";
-import { BasicEntityProvider, wrapMetaIntoCtor } from "./entity-parser";
+import { BasicEntityProvider } from "./entity-parser";
+import { wrapMetaIntoCtor } from "./entity-parser/basic";
 
 export interface IMetadataGroup {
   entity: IDirectiveContract | IComponentContract | IModuleContract;
@@ -125,14 +126,14 @@ export class GlobalMap {
         const thisModule = this.maps.modules[key];
         const provider = resolver(this.getProvider(<any>thisModule.provider));
         thisModule.metadata = {
-          ...getMetadata(thisModule.value, provider),
+          ...getEitityMetadata(thisModule.value, provider),
           ...thisModule.metadata,
         };
         for (const key in thisModule.components) {
           if (thisModule.components.hasOwnProperty(key)) {
             const thisComp = thisModule.components[key];
             thisComp.metadata = {
-              ...getMetadata(thisComp.value, provider),
+              ...getEitityMetadata(thisComp.value, provider),
               ...thisComp.metadata,
             };
           }
@@ -141,7 +142,7 @@ export class GlobalMap {
           if (thisModule.directives.hasOwnProperty(key)) {
             const thisDire = thisModule.directives[key];
             thisDire.metadata = {
-              ...getMetadata(thisDire.value, provider),
+              ...getEitityMetadata(thisDire.value, provider),
               ...thisDire.metadata,
             };
           }
@@ -151,7 +152,7 @@ export class GlobalMap {
   }
 }
 
-export function getMetadata(mdname: EntityConstructor<any>, provider?: BasicEntityProvider): IMetadataGroup {
+export function getEitityMetadata(mdname: EntityConstructor<any>, provider?: BasicEntityProvider): IMetadataGroup {
   const result: IMetadataGroup = {
     entity: <any>{},
     groups: resolvePropertyGroups(mdname),

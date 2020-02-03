@@ -1,7 +1,7 @@
 import ts from "typescript";
-import uuid from "uuid/v4";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { BasicError } from "#errors";
+import { createEntityId } from "#utils";
 import {
   IComponentAttachMap,
   IComponentInputMap,
@@ -125,15 +125,6 @@ export interface IRootComponentCreateOptions extends IComponentCreateOptions {
   directives?: IDirectiveCreateOptions[];
   children?: ICompChildRefPluginOptions[];
   attach: { [prop: string]: any };
-}
-
-export function createEntityId() {
-  return (
-    "E" +
-    uuid()
-      .split("-")
-      .join("")
-  );
 }
 
 export interface IEwsEntity {
