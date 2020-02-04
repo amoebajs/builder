@@ -12,7 +12,7 @@ export enum Position {
 
 export const PositionStringRules = { key: getEnumValues(Position), value: "string" };
 
-@Component({ name: "basic-element", version: "0.0.1-beta.0" })
+@Component({ name: "basic-element", displayName: "基础组件", version: "0.0.1-beta.0" })
 export class BasicElement extends ReactComponent {
   @Input({ name: "width", displayName: "组件宽度" })
   layoutWidth!: string;

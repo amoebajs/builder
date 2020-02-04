@@ -3,7 +3,7 @@ import { BasicState, Directive, Input, VariableGenerator } from "#core";
 import { ReactDirective } from "#providers";
 import { classCase } from "#utils/case";
 
-@Directive({ name: "global-state", version: "0.0.1-beta.0" })
+@Directive({ name: "global-state", displayName: "全局状态", version: "0.0.1-beta.0" })
 export class GlobalStateDirective extends ReactDirective {
   @Input({ name: "state", useMap: { key: "string", value: "any" } })
   defaultStates: Array<[string, any]> = [];

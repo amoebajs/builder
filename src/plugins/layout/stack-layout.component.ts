@@ -19,7 +19,7 @@ export enum ContentAlign {
   End = "end",
 }
 
-@Component({ name: "stack-layout", version: "0.0.1-beta.0" })
+@Component({ name: "stack-layout", displayName: "线性布局", version: "0.0.1-beta.0" })
 @Extends(BasicLayout)
 export class StackLayout extends BasicLayout {
   @Input({ name: "contentAlign", displayName: "内容排布样式", useEnums: getEnumValues(ContentAlign) })

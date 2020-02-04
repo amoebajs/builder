@@ -1,7 +1,7 @@
 import { Directive, Input } from "#core";
 import { ReactDirective } from "#providers";
 
-@Directive({ name: "zent-base-css" })
+@Directive({ name: "zent-base-css", displayName: "基础样式指令" })
 export class ZentBaseCssDirective extends ReactDirective {
   @Input()
   public target: string = "base";

@@ -13,7 +13,7 @@ export interface IFormFieldOptions {
   props: IJsxAttrs;
 }
 
-@Component({ name: "zent-form" })
+@Component({ name: "zent-form", displayName: "表单" })
 export class ZentFormComponent extends ReactComponent {
   @Input("fields")
   fields: IFormFieldOptions[] = [];

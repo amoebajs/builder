@@ -1,7 +1,7 @@
 import { Attach, Component, Input, JsxElementGenerator, PropAttach, Extends } from "#core";
 import { BasicLayout } from "./basic-layout.component";
 
-@Component({ name: "grid-layout", version: "0.0.1-beta.0" })
+@Component({ name: "grid-layout", displayName: "网格布局", version: "0.0.1-beta.0" })
 @Extends(BasicLayout)
 export class GridLayout extends BasicLayout {
   @Input({ name: "rowCount", displayName: "行数量" })

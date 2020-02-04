@@ -4,7 +4,7 @@ import { ReactDirective } from "#providers";
 import { TYPES } from "#utils/constants";
 import { classCase } from "#utils/case";
 
-@Directive({ name: "custom-click" })
+@Directive({ name: "custom-click", displayName: "自定义点击" })
 export class CustomClickDirective extends ReactDirective {
   @Input()
   public host!: string;
