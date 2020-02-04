@@ -70,21 +70,18 @@ page:
     - ref: GridLayout
       id: GridLayoutChild01
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "#fea500"
         padding:
           type: literal
           expression:
-            - [top, 10px]
-            - [left, 10px]
-            - [right, 10px]
-            - [bottom, 10px]
+            - [all, 10px]
       children:
         - ref: StackLayout
           id: StackLayoutChild01
           input:
-            backgroundColor:
+            background:
               type: literal
               expression: "#888888"
           children:
@@ -120,19 +117,33 @@ page:
     - ref: GridLayout
       id: GridLayoutChild02
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "#323233"
+        borderColor:
+          type: literal
+          expression:
+            - [all, "#ffffff"]
+            - [bottom, "#fea588"]
+        borderWidth:
+          type: literal
+          expression:
+            - [all, 4px]
+        borderStyle:
+          type: literal
+          expression:
+            - [all, hidden]
+            - [bottom, solid]
     - ref: GridLayout
       id: GridLayoutChild03
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "rgb(254, 38, 76)"
     - ref: GridLayout
       id: GridLayoutChild04
       input:
-        backgroundColor:
+        background:
           type: literal
           expression: "rgb(54, 158, 106)"
       children:

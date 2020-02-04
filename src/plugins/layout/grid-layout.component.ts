@@ -4,20 +4,21 @@ import { BasicLayout } from "./basic-layout.component";
 @Component({ name: "grid-layout", version: "0.0.1-beta.0" })
 @Extends(BasicLayout)
 export class GridLayout extends BasicLayout {
-  @Input({ name: "rowCount" })
+  @Input({ name: "rowCount", displayName: "行数量" })
   gridRowCount: number = 1;
 
-  @Input({ name: "columnCount" })
+  @Input({ name: "columnCount", displayName: "列数量" })
   gridColumnCount: number = 1;
 
-  @Input({ name: "rowGap", displayName: "Grid行间隔" })
+  @Input({ name: "rowGap", displayName: "行间隔" })
   gridRowGap: string = "0px";
 
-  @Input({ name: "columnGap", displayName: "Grid列间隔" })
+  @Input({ name: "columnGap", displayName: "列间隔" })
   gridColumnGap: string = "0px";
 
   @Input({
     name: "rowSizes",
+    displayName: "行尺寸",
     useMap: {
       key: v => Number.isInteger(v) && v >= 1,
       value: v => v >= 0 && v <= 100,
@@ -27,6 +28,7 @@ export class GridLayout extends BasicLayout {
 
   @Input({
     name: "columnSizes",
+    displayName: "列尺寸",
     useMap: {
       key: v => Number.isInteger(v) && v >= 1,
       value: v => v >= 0 && v <= 100,
@@ -34,21 +36,21 @@ export class GridLayout extends BasicLayout {
   })
   gridColumnSizes: Array<[number, number]> = [[1, 100]];
 
-  @Attach({ name: "rowSpan" })
+  @Attach({ name: "rowSpan", displayName: "行跨度" })
   childRowSpan: PropAttach<number> = new PropAttach(1);
 
-  @Attach({ name: "columnSpan" })
+  @Attach({ name: "columnSpan", displayName: "列跨度" })
   childColumnSpan: PropAttach<number> = new PropAttach(1);
 
-  @Attach({ name: "rowStart" })
+  @Attach({ name: "rowStart", displayName: "行起始位置" })
   childRowStart: PropAttach<number> = new PropAttach(1);
 
-  @Attach({ name: "columnStart" })
+  @Attach({ name: "columnStart", displayName: "行结束位置" })
   childColumnStart: PropAttach<number> = new PropAttach(1);
 
-  protected getLayoutSelfStyle() {
+  protected getElementSelfStyle() {
     return {
-      ...super.getLayoutSelfStyle(),
+      ...super.getElementSelfStyle(),
       display: "grid",
       gridTemplateColumns: this.calcColumnsSize(),
       gridTemplateRows: this.calcRowsSize(),

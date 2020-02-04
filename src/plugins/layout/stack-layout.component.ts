@@ -1,4 +1,5 @@
 import { Component, Input, Extends } from "#core";
+import { getEnumValues } from "#utils/enums";
 import { BasicLayout } from "./basic-layout.component";
 
 export enum StackDirection {
@@ -21,27 +22,18 @@ export enum ContentAlign {
 @Component({ name: "stack-layout", version: "0.0.1-beta.0" })
 @Extends(BasicLayout)
 export class StackLayout extends BasicLayout {
-  @Input({
-    name: "contentAlign",
-    useEnums: [ContentAlign.Center, ContentAlign.Start, ContentAlign.End],
-  })
+  @Input({ name: "contentAlign", displayName: "内容排布样式", useEnums: getEnumValues(ContentAlign) })
   stackContentAlign: ContentAlign = ContentAlign.Start;
 
-  @Input({
-    name: "direction",
-    useEnums: v => v === StackDirection.Horizontal || v === StackDirection.Vertical,
-  })
+  @Input({ name: "direction", displayName: "布局方向", useEnums: getEnumValues(StackDirection) })
   stackDirection: StackDirection = StackDirection.Vertical;
 
-  @Input({
-    name: "scroll",
-    useEnums: [StackScroll.Auto, StackScroll.Disabled, StackScroll.Display],
-  })
+  @Input({ name: "scroll", displayName: "滚动条样式", useEnums: getEnumValues(StackScroll) })
   stackScroll: StackScroll = StackScroll.Auto;
 
-  protected getLayoutSelfStyle() {
+  protected getElementSelfStyle() {
     return {
-      ...super.getLayoutSelfStyle(),
+      ...super.getElementSelfStyle(),
       display: "flex",
       flexDirection: this.stackDirection,
       justifyContent: this.getContentAlign(),

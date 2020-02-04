@@ -11,3 +11,5 @@ import { GlobalStateDirective } from "./directives/global-state.directive";
   directives: [GlobalStateDirective, CustomClickDirective],
 })
 export class CommonModule {}
+
+export { GlobalStateDirective, CustomClickDirective, CssGridContainer };
