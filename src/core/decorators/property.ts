@@ -1,7 +1,15 @@
 import { InjectDIToken } from "@bonbons/di";
 import { merge } from "lodash";
-import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
+import {
+  EntityConstructor,
+  IBasicI18NContract,
+  UnnamedPartial,
+  resolveParams,
+  setDisplayI18NMeta,
+  resolveEntityMetaType,
+} from "./base";
 import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, IPropertyGroupBase } from "../base/common";
+import { resolveExtends } from "./extends";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
@@ -172,16 +180,43 @@ export function definePropertyGroup(target: EntityConstructor<any>, metadata: IP
   );
 }
 
-export function resolveInputProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
+export function resolveInputProperties(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const inputs = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolveInputProperties(extendMeta.parent),
+      ...inputs,
+    };
+  }
+  return inputs;
 }
 
-export function resolveAttachProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_ATTACH_DEFINE, target) || {};
+export function resolveAttachProperties(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const attaches = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_ATTACH_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolveAttachProperties(extendMeta.parent),
+      ...attaches,
+    };
+  }
+  return attaches;
 }
 
-export function resolvePropertyGroups(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyGroupBase }>Reflect.getMetadata(PROP_GROUP_DEFINE, target) || {};
+export function resolvePropertyGroups(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const groups = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_GROUP_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolvePropertyGroups(extendMeta.parent),
+      ...groups,
+    };
+  }
+  return groups;
 }
 
 function getGroupNameMeta(data: IPropertyBase) {

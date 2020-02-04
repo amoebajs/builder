@@ -1,9 +1,8 @@
 import "reflect-metadata";
-import { InjectDIToken, InjectScope, getDependencies } from "@bonbons/di";
+import { InjectDIToken, getDependencies } from "@bonbons/di";
 import { IDescriptionMeta, IWeakDescriptionMeta } from "../base";
 
-export const PROVIDER_SCOPE = "ambjs::provider-scope";
-export const MODULE_DEFINE = "ambjs::module_define";
+export const ENTITY_TYPE_DEFINE = "ambjs::entity_type";
 
 export interface IConstructor<T> {
   new (...args: any[]): T;
@@ -12,15 +11,6 @@ export interface IConstructor<T> {
 export type EntityConstructor<T> = InjectDIToken<T>;
 
 export type UnnamedPartial<T> = Partial<T> & { name: string };
-
-export interface IModuleContract {
-  name: string | null;
-  displayName: string | null;
-  provider: keyof IFrameworkDepts;
-  components: EntityConstructor<any>[];
-  directives: EntityConstructor<any>[];
-  dependencies: Record<string, string>;
-}
 
 export interface IBasicI18NContract {
   name: string | null;
@@ -45,24 +35,16 @@ export const defaultFrameworkDepts: IFrameworkDepts = {
   },
 };
 
+export function defineEntityMetaType(target: EntityConstructor<any>, metadata: string) {
+  return Reflect.defineMetadata(ENTITY_TYPE_DEFINE, metadata, target);
+}
+
+export function resolveEntityMetaType(target: EntityConstructor<any>) {
+  return <string>Reflect.getMetadata(ENTITY_TYPE_DEFINE, target);
+}
+
 export function resolveDepts(target: InjectDIToken<any>): InjectDIToken<any>[] {
   return getDependencies(target) || [];
-}
-
-export function defineScope(target: EntityConstructor<any>, scope: InjectScope) {
-  return Reflect.defineMetadata(PROVIDER_SCOPE, scope, target);
-}
-
-export function resolveScope(target: EntityConstructor<any>, defaults: InjectScope = InjectScope.Singleton) {
-  return <InjectScope>Reflect.getMetadata(PROVIDER_SCOPE, target) || defaults;
-}
-
-export function defineModule(target: EntityConstructor<any>, metadata: IModuleContract) {
-  return Reflect.defineMetadata(MODULE_DEFINE, metadata, target);
-}
-
-export function resolveModule(target: EntityConstructor<any>, defaults: Partial<IModuleContract> = {}) {
-  return <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults;
 }
 
 export function resolveParams<T extends IBasicI18NContract>(params?: string | Partial<IBasicI18NContract>): Partial<T> {

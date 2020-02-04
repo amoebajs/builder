@@ -1,6 +1,5 @@
-import { ReactComponent } from "#providers";
-import { Component, Input } from "#core";
-import { DOMS } from "#utils/index";
+import { Component, Input, Extends } from "#core";
+import { BasicLayout } from "./basic-layout.component";
 
 export enum StackDirection {
   Horizontal = "row",
@@ -19,47 +18,14 @@ export enum ContentAlign {
   End = "end",
 }
 
-export enum Position {
-  Top = "top",
-  Bottom = "bottom",
-  Left = "left",
-  Right = "right",
-}
-
 @Component({ name: "stack-layout", version: "0.0.1-beta.0" })
-export class StackLayout extends ReactComponent {
-  @Input({ name: "width" })
-  stackWidth!: string;
-
-  @Input({ name: "height" })
-  stackHeight!: string;
-
-  @Input({ name: "backgroundColor" })
-  stackBackgroundColor: string = "transparent";
-
+@Extends(BasicLayout)
+export class StackLayout extends BasicLayout {
   @Input({
     name: "contentAlign",
     useEnums: [ContentAlign.Center, ContentAlign.Start, ContentAlign.End],
   })
   stackContentAlign: ContentAlign = ContentAlign.Start;
-
-  @Input({
-    name: "margin",
-    useMap: {
-      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
-      value: "string",
-    },
-  })
-  stackMargin: Array<[Position, string]> = [];
-
-  @Input({
-    name: "padding",
-    useMap: {
-      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
-      value: "string",
-    },
-  })
-  stackPadding: Array<[Position, string]> = [];
 
   @Input({
     name: "direction",
@@ -73,26 +39,18 @@ export class StackLayout extends ReactComponent {
   })
   stackScroll: StackScroll = StackScroll.Auto;
 
-  async onInit() {
-    await super.onInit();
-    this.setTagName(DOMS.Div);
-    this.addAttributesWithMap({
-      style: this.helper.createReactPropsMixinAccess("style", {
-        display: "flex",
-        flexDirection: this.stackDirection,
-        justifyContent: this.calcContentAlign(),
-        height: this.stackHeight,
-        width: this.stackWidth,
-        margin: calcPosition(this.stackMargin),
-        padding: calcPosition(this.stackPadding),
-        backgroundColor: this.stackBackgroundColor,
-        overflowX: "hidden",
-        overflowY: this.stackScroll,
-      }),
-    });
+  protected getLayoutSelfStyle() {
+    return {
+      ...super.getLayoutSelfStyle(),
+      display: "flex",
+      flexDirection: this.stackDirection,
+      justifyContent: this.getContentAlign(),
+      overflowX: "hidden",
+      overflowY: this.stackScroll,
+    };
   }
 
-  private calcContentAlign() {
+  private getContentAlign() {
     switch (this.stackContentAlign) {
       case ContentAlign.Start:
         return "flex-start";
@@ -102,12 +60,4 @@ export class StackLayout extends ReactComponent {
         return "center";
     }
   }
-}
-
-export function calcPosition(pos: [Position, string][]) {
-  const { top = "0px", bottom = "0px", left = "0px", right = "0px" } = pos.reduce<any>(
-    (p, c) => ({ ...p, [c[0]]: c[1] }),
-    {},
-  );
-  return `${top} ${right} ${bottom} ${left}`;
 }

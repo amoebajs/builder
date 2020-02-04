@@ -1,19 +1,9 @@
-import { ReactComponent } from "#providers";
-import { Attach, Component, Input, JsxElementGenerator, PropAttach } from "#core";
-import { DOMS } from "#utils/index";
-import { Position, calcPosition } from "./stack-layout.component";
+import { Attach, Component, Input, JsxElementGenerator, PropAttach, Extends } from "#core";
+import { BasicLayout } from "./basic-layout.component";
 
 @Component({ name: "grid-layout", version: "0.0.1-beta.0" })
-export class GridLayout extends ReactComponent {
-  @Input({ name: "width" })
-  gridWidth!: string;
-
-  @Input({ name: "height" })
-  gridHeight!: string;
-
-  @Input({ name: "backgroundColor" })
-  gridBackgroundColor: string = "transparent";
-
+@Extends(BasicLayout)
+export class GridLayout extends BasicLayout {
   @Input({ name: "rowCount" })
   gridRowCount: number = 1;
 
@@ -25,24 +15,6 @@ export class GridLayout extends ReactComponent {
 
   @Input({ name: "columnGap", displayName: "Grid列间隔" })
   gridColumnGap: string = "0px";
-
-  @Input({
-    name: "margin",
-    useMap: {
-      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
-      value: "string",
-    },
-  })
-  gridMargin: Array<[Position, string]> = [];
-
-  @Input({
-    name: "padding",
-    useMap: {
-      key: [Position.Bottom, Position.Left, Position.Right, Position.Top],
-      value: "string",
-    },
-  })
-  gridPadding: Array<[Position, string]> = [];
 
   @Input({
     name: "rowSizes",
@@ -74,23 +46,15 @@ export class GridLayout extends ReactComponent {
   @Attach({ name: "columnStart" })
   childColumnStart: PropAttach<number> = new PropAttach(1);
 
-  async onInit() {
-    await super.onInit();
-    this.setTagName(DOMS.Div);
-    this.addAttributesWithMap({
-      style: this.helper.createReactPropsMixinAccess("style", {
-        display: "grid",
-        height: this.gridHeight,
-        width: this.gridWidth,
-        margin: calcPosition(this.gridMargin),
-        padding: calcPosition(this.gridPadding),
-        backgroundColor: this.gridBackgroundColor,
-        gridTemplateColumns: this.calcColumnsSize(),
-        gridTemplateRows: this.calcRowsSize(),
-        gridRowGap: this.gridRowGap,
-        gridColumnGap: this.gridColumnGap,
-      }),
-    });
+  protected getLayoutSelfStyle() {
+    return {
+      ...super.getLayoutSelfStyle(),
+      display: "grid",
+      gridTemplateColumns: this.calcColumnsSize(),
+      gridTemplateRows: this.calcRowsSize(),
+      gridRowGap: this.gridRowGap,
+      gridColumnGap: this.gridColumnGap,
+    };
   }
 
   protected onChildrenVisit(key: string, generator: JsxElementGenerator) {

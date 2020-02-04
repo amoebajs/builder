@@ -1,4 +1,12 @@
-import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams } from "./base";
+import {
+  EntityConstructor,
+  IBasicI18NContract,
+  UnnamedPartial,
+  resolveParams,
+  defineEntityMetaType,
+  resolveEntityMetaType,
+} from "./base";
+import { resolveExtends } from "./extends";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
 
@@ -7,7 +15,17 @@ export function defineComponent(target: EntityConstructor<any>, metadata: ICompo
 }
 
 export function resolveComponent(target: EntityConstructor<any>, defaults: Partial<IComponentContract> = {}) {
-  return <IComponentContract>Reflect.getMetadata(COMPONENT_DEFINE, target) || defaults;
+  const metadata = <IComponentContract>Reflect.getMetadata(COMPONENT_DEFINE, target) || defaults;
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    const parent = resolveComponent(extendMeta.parent, {});
+    metadata.dependencies = {
+      ...parent.dependencies,
+      ...metadata.dependencies,
+    };
+  }
+  return metadata;
 }
 
 export interface IComponentContract extends IBasicI18NContract {
@@ -40,6 +58,7 @@ export function Component(define: any) {
         ...decoParams.dependencies,
       },
     };
+    defineEntityMetaType(target, "component");
     defineComponent(target, options);
     return <any>target;
   };

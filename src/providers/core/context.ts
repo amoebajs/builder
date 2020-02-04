@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
 import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap, IMapEntry } from "#providers";
-import { EntityConstructor, Injectable } from "#core";
+import { EntityConstructor, Injectable, resolveExtends, resolveComponent, resolveDirective } from "#core";
 import {
   EntityType,
   IBasicEntityProvider,
