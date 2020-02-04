@@ -1,23 +1,25 @@
-import { Attach, Component, Input, JsxElementGenerator, PropAttach, Extends } from "#core";
+import { Attach, Component, Input, JsxElementGenerator, PropAttach, Extends, Group } from "#core";
 import { BasicLayout } from "./basic-layout.component";
 
 @Component({ name: "grid-layout", displayName: "网格布局", version: "0.0.1-beta.0" })
+@Group({ name: "grid", displayName: "网格属性" })
 @Extends(BasicLayout)
 export class GridLayout extends BasicLayout {
-  @Input({ name: "rowCount", displayName: "行数量" })
+  @Input({ name: "rowCount", group: "grid", displayName: "行数量" })
   gridRowCount: number = 1;
 
-  @Input({ name: "columnCount", displayName: "列数量" })
+  @Input({ name: "columnCount", group: "grid", displayName: "列数量" })
   gridColumnCount: number = 1;
 
-  @Input({ name: "rowGap", displayName: "行间隔" })
+  @Input({ name: "rowGap", group: "grid", displayName: "行间隔" })
   gridRowGap: string = "0px";
 
-  @Input({ name: "columnGap", displayName: "列间隔" })
+  @Input({ name: "columnGap", group: "grid", displayName: "列间隔" })
   gridColumnGap: string = "0px";
 
   @Input({
     name: "rowSizes",
+    group: "grid",
     displayName: "行尺寸",
     useMap: {
       key: v => Number.isInteger(v) && v >= 1,
@@ -28,6 +30,7 @@ export class GridLayout extends BasicLayout {
 
   @Input({
     name: "columnSizes",
+    group: "grid",
     displayName: "列尺寸",
     useMap: {
       key: v => Number.isInteger(v) && v >= 1,
