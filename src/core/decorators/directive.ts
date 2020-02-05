@@ -7,7 +7,7 @@ import {
   defineEntityMetaType,
   resolveEntityMetaType,
 } from "./base";
-import { resolveExtends } from ".";
+import { resolveExtends, Extends } from "./extends";
 
 export const DIRECTIVE_DEFINE = "ambjs::directive_define";
 
@@ -37,6 +37,10 @@ export interface IDirectiveContract extends IBasicI18NContract {
   dependencies: Record<string, string>;
 }
 
+interface IExtend {
+  parent: EntityConstructor<any> | null;
+}
+
 const defaults: IDirectiveContract = {
   name: null,
   version: "0.0.1",
@@ -48,20 +52,22 @@ const defaults: IDirectiveContract = {
 };
 
 export function Directive(name: string): ClassDecorator;
-export function Directive(params: UnnamedPartial<IDirectiveContract>): ClassDecorator;
+export function Directive(params: UnnamedPartial<IDirectiveContract & IExtend>): ClassDecorator;
 export function Directive(define: any) {
-  const decoParams = resolveParams<IDirectiveContract>(define);
+  const decoParams = resolveParams<IDirectiveContract & IExtend>(define);
+  const { parent, ...otherOptions } = decoParams;
   return function customDirective(target: IConstructor<any>) {
     const options: IDirectiveContract = {
       ...defaults,
-      ...decoParams,
+      ...otherOptions,
       dependencies: {
         ...defaults.dependencies,
-        ...decoParams.dependencies,
+        ...otherOptions.dependencies,
       },
     };
     defineEntityMetaType(target, "directive");
     defineDirective(target, options);
+    if (parent) Extends(parent)(<any>target);
     return <any>target;
   };
 }

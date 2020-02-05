@@ -6,7 +6,7 @@ import {
   defineEntityMetaType,
   resolveEntityMetaType,
 } from "./base";
-import { resolveExtends } from "./extends";
+import { resolveExtends, Extends } from "./extends";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
 
@@ -35,6 +35,10 @@ export interface IComponentContract extends IBasicI18NContract {
   dependencies: Record<string, string>;
 }
 
+interface IExtend {
+  parent: EntityConstructor<any> | null;
+}
+
 const defaults: IComponentContract = {
   name: null,
   version: "0.0.1",
@@ -46,20 +50,22 @@ const defaults: IComponentContract = {
 };
 
 export function Component(name: string): ClassDecorator;
-export function Component(params: UnnamedPartial<IComponentContract>): ClassDecorator;
+export function Component(params: UnnamedPartial<IComponentContract & IExtend>): ClassDecorator;
 export function Component(define: any) {
-  const decoParams = resolveParams<IComponentContract>(define);
+  const decoParams = resolveParams<IComponentContract & IExtend>(define);
+  const { parent, ...otherOptions } = decoParams;
   return function compFactory(target: EntityConstructor<any>) {
     const options: IComponentContract = {
       ...defaults,
-      ...decoParams,
+      ...otherOptions,
       dependencies: {
         ...defaults.dependencies,
-        ...decoParams.dependencies,
+        ...otherOptions.dependencies,
       },
     };
     defineEntityMetaType(target, "component");
     defineComponent(target, options);
+    if (parent) Extends(parent)(<any>target);
     return <any>target;
   };
 }
