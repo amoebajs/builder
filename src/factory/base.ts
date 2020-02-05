@@ -15,7 +15,6 @@ import {
   SourceFileBasicContext,
   WebpackConfig,
 } from "#providers";
-import { CommonModule, LayoutModule, ZentModule } from "#plugins";
 import {
   DeclarationGenerator,
   EntityConstructor,
@@ -97,11 +96,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   }
 
   /** @override can be overrided */
-  protected initModules() {
-    this.useModule(CommonModule);
-    this.useModule(LayoutModule);
-    this.useModule(ZentModule);
-  }
+  protected initModules() {}
 
   /** @override can be overrided */
   protected initEntityProviders() {

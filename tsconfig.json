@@ -10,6 +10,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
+    "importHelpers": true,
     "outDir": "dist",
     "baseUrl": "src",
     "paths": {
@@ -17,13 +18,11 @@
       "#errors": ["./errors/index"],
       "#factory": ["./factory/index"],
       "#providers": ["./providers/index"],
-      "#plugins": ["./plugins/index"],
       "#utils": ["./utils/index"],
       "#core/*": ["./core/*"],
       "#errors/*": ["./errors/*"],
       "#factory/*": ["./factory/*"],
       "#providers/*": ["./providers/*"],
-      "#plugins/*": ["./plugins/*"],
       "#utils/*": ["./utils/*"]
     }
   },
