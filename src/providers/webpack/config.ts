@@ -14,8 +14,7 @@ export interface IWebpackOutputOptions {
 }
 
 export interface IWebpackTypeScriptOptions {
-  tsconfig: string;
-  importPlugins: any[];
+  compilerOptions: Record<string, any>;
 }
 
 export interface IWebpackSandboxOptions {
@@ -76,8 +75,19 @@ export class WebpackConfig {
                 loader: require.resolve("ts-loader"),
                 options: {
                   transpileOnly: true,
-                  configFile: options.typescript?.tsconfig ?? "tsconfig.jsx.json",
-                  compilerOptions: { module: "es2015" },
+                  configFile: undefined,
+                  compilerOptions: {
+                    target: "es5",
+                    module: "commonjs",
+                    lib: ["es5", "es6", "dom"],
+                    jsx: "react",
+                    sourceMap: true,
+                    esModuleInterop: true,
+                    skipLibCheck: true,
+                    importHelpers: true,
+                    outDir: "build/output",
+                    ...options.typescript?.compilerOptions,
+                  },
                 },
               },
             ],

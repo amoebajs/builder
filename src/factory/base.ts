@@ -49,7 +49,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   private __pre_entity_providers: [string, any][] = [];
   private __pre_modules: any[] = [];
 
-  public get builder() {
+  public get builder(): Builder {
     this.parse();
     // check if circular
     // console.log(Array.from(this._di["map"]["values"]()).filter((i: any) => !i.fac));
