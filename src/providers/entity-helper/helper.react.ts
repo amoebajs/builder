@@ -1,12 +1,11 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
-import { is } from "#utils/is";
-import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert } from "#core";
+import { is, IJsxAttrs } from "../../utils";
+import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert } from "../../core";
 import { camelCase, kebabCase } from "lodash";
-import { IJsxAttrDefine } from "#core/typescript/jsx-attribute";
-import { IJsxElementDefine } from "#core/typescript/jsx-element";
-import { IJsxAttrs } from "#utils/constants";
 import { BasicHelper } from "./helper.basic";
+import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
+import { IJsxElementDefine } from "../../core/typescript/jsx-element";
 
 export interface IFrontLibImports {
   default?: string;

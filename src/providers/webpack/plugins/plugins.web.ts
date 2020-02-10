@@ -1,5 +1,5 @@
 import { Plugin } from "webpack";
-import { Injectable } from "#core/decorators";
+import { Injectable } from "../../../core";
 import { WebpackPlugins } from "./plugins.contract";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */

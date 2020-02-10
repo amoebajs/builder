@@ -13,9 +13,8 @@ import {
   StatementGenerator,
   VariableGenerator,
   resolveSyntaxInsert,
-} from "#core";
-import { REACT, TYPES } from "#utils/constants";
-import { classCase } from "#utils/case";
+} from "../../core";
+import { REACT, TYPES, classCase } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
 
 export type JsxAttributeValueType = number | string | boolean | ts.Expression;

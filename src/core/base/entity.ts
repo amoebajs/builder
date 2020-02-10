@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { BasicError } from "#errors";
-import { createEntityId } from "#utils";
+import { BasicError } from "../../errors";
+import { createEntityId } from "../../utils";
 import {
   IComponentAttachMap,
   IComponentInputMap,

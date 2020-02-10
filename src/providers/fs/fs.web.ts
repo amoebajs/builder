@@ -1,4 +1,4 @@
-import { Injectable } from "#core";
+import { Injectable } from "../../core";
 import { Fs } from "./fs.contract";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */

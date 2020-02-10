@@ -14,8 +14,8 @@ import {
   resolveModule,
   resolvePropertyGroups,
   resolveProps,
-} from "#core/decorators";
-import { BasicError } from "#errors";
+} from "../core";
+import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";
 import { wrapMetaIntoCtor } from "./entity-parser/basic";
 

@@ -1,7 +1,7 @@
 import ts from "typescript";
-import { NotFoundError } from "#errors";
-import { BasicState, Injectable, JsxElementGenerator } from "#core";
 import { InjectScope } from "@bonbons/di";
+import { NotFoundError } from "../../errors";
+import { BasicState, Injectable, JsxElementGenerator } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { ReactComponent } from "../entities";
 

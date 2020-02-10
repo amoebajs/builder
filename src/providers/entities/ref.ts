@@ -10,7 +10,7 @@ import {
   IPureObject,
   Injectable,
   SourceFileContext,
-} from "#core";
+} from "../../core";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import HtmlWebPackPlugin from "html-webpack-plugin";
 import { Plugin, ProgressPlugin } from "webpack";
-import { Injectable } from "#core/decorators";
+import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
 import { IWebpackTemplateScriptOptions, IWebpackTemplateStyleOptions, WebpackPlugins } from "./plugins.contract";

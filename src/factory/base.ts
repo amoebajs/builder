@@ -14,7 +14,7 @@ import {
   ReactRender,
   SourceFileBasicContext,
   WebpackConfig,
-} from "#providers";
+} from "../providers";
 import {
   DeclarationGenerator,
   EntityConstructor,
@@ -33,7 +33,7 @@ import {
   VariableGenerator,
   getInjectScope,
   resolveDepts,
-} from "#core";
+} from "../core";
 
 export interface IFactoryOptions {
   trace: boolean;

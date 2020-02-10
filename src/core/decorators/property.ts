@@ -8,7 +8,7 @@ import {
   setDisplayI18NMeta,
   resolveEntityMetaType,
 } from "./base";
-import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, IPropertyGroupBase } from "../base/common";
+import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase } from "../base/common";
 import { resolveExtends } from "./extends";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";

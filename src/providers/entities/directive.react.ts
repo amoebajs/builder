@@ -1,5 +1,5 @@
 import { InjectScope } from "@bonbons/di";
-import { BasicDirective, IPureObject, Injectable } from "#core";
+import { BasicDirective, IPureObject, Injectable } from "../../core";
 import { ReactComponent } from "./component.react";
 import { ReactHelper, ReactRender } from "../entity-helper";
 

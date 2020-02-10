@@ -1,4 +1,4 @@
-import { Injectable } from "#core";
+import { Injectable } from "../../../core";
 import { IWebpackOptions } from "../config";
 import { WebpackBuild } from "./build.contract";
 

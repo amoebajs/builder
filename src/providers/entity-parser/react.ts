@@ -7,8 +7,8 @@ import {
   IInnerDirectiveChildRef,
   Injectable,
   SourceFileContext,
-} from "#core";
-import { REACT } from "#utils/constants";
+} from "../../core";
+import { REACT } from "../../utils";
 import { ReactDirective } from "../entities";
 import { ReactHelper } from "../entity-helper";
 import { BasicEntityProvider } from "./basic";

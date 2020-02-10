@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "websdk-dist",
-    "emitDeclarationOnly": true,
-    "allowJs": false
-  },
-  "include": ["src/index.websdk.ts"]
-}

@@ -16,8 +16,8 @@ import {
   SourceFileContext,
   resolveAttachProperties,
   resolveInputProperties,
-} from "#core";
-import { is } from "#utils/is";
+} from "../../core";
+import { is } from "../../utils";
 import { BasicHelper } from "../entity-helper";
 
 export function wrapMetaIntoCtor<T extends InjectDIToken<any>>(ctor: T, provider: string): T {

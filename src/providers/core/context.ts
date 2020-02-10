@@ -1,7 +1,6 @@
 import ts from "typescript";
 import { InjectScope, Injector } from "@bonbons/di";
-import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap, IMapEntry } from "#providers";
-import { EntityConstructor, Injectable, resolveExtends, resolveComponent, resolveDirective } from "#core";
+import { EntityConstructor, Injectable } from "../../core";
 import {
   EntityType,
   IBasicEntityProvider,
@@ -16,6 +15,8 @@ import {
   SourceFileContext,
 } from "../../core";
 import { NotFoundError } from "../../errors";
+import { GlobalMap, IMapEntry } from "../global-map";
+import { BasicComponentChildRef, BasicDirectiveChildRef } from "../entities";
 
 interface IContextTreeNode {
   scopeid: string | symbol;
