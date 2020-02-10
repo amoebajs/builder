@@ -18,7 +18,7 @@
     "copy:prepublish": "yarn clear:dist && npx copy README.md dist && npx copy LICENSE dist",
     "compile:node": "npx tsc && yarn copy:assets && yarn tscpaths -s ./src -o ./dist -p tsconfig.json",
     "demo:test": "cross-env TS_PROJECT=scripts/tsconfig.json npx ts-node -r tsconfig-paths/register scripts/test.ts",
-    "watch": "node scripts/watch.js",
+    "watch": "node scripts/watch.js --output=../basic-modules/node_modules/@amoebajs/builder",
     "build": "yarn copy:prepublish && yarn compile:node",
     "pub": "yarn build && node scripts/stable.publish.js",
     "rc": "yarn build && node scripts/rc.publish.js"

@@ -1,9 +1,12 @@
 const chokidar = require("chokidar");
 const chalk = require("chalk");
 const path = require("path");
+const fs = require("fs-extra");
 const child_process = require("child_process");
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
+
+const output = process.argv.find(i => i.startsWith("--output="));
 
 function resolvePaths(paths) {
   return paths.map(i => path.resolve(__dirname, "..", i));
@@ -20,6 +23,10 @@ function runCompilation() {
       })
       .on("exit", () => {
         console.log(chalk.green(`done in ${((new Date().getTime() - start) / 1000).toFixed(2)}s.`));
+        if (output) {
+          const [, target] = output.split("=");
+          fs.copySync(path.resolve(__dirname, "..", "dist"), path.resolve(__dirname, "..", ...target.split("/")));
+        }
         resolve();
       });
   });
