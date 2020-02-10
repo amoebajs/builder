@@ -1,5 +1,5 @@
 import { InjectDIToken } from "@bonbons/di";
-import { merge } from "lodash";
+import merge from "lodash/merge";
 import {
   EntityConstructor,
   IBasicI18NContract,

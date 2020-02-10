@@ -1,8 +1,9 @@
 import ts from "typescript";
+import kebabCase from "lodash/kebabCase";
+import camelCase from "lodash/camelCase";
 import { InjectScope } from "@bonbons/di";
 import { is, IJsxAttrs } from "../../utils";
 import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert } from "../../core";
-import { camelCase, kebabCase } from "lodash";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
 import { IJsxElementDefine } from "../../core/typescript/jsx-element";

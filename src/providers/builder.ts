@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { kebabCase } from "lodash";
+import kebabCase from "lodash/kebabCase";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import { IFrameworkDepts, Injectable } from "../core";
 import { Path } from "./path/path.contract";
