@@ -75,7 +75,6 @@ export class WebpackConfig {
                 loader: require.resolve("ts-loader"),
                 options: {
                   transpileOnly: true,
-                  configFile: undefined,
                   compilerOptions: {
                     target: "es5",
                     module: "commonjs",
