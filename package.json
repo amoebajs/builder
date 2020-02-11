@@ -23,8 +23,9 @@
     "demo:test": "cross-env TS_PROJECT=scripts/tsconfig.json npx ts-node -r tsconfig-paths/register scripts/test.ts",
     "watch": "node scripts/watch.js --output=../basic-modules/node_modules/@amoebajs/builder",
     "build": "yarn copy:prepublish && yarn compile:node",
-    "pub": "yarn build && node scripts/stable.publish.js",
-    "rc": "yarn build && node scripts/rc.publish.js"
+    "test": "jest --passWithNoTests",
+    "pub": "yarn build && yarn test && node scripts/stable.publish.js",
+    "rc": "yarn build && yarn test && node scripts/rc.publish.js"
   },
   "dependencies": {
     "@bonbons/di": "2.0.0-beta.3",
@@ -58,6 +59,7 @@
   },
   "devDependencies": {
     "@bigmogician/publisher": "^1.0.12",
+    "@types/jest": "^25.1.2",
     "@types/lodash": "^4.14.149",
     "@types/webpack-dev-server": "^3.9.0",
     "@typescript-eslint/eslint-plugin": "^2.14.0",
@@ -71,9 +73,11 @@
     "eslint-plugin-jsx-control-statements": "^2.2.1",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.17.0",
+    "jest": "^25.1.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "rimraf": "^3.0.0",
+    "ts-jest": "^25.2.0",
     "ts-node": "^8.4.1",
     "tsconfig-paths": "^3.9.0",
     "tscpaths": "^0.0.9",
