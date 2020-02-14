@@ -14,6 +14,7 @@ import {
   ReactRender,
   SourceFileBasicContext,
   WebpackConfig,
+  ReactReconcilerEngine,
 } from "../providers";
 import {
   DeclarationGenerator,
@@ -33,6 +34,7 @@ import {
   VariableGenerator,
   getInjectScope,
   resolveDepts,
+  ReconcilerEngine,
 } from "../core";
 
 export interface IFactoryOptions {
@@ -93,6 +95,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(JsxExpressionGenerator);
     this.useProvider(JsxAttributeGenerator);
     this.useProvider(JsxElementGenerator);
+    this.useProvider(ReconcilerEngine, ReactReconcilerEngine);
   }
 
   /** @override can be overrided */
