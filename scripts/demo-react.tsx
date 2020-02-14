@@ -2,10 +2,28 @@ import React, { ReactNode } from "react";
 import { Factory, ReconcilerEngine, SourceFileContext, Utils, Component, ReactComponent, Group, Input } from "../src";
 import { IConstructor } from "../src/core";
 
+type UseHelper<T> = {
+  [key in keyof T]: T[key] extends [infer K, infer V][]
+    ? K extends string | number | symbol
+      ? Partial<Record<K, V>> | [K, V][]
+      : [K, V][]
+    : T[key];
+};
+
 function useReact<T>(
   ctor: IConstructor<T>,
-): IConstructor<React.PureComponent<Partial<T & { children: ReactNode | ReactNode[] }>, {}>> {
-  return ctor as any;
+): IConstructor<React.PureComponent<Partial<UseHelper<T & { children: ReactNode | ReactNode[] }>>, {}>> {
+  return new Proxy<any>(ctor, {
+    get(target, key) {
+      if (key === "__useReact") {
+        return true;
+      }
+      if (key === "__target") {
+        return target;
+      }
+      return target[key];
+    },
+  });
 }
 
 const DemoText = (props: any) => {
@@ -98,7 +116,7 @@ export class BasicElement extends ReactComponent {
   })
   layoutMargin: Array<[Position, string]> = [];
 
-  async onInit() {
+  protected async onInit() {
     await super.onInit();
     this.setTagName(Utils.DOMS.Div);
     this.addAttributesWithMap({ style: this.resolveRootElementStyle() });
@@ -170,7 +188,16 @@ async function run() {
     <DemoContainer>
       <DemoText>AAA</DemoText>
       <DemoText>BBB</DemoText>
-      <BasicEle layoutBackground={"#ffa500"}>
+      <BasicEle
+        layoutBackground="#ececec"
+        layoutHeight="100vh"
+        layoutWidth="100vw"
+        layoutMargin={{ all: "4px" }}
+        layoutPadding={{ all: "8px" }}
+        layoutBorderWidth={{ left: "40px", right: "40px" }}
+        layoutBorderStyle={{ left: "solid", right: "dashed" }}
+        layoutBorderColor={{ left: "#fea500", right: "#585858" }}
+      >
         <DemoText>AAA</DemoText>
         <DemoText>BBB</DemoText>
       </BasicEle>
