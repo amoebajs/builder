@@ -1,30 +1,15 @@
-import React, { ReactNode } from "react";
-import { Factory, ReconcilerEngine, SourceFileContext, Utils, Component, ReactComponent, Group, Input } from "../src";
-import { IConstructor } from "../src/core";
-
-type UseHelper<T> = {
-  [key in keyof T]: T[key] extends [infer K, infer V][]
-    ? K extends string | number | symbol
-      ? Partial<Record<K, V>> | [K, V][]
-      : [K, V][]
-    : T[key];
-};
-
-function useReconciler<T>(
-  ctor: IConstructor<T>,
-): IConstructor<React.PureComponent<Partial<UseHelper<T & { children: ReactNode | ReactNode[] }>>, {}>> {
-  return new Proxy<any>(ctor, {
-    get(target, key) {
-      if (key === "__useReconciler") {
-        return true;
-      }
-      if (key === "__target") {
-        return target;
-      }
-      return target[key];
-    },
-  });
-}
+import React from "react";
+import {
+  Factory,
+  ReconcilerEngine,
+  SourceFileContext,
+  Utils,
+  Component,
+  ReactComponent,
+  Group,
+  Input,
+  useReconciler,
+} from "../src";
 
 const DemoText = (props: any) => {
   return props.children;
