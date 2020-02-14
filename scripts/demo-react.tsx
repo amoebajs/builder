@@ -10,12 +10,12 @@ type UseHelper<T> = {
     : T[key];
 };
 
-function useReact<T>(
+function useReconciler<T>(
   ctor: IConstructor<T>,
 ): IConstructor<React.PureComponent<Partial<UseHelper<T & { children: ReactNode | ReactNode[] }>>, {}>> {
   return new Proxy<any>(ctor, {
     get(target, key) {
-      if (key === "__useReact") {
+      if (key === "__useReconciler") {
         return true;
       }
       if (key === "__target") {
@@ -177,7 +177,7 @@ export class BasicElement extends ReactComponent {
   }
 }
 
-const BasicEle = useReact(BasicElement);
+const BasicEle = useReconciler(BasicElement);
 
 async function run() {
   const fac = new Factory().parse();
