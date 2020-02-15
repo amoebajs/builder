@@ -160,7 +160,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
 
   protected createComponentRef(options: IDynamicRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const composition = this.compositions.find(i => i.importId === options.refEntityId)!;
-    if (composition) return this.createCompositionRef(options);
+    if (composition) return this.createCompositionRef(options, parent);
     const tOptions: ICompChildRefPluginOptions = <any>options;
     const component = this.components.find(i => i.importId === tOptions.refEntityId)!;
     const ref = this.injector.get(BasicComponentChildRef);
@@ -238,7 +238,7 @@ export function setBaseChildRefInfo(
   template: EntityConstructor<any>,
   parent?: IInnerCompnentChildRef,
 ) {
-  ref.setEntityId(options.entityName);
+  ref.setScopeId(options.entityName);
   ref["__refId"] = options.refEntityId;
   ref["__refConstructor"] = template;
   ref["__entityId"] = options.entityName;

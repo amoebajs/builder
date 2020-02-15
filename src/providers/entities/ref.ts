@@ -63,7 +63,11 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
         return instance;
       }
     }
-    await instance.onEmit();
+    const compRef = await instance.onEmit(<any>this);
+    if (compRef) {
+      await compRef.onInit();
+      await compRef.bootstrap();
+    }
     return instance;
   }
 }
@@ -96,10 +100,14 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async bootstrap() {
     const instance: IInnerComponent = await super.bootstrap();
+    // instance.setScopeId(this.__entityId);
     await instance.onInit();
     // 非根组件，尝试优化shake重复代码
     if (this.__context.root.__entityId !== this.__entityId) {
       const componentName = decideComponentName(this.__context, <any>this);
+      // if (this.__refId === "GridLayout") {
+      //   console.log([componentName, this.__entityId]);
+      // }
       if (componentName !== this.__entityId) {
         return instance;
       }
@@ -115,6 +123,10 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     for (const directive of this.__refDirectives) {
       await directive.bootstrap();
     }
+    // if (this.__context.root.__entityId !== this.__entityId && this.__refId === "GridLayout") {
+    //   console.log("render");
+    //   console.log(instance);
+    // }
     await instance.onChildrenRender();
     await instance.onRender();
     return instance;

@@ -35,8 +35,13 @@ export interface IReactEntityPayload {
   _store: null;
 }
 
+export interface IReconcilerExtends {
+  parent?: IInnerCompnentChildRef;
+  key?: string;
+}
+
 export interface IEngine {
-  parseComposite(element: JSX.Element, refId?: string): IInnerCompnentChildRef;
+  parseComposite(element: JSX.Element, options?: IReconcilerExtends): IInnerCompnentChildRef;
   parseGenerator(element: JSX.Element): ts.Node;
 }
 

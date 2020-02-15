@@ -47,7 +47,7 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     } else {
       await this._attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
     }
-    instance.setEntityId(ref.__entityId);
+    instance.setScopeId(ref.__entityId);
     instance.setParentId(ref.__parent);
     instance["injector"] = this.injector;
     instance["__context"] = context;

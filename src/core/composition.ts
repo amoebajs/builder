@@ -1,9 +1,11 @@
 import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
+import { BasicChildRef, IInnerCompositionChildRef, IInnerCompnentChildRef } from "./child-ref";
 
 export interface IComposition extends IEwsEntity {}
 
 export interface ICompositionProtectedHooks extends IEwsEntityProtectedHooks {
-  onEmit(): Promise<void>;
+  onRender(): Promise<JSX.Element | void>;
+  onEmit(options: IInnerCompositionChildRef): Promise<IInnerCompnentChildRef | void>;
 }
 
 export interface ICompositionPrivates extends IEwsEntityPrivates<"composition"> {
@@ -28,5 +30,5 @@ export abstract class BasicComposition<T extends IPureObject = IPureObject> exte
   protected async onRender(): Promise<JSX.Element | void> {}
 
   /** @override */
-  protected async onEmit(): Promise<void> {}
+  protected async onEmit(options: IInnerCompositionChildRef): Promise<IInnerCompnentChildRef | void> {}
 }

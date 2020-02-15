@@ -14,6 +14,7 @@ import {
   IInnerCompnentChildRef,
   IInnerDirectiveChildRef,
   resolveInputProperties,
+  IReconcilerExtends,
 } from "../../core";
 import { BasicComponentChildRef, BasicDirectiveChildRef } from "../entities";
 import { setBaseChildRefInfo } from "./context";
@@ -24,7 +25,7 @@ interface IResolve {
   context: SourceFileContext<IBasicEntityProvider>;
   element: IReactEntityPayload;
   parent?: IInnerCompnentChildRef;
-  refId?: string;
+  key?: string;
 }
 
 @Injectable(InjectScope.New)
@@ -40,11 +41,8 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     element,
     context,
     parent,
-    refId,
+    key: entityId,
   }: IResolve): IInnerCompnentChildRef | IInnerDirectiveChildRef {
-    if (parent) {
-      console.log({ element, context, parent, refId });
-    }
     const { $$typeof, type: token, props } = element;
     const isReactElement = $$typeof.toString() === "Symbol(react.element)";
     const isValidProxy = token.__useReconciler === true;
@@ -52,13 +50,19 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     const ctor = token.__target;
     const compMeta = resolveComponent(ctor);
     if (compMeta.name) {
+      const { moduleName, name } = this.globalMap.getComponentByType(ctor);
+      let imported = context.components.find(i => i.moduleName === moduleName && i.templateName === name);
+      if (!imported) {
+        imported = { moduleName: moduleName!, templateName: name, type: <any>ctor, importId: createEntityId() };
+        context.importComponents([imported]);
+      }
       const inputs = resolveInputProperties(ctor);
       const inputEntries = Object.entries(inputs);
       const ref = this.injector.get(BasicComponentChildRef);
-      const { key: entityId, children, ...otherProps } = props;
+      const { key: _, children, ...otherProps } = props;
       const options: ICompChildRefPluginOptions = {
         entityName: <string>entityId || createEntityId(),
-        refEntityId: refId || "[none]",
+        refEntityId: imported.importId,
         directives: [],
         components: [],
         options: { input: {}, attach: {}, props: {} },
@@ -96,10 +100,16 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     }
     const direMeta = resolveDirective(ctor);
     if (direMeta.name) {
+      const { moduleName, name } = this.globalMap.getDirectiveByType(ctor);
+      let imported = context.directives.find(i => i.moduleName === moduleName && i.templateName === name);
+      if (!imported) {
+        imported = { moduleName: moduleName!, templateName: name, type: <any>ctor, importId: createEntityId() };
+        context.importDirectives([imported]);
+      }
       const ref = this.injector.get(BasicDirectiveChildRef);
       const options: IDirecChildRefPluginOptions = {
         entityName: createEntityId(),
-        refEntityId: refId || "[none]",
+        refEntityId: imported.importId,
         options: { input: {} },
       };
       setBaseChildRefInfo(context, <any>ref, options, ctor, parent);
@@ -114,8 +124,8 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     }
     this.context = options.context;
     return (this.engine = {
-      parseComposite: (element: JSX.Element, refId?: string) =>
-        <IInnerCompnentChildRef>this.resolveEntity({ context: this.context, element: <any>element, refId }),
+      parseComposite: (element: JSX.Element, { parent, key }: IReconcilerExtends = {}) =>
+        <IInnerCompnentChildRef>this.resolveEntity({ context: this.context, element: <any>element, parent, key }),
       parseGenerator(element: JSX.Element) {
         throw new Error("not implemented.");
       },

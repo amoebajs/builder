@@ -1,5 +1,5 @@
 import { InjectScope } from "@bonbons/di";
-import { IPureObject, Injectable, BasicComposition } from "../../core";
+import { IPureObject, Injectable, BasicComposition, IInnerCompositionChildRef } from "../../core";
 import { ReactHelper } from "../entity-helper";
 
 @Injectable(InjectScope.New)
@@ -8,15 +8,16 @@ export abstract class ReactComposition<T extends IPureObject = IPureObject> exte
     super();
   }
 
-  protected async onEmit() {
+  protected async onEmit(options: IInnerCompositionChildRef) {
     const result = await this.onRender();
     if (result) {
-      const ref = this.__context.reconciler
-        .createEngine({ context: this.__context })
-        .parseComposite(result, this.entityId);
-      // console.log(ref);
-      await ref.onInit();
-      await ref.bootstrap();
+      const instance = this.__context.reconciler.createEngine({ context: this.__context }).parseComposite(result, {
+        parent: options.__parentRef,
+        key: options.__entityId,
+      });
+      instance.setScopeId(options.__entityId);
+      (<any>instance).__entityId = options.__entityId;
+      return instance;
     }
   }
 }
