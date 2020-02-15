@@ -8,6 +8,7 @@ export interface IModuleContract {
   provider: keyof IFrameworkDepts;
   components: EntityConstructor<any>[];
   directives: EntityConstructor<any>[];
+  compositions: EntityConstructor<any>[];
   dependencies: Record<string, string>;
 }
 
@@ -17,6 +18,7 @@ const defaults: IModuleContract = {
   provider: "react",
   components: [],
   directives: [],
+  compositions: [],
   dependencies: {},
 };
 

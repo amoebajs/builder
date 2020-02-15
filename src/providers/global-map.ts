@@ -14,13 +14,15 @@ import {
   resolveModule,
   resolvePropertyGroups,
   resolveProps,
+  ICompositionContract,
+  resolveComposition,
 } from "../core";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";
 import { wrapMetaIntoCtor } from "./entity-parser/basic";
 
 export interface IMetadataGroup {
-  entity: IDirectiveContract | IComponentContract | IModuleContract;
+  entity: IDirectiveContract | IComponentContract | ICompositionContract | IModuleContract;
   inputs: { [name: string]: any };
   attaches: { [name: string]: any };
   props: { [name: string]: any };
@@ -44,12 +46,14 @@ export interface IMapEntry<T = any> {
 export interface IModuleEntry<T = any> extends IMapEntry<T> {
   components: { [name: string]: IMapEntry<any> };
   directives: { [name: string]: IMapEntry<any> };
+  compositions: { [name: string]: IMapEntry<any> };
 }
 
 export interface IGlobalMap {
   modules: { [key: string]: IModuleEntry<any> };
   globalComponentList: IMapEntry<any>[];
   globalDirectiveList: IMapEntry<any>[];
+  globalCompositionList: IMapEntry<any>[];
 }
 
 @Injectable()
@@ -58,6 +62,7 @@ export class GlobalMap {
     modules: {},
     globalComponentList: [],
     globalDirectiveList: [],
+    globalCompositionList: [],
   };
 
   public readonly providers: Partial<IFrameworkStructure<any>> = {};
@@ -76,6 +81,7 @@ export class GlobalMap {
       value: register(mdname),
       components: {},
       directives: {},
+      compositions: {},
       provider: metadata.provider,
       metadata: <any>{ entity: metadata },
     });
@@ -109,6 +115,21 @@ export class GlobalMap {
         this.maps.globalDirectiveList.push(directive);
       });
     }
+    if (metadata.compositions) {
+      metadata.compositions.forEach(i => {
+        const meta = resolveComposition(i);
+        const pipeName = meta.name || "[unnamed]";
+        const composition = (thisModule.compositions[pipeName] = {
+          name: pipeName,
+          displayName: meta.displayName || pipeName,
+          moduleName,
+          value: register(i),
+          provider: metadata.provider,
+          metadata: <any>{ entity: meta },
+        });
+        this.maps.globalCompositionList.push(composition);
+      });
+    }
     return this;
   }
 
@@ -124,12 +145,20 @@ export class GlobalMap {
     return this.getModule(module).directives[name];
   }
 
+  public getComposition(module: string, name: string): IMapEntry<any> {
+    return this.getModule(module).compositions[name];
+  }
+
   public getComponentByType(component: InjectDIToken<any>): IMapEntry<any> {
     return this.maps.globalComponentList.find(i => i.value === component)!;
   }
 
   public getDirectiveByType(directive: InjectDIToken<any>): IMapEntry<any> {
     return this.maps.globalDirectiveList.find(i => i.value === directive)!;
+  }
+
+  public getCompositionByType(composition: InjectDIToken<any>): IMapEntry<any> {
+    return this.maps.globalCompositionList.find(i => i.value === composition)!;
   }
 
   public getProvider(name: keyof IFrameworkDepts): typeof BasicEntityProvider {
@@ -161,6 +190,15 @@ export class GlobalMap {
             thisDire.metadata = {
               ...getEitityMetadata(thisDire.value, provider),
               ...thisDire.metadata,
+            };
+          }
+        }
+        for (const key in thisModule.compositions) {
+          if (thisModule.compositions.hasOwnProperty(key)) {
+            const thisCpsi = thisModule.compositions[key];
+            thisCpsi.metadata = {
+              ...getEitityMetadata(thisCpsi.value, provider),
+              ...thisCpsi.metadata,
             };
           }
         }

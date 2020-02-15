@@ -83,6 +83,7 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   }
 
   protected async onInit() {
+    await super.onInit();
     // console.log("init --> " + this.__refId + " : " + this.__entityId);
   }
 

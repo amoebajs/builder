@@ -56,6 +56,13 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
   protected async bootstrap() {
     const instance: IInnerComposition = await super.bootstrap();
     await instance.onInit();
+    // 非根组件，尝试优化shake重复代码
+    if (this.__context.root.__entityId !== this.__entityId) {
+      const componentName = decideComponentName(this.__context, <any>this);
+      if (componentName !== this.__entityId) {
+        return instance;
+      }
+    }
     await instance.onEmit();
     return instance;
   }

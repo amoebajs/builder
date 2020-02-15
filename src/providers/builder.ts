@@ -1,7 +1,7 @@
 import ts from "typescript";
 import kebabCase from "lodash/kebabCase";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { IFrameworkDepts, Injectable } from "../core";
+import { IFrameworkDepts, Injectable, ICompositionCreateOptions } from "../core";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
@@ -21,6 +21,8 @@ export interface IDirectiveDefine {
   name: string;
   id: string;
 }
+
+export interface ICompositionDefine extends IDirectiveDefine {}
 
 export interface IComponentDefine extends IDirectiveDefine {}
 
@@ -45,6 +47,7 @@ export interface IPageCreateOptions {
   provider: keyof IFrameworkDepts;
   components?: IComponentDefine[];
   directives?: IDirectiveDefine[];
+  compositions?: ICompositionDefine[];
   page: IPageDefine;
 }
 
@@ -99,6 +102,7 @@ export class Builder {
       .setProvider(provider)
       .importComponents(mapComp(configs.components))
       .importDirectives(mapDire(configs.directives))
+      .importCompositions(mapCpsi(configs.compositions))
       .build();
     await context.createRoot(mapComponentChild([configs.page])[0]);
     await context.callCompilation();
@@ -198,5 +202,14 @@ function mapDire(directives: IDirectiveDefine[] = []) {
     templateName: i.name,
     importId: i.id,
     type: "directive",
+  }));
+}
+
+function mapCpsi(compositions: ICompositionDefine[] = []) {
+  return compositions.map<ICompositionCreateOptions>(i => ({
+    moduleName: i.module,
+    templateName: i.name,
+    importId: i.id,
+    type: "composition",
   }));
 }

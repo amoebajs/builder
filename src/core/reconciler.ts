@@ -36,7 +36,7 @@ export interface IReactEntityPayload {
 }
 
 export interface IEngine {
-  parseComposite(element: JSX.Element): IInnerCompnentChildRef;
+  parseComposite(element: JSX.Element, refId?: string): IInnerCompnentChildRef;
   parseGenerator(element: JSX.Element): ts.Node;
 }
 

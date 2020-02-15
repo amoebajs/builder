@@ -20,7 +20,9 @@ export abstract class BasicComposition<T extends IPureObject = IPureObject> exte
   }
 
   /** @override */
-  protected async onInit(): Promise<void> {}
+  protected async onInit(): Promise<void> {
+    await super.onInit();
+  }
 
   /** @override */
   protected async onRender(): Promise<JSX.Element | void> {}

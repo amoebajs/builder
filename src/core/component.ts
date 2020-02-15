@@ -46,7 +46,9 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   //#region hooks
 
   /** @override */
-  protected async onInit(): Promise<void> {}
+  protected async onInit(): Promise<void> {
+    await super.onInit();
+  }
 
   /** @override */
   protected async onChildrenRender(): Promise<void> {}

@@ -11,7 +11,10 @@ export abstract class ReactComposition<T extends IPureObject = IPureObject> exte
   protected async onEmit() {
     const result = await this.onRender();
     if (result) {
-      const ref = this.__context.reconciler.createEngine({ context: this.__context }).parseComposite(result);
+      const ref = this.__context.reconciler
+        .createEngine({ context: this.__context })
+        .parseComposite(result, this.entityId);
+      // console.log(ref);
       await ref.onInit();
       await ref.bootstrap();
     }

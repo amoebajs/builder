@@ -185,7 +185,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
 
   protected createCompositionRef(options: ICompositeChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicCompositionChildRef);
-    const target = this.directives.find(i => i.importId === options.refEntityId)!;
+    const target = this.compositions.find(i => i.importId === options.refEntityId)!;
     const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     setBaseChildRefInfo(this, <any>ref, options, value, parent);
     return <IInnerCompositionChildRef>(<unknown>ref);
@@ -206,21 +206,23 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     const { metadata: moduleMeta } = this._resolveMetadataOfEntity(target.moduleName, "module");
     const { metadata } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     return {
-      ...moduleMeta.entity.dependencies,
-      ...metadata.entity.dependencies,
+      ...(<any>moduleMeta.entity).dependencies,
+      ...(<any>metadata.entity).dependencies,
     };
   }
 
   private _resolveMetadataOfEntity(
     moduleName: string,
-    type: "component" | "directive" | "module",
+    type: "component" | "directive" | "composition" | "module",
     templateName?: string,
   ) {
     let target!: IMapEntry<any>;
     if (type === "module") {
       target = this.globalMap.getModule(moduleName);
     } else {
-      target = this.globalMap[type === "component" ? "getComponent" : "getDirective"](moduleName, templateName!);
+      target = this.globalMap[
+        type === "component" ? "getComponent" : type === "composition" ? "getComposition" : "getDirective"
+      ](moduleName, templateName!);
     }
     if (!target) {
       throw new NotFoundError(`${type} [${moduleName}${templateName && "."}${templateName}] not found`);

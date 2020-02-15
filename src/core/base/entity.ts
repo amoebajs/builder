@@ -195,7 +195,12 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   protected async onInit(): Promise<void> {
-    return Promise.resolve();
+    this.__context.scopedContext.set(this.__scope, {
+      scope: this.__scope,
+      type: this.__etype,
+      parent: this.__parent,
+      container: {},
+    });
   }
 
   //#region  pretected methods
@@ -251,18 +256,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     args: A[],
     type: IBasicComponentAppendType,
   ) {
-    let context = this.__context.scopedContext.get(this.__scope);
-    if (!context) {
-      this.__context.scopedContext.set(
-        this.__scope,
-        (context = {
-          scope: this.__scope,
-          type: this.__etype,
-          parent: this.__parent,
-          container: {},
-        }),
-      );
-    }
+    const context = this.__context.scopedContext.get(this.__scope)!;
     if (type === "reset") {
       context.container[target] = <any>args;
     } else {
