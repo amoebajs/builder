@@ -1,6 +1,12 @@
 import ts from "typescript";
-import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
-import { IInnerCompnentChildRef } from "../child-ref";
+import {
+  EntityType,
+  ICompChildRefPluginOptions,
+  IComponentCreateOptions,
+  IDirectiveCreateOptions,
+  ICompositionCreateOptions,
+} from "./entity";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "../child-ref";
 import {
   ClassGenerator,
   FunctionGenerator,
@@ -10,6 +16,7 @@ import {
   JsxExpressionGenerator,
   VariableGenerator,
 } from "../typescript";
+import { ReconcilerEngine } from "../reconciler";
 
 export const ContextItemsGroup = {
   import: ImportGenerator,
@@ -53,15 +60,18 @@ export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
   public astContext!: IFinalAstContext;
   public provider!: T;
-  public root!: IInnerCompnentChildRef;
+  public reconciler!: ReconcilerEngine;
+  public root!: IInnerCompnentChildRef | IInnerCompositionChildRef;
   public rootSlot!: string;
   public components!: IComponentCreateOptions[];
   public directives!: IDirectiveCreateOptions[];
+  public compositions!: ICompositionCreateOptions[];
   public dependencies!: Record<string, string>;
   public defaultCompRefRecord: Record<string, string> = {};
   public abstract setProvider(provider: string): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
+  public abstract importCompositions(compositions: ICompositionCreateOptions[]): this;
   public abstract build(): this;
   public abstract getDependencies(): Record<string, string>;
   public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): this;

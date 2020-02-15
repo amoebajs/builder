@@ -23,6 +23,7 @@ import { GlobalMap } from "../global-map";
 @Injectable(InjectScope.New)
 export class ReactReconcilerEngine extends ReconcilerEngine {
   private engine!: IEngine;
+  private context!: SourceFileContext<IBasicEntityProvider>;
 
   constructor(protected injector: Injector, protected globalMap: GlobalMap) {
     super();
@@ -97,15 +98,15 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
   }
 
   public createEngine(options: IEngineOptions): IEngine {
-    return (
-      this.engine ||
-      (this.engine = {
-        parseComposite: (element: JSX.Element) =>
-          <IInnerCompnentChildRef>this.resolveEntity(options.context, <any>element),
-        parseGenerator(element: JSX.Element) {
-          throw new Error("not implemented.");
-        },
-      })
-    );
+    if (this.context === options.context && this.engine) {
+      return this.engine;
+    }
+    this.context = options.context;
+    return (this.engine = {
+      parseComposite: (element: JSX.Element) => <IInnerCompnentChildRef>this.resolveEntity(this.context, <any>element),
+      parseGenerator(element: JSX.Element) {
+        throw new Error("not implemented.");
+      },
+    });
   }
 }

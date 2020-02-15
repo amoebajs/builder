@@ -16,6 +16,8 @@ import {
   SourceFileContext,
   resolveAttachProperties,
   resolveInputProperties,
+  IInnerCompositionChildRef,
+  IInnerComposition,
 } from "../../core";
 import { is } from "../../utils";
 import { BasicHelper } from "../entity-helper";
@@ -35,11 +37,13 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
 
   public async attachInstance(
     context: SourceFileContext<IBasicEntityProvider>,
-    ref: IInnerCompnentChildRef | IInnerDirectiveChildRef,
+    ref: IInnerCompnentChildRef | IInnerDirectiveChildRef | IInnerCompositionChildRef,
   ): Promise<any> {
-    const instance: IInnerComponent | IInnerDirective = this.injector.get(ref.__refConstructor);
+    const instance: IInnerComponent | IInnerDirective | IInnerComposition = this.injector.get(ref.__refConstructor);
     if (ref.__etype === "componentChildRef") {
       await this._attachComponent(<IInnerComponent>instance, (<IInnerCompnentChildRef>ref).__options);
+    } else if (ref.__etype === "compositionChildRef") {
+      await this._attachComposition(<IInnerComposition>instance, (<IInnerCompositionChildRef>ref).__options);
     } else {
       await this._attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
     }
@@ -99,9 +103,15 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return instance;
   }
 
+  private async _attachComposition(instance: IInnerComposition, { input }: IInnerCompositionChildRef["__options"]) {
+    const template = Object.getPrototypeOf(instance).constructor;
+    this._setInputs(template, instance, input);
+    return instance;
+  }
+
   private _setInputs(
     template: EntityConstructor<any>,
-    instance: IInnerComponent | IInnerDirective,
+    instance: IInnerComponent | IInnerDirective | IInnerComposition,
     options: IComponentInputMap | IDirectiveInputMap,
   ) {
     const inputs = resolveInputProperties(template);

@@ -10,7 +10,10 @@ import {
   IPureObject,
   Injectable,
   SourceFileContext,
+  ICompositionChildRefPrivates,
+  IInnerCompositionChildRef,
 } from "../../core";
+import { IInnerComposition } from "../../core/composition";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
@@ -36,6 +39,29 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
 }
 
 @Injectable(InjectScope.New)
+export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
+  protected __options: ICompositionChildRefPrivates["__options"] = {
+    input: {},
+  };
+
+  public get entityInputs(): ICompositionChildRefPrivates["__options"]["input"] {
+    return this.__options.input;
+  }
+
+  constructor() {
+    super();
+    this["__etype"] = "compositionChildRef";
+  }
+
+  protected async bootstrap() {
+    const instance: IInnerComposition = await super.bootstrap();
+    await instance.onInit();
+    await instance.onEmit();
+    return instance;
+  }
+}
+
+@Injectable(InjectScope.New)
 export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
   protected __options: IComponentChildRefPrivates["__options"] = {
     input: {},
@@ -52,7 +78,7 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async onInit() {
     await super.onInit();
-    const refs: (IInnerCompnentChildRef | IInnerDirectiveChildRef)[] = [
+    const refs: (IInnerCompnentChildRef | IInnerDirectiveChildRef | IInnerCompositionChildRef)[] = [
       ...this.__refComponents,
       ...this.__refDirectives,
     ];
@@ -75,7 +101,7 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
       instance.__children.push({
         component: decideComponentName(this.__context, component),
         id: component.__entityId,
-        props: { ...component.__options.props },
+        props: { ...(<any>component.__options).props },
       });
       await component.bootstrap();
     }
@@ -99,9 +125,9 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
  * @param {IChildRef} i
  * @returns
  */
-function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef) {
+function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef | IInnerCompositionChildRef) {
   const inputLen = Object.keys(i.__options.input).length;
-  const attachLen = Object.keys(i.__options.attach).length;
+  const attachLen = (<any>i.__options).attach && Object.keys((<any>i.__options).attach).length;
   let defaultEntityId = i.__entityId;
   // inputs/attaches 参数未定义，不重复生成组件
   if (inputLen === 0 && attachLen === 0) {

@@ -7,7 +7,6 @@ import {
   IEwsEntityProtectedHooks,
   IPureObject,
 } from "./base";
-import { IInnerComposite } from "./libs";
 
 export interface IComponent extends IEwsEntity {}
 
@@ -21,7 +20,6 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
   readonly __children: IChildElement[];
   readonly __components: IInnerComponent[];
   readonly __directives: IDirective[];
-  readonly __compositions: IInnerComposite[];
 }
 
 export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}

@@ -11,14 +11,19 @@ import {
   MapValueType,
 } from "./common";
 import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
-import { IFrameworkDepts } from "../decorators";
 import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
 
-// export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
-
-export type EntityType = "directive" | "component" | "childref" | "componentChildRef" | "directiveChildRef" | "entity";
+export type EntityType =
+  | "directive"
+  | "component"
+  | "composition"
+  | "childref"
+  | "componentChildRef"
+  | "directiveChildRef"
+  | "compositionChildRef"
+  | "entity";
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
@@ -36,9 +41,14 @@ export interface IComponentCreateOptions extends IBasicImportEntityCreateOptions
   type: "component";
 }
 
+export interface ICompositionCreateOptions extends IBasicImportEntityCreateOptions {
+  type: "composition";
+}
+
 export interface IEntitiesGroup {
   components: IComponentCreateOptions[];
   directives: IDirectiveCreateOptions[];
+  compositions: ICompositionCreateOptions[];
 }
 
 export interface IDirecChildRefPluginOptions {
@@ -56,7 +66,7 @@ export interface ICompChildRefPluginOptions {
   refEntityId: string;
   /** entity name will emit into source code */
   entityName: string;
-  components: ICompChildRefPluginOptions[];
+  components: IDynamicRefPluginOptions[];
   directives: IDirecChildRefPluginOptions[];
   options: {
     input: IComponentInputMap;
@@ -65,20 +75,17 @@ export interface ICompChildRefPluginOptions {
   };
 }
 
-export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
-  provider: keyof IFrameworkDepts;
-  components?: IComponentPluginOptions<any>[];
-  directives?: IDirectivePluginOptions<any>[];
-  children?: ICompChildRefPluginOptions[];
-  dependencies?: { [prop: string]: any };
+export interface ICompositeChildRefPluginOptions {
+  /** entity id */
+  refEntityId: string;
+  /** entity name will emit into source code */
+  entityName: string;
+  options: {
+    input: IComponentInputMap;
+  };
 }
 
-export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
-  id: string;
-  provider: keyof IFrameworkDepts;
-  template: T;
-  input?: IDirectiveInputMap;
-}
+export type IDynamicRefPluginOptions = ICompChildRefPluginOptions | ICompositeChildRefPluginOptions;
 
 export interface IBasicEntityProvider {
   attachInstance(
@@ -107,24 +114,6 @@ export interface IBasicEntityProvider {
     funcs: ts.FunctionDeclaration[],
   ): ts.FunctionDeclaration[];
   afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
-}
-
-export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
-  attach?: IComponentAttachMap;
-  passContext: SourceFileContext<IBasicEntityProvider>;
-}
-
-export interface IComponentPropertiesOptions {
-  input: IDirectiveInputMap;
-  attach: IComponentAttachMap;
-  props: IComponentPropMap;
-}
-
-export interface IRootComponentCreateOptions extends IComponentCreateOptions {
-  components?: IComponentCreateOptions[];
-  directives?: IDirectiveCreateOptions[];
-  children?: ICompChildRefPluginOptions[];
-  attach: { [prop: string]: any };
 }
 
 export interface IEwsEntity {

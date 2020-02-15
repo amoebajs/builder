@@ -7,6 +7,7 @@ import {
   IInnerDirectiveChildRef,
   Injectable,
   SourceFileContext,
+  IInnerCompositionChildRef,
 } from "../../core";
 import { REACT } from "../../utils";
 import { ReactDirective } from "../entities";
@@ -21,7 +22,7 @@ export class ReactEntityProvider extends BasicEntityProvider {
 
   public async attachInstance(
     context: SourceFileContext<IBasicEntityProvider>,
-    ref: IInnerCompnentChildRef | IInnerDirectiveChildRef,
+    ref: IInnerCompnentChildRef | IInnerCompositionChildRef | IInnerDirectiveChildRef,
   ): Promise<any> {
     const instance = await super.attachInstance(context, ref);
     if (ref.__etype === "directiveChildRef") {

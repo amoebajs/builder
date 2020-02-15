@@ -35,11 +35,19 @@ export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEws
     attach: IComponentAttachMap;
     props: IComponentPropMap;
   };
-  readonly __refComponents: IInnerCompnentChildRef[];
+  readonly __refComponents: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
   readonly __refDirectives: IInnerDirectiveChildRef[];
 }
 
 export interface IDirectiveChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"directiveChildRef"> {
+  readonly __options: {
+    input: IDirectiveInputMap;
+  };
+}
+
+export interface ICompositionChildRefPrivates
+  extends IBasicChildRefPrivates,
+    IEwsEntityPrivates<"compositionChildRef"> {
   readonly __options: {
     input: IDirectiveInputMap;
   };
@@ -53,6 +61,11 @@ export interface IInnerCompnentChildRef
 export interface IInnerDirectiveChildRef
   extends IBasicChildRef,
     IDirectiveChildRefPrivates,
+    IBasicChildRefProtectedHooks {}
+
+export interface IInnerCompositionChildRef
+  extends IBasicChildRef,
+    ICompositionChildRefPrivates,
     IBasicChildRefProtectedHooks {}
 
 export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {

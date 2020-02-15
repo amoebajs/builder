@@ -15,6 +15,8 @@ import {
   SourceFileBasicContext,
   WebpackConfig,
   ReactReconcilerEngine,
+  BasicCompositionChildRef,
+  ReactComposition,
 } from "../providers";
 import {
   DeclarationGenerator,
@@ -35,6 +37,9 @@ import {
   getInjectScope,
   resolveDepts,
   ReconcilerEngine,
+  BasicComponent,
+  BasicDirective,
+  BasicComposition,
 } from "../core";
 
 export interface IFactoryOptions {
@@ -77,13 +82,18 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(HtmlBundle);
     this.useProvider(Builder);
     this.useProvider(BasicEntityProvider);
+    this.useProvider(BasicComponent);
+    this.useProvider(BasicDirective);
+    this.useProvider(BasicComposition);
     this.useProvider(ReactDirective);
     this.useProvider(ReactComponent);
+    this.useProvider(ReactComposition);
     this.useProvider(BasicHelper);
     this.useProvider(ReactHelper);
     this.useProvider(ReactRender);
     this.useProvider(BasicDirectiveChildRef);
     this.useProvider(BasicComponentChildRef);
+    this.useProvider(BasicCompositionChildRef);
     this.useProvider(SourceFileContext, SourceFileBasicContext);
     this.useProvider(NodeGenerator);
     this.useProvider(StatementGenerator);
