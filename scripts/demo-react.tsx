@@ -1,4 +1,5 @@
 import React from "react";
+import ts from "typescript";
 import {
   Factory,
   ReconcilerEngine,
@@ -9,6 +10,7 @@ import {
   Group,
   Input,
   useReconciler,
+  Module,
 } from "../src";
 
 const DemoText = (props: any) => {
@@ -162,33 +164,43 @@ export class BasicElement extends ReactComponent {
   }
 }
 
+@Module({
+  name: "?????????",
+  provider: "react",
+  components: [BasicElement],
+})
+class DemoModule {}
+
 const BasicEle = useReconciler(BasicElement);
 
 async function run() {
-  const fac = new Factory().parse();
-  const context = fac.builder.get(SourceFileContext);
+  const fac = new Factory().useModule(DemoModule).parse();
+  const context = fac.builder.get(SourceFileContext).setProvider("react");
   const newEngine = fac.builder.get(ReconcilerEngine);
   const Engine = newEngine.createEngine({ context });
-  const container = await Engine.render(
-    <DemoContainer>
-      <DemoText>AAA</DemoText>
-      <DemoText>BBB</DemoText>
-      <BasicEle
-        layoutBackground="#ececec"
-        layoutHeight="100vh"
-        layoutWidth="100vw"
-        layoutMargin={{ all: "4px" }}
-        layoutPadding={{ all: "8px" }}
-        layoutBorderWidth={{ left: "40px", right: "40px" }}
-        layoutBorderStyle={{ left: "solid", right: "dashed" }}
-        layoutBorderColor={{ left: "#fea500", right: "#585858" }}
-      >
-        <DemoText>AAA</DemoText>
-        <DemoText>BBB</DemoText>
-      </BasicEle>
-    </DemoContainer>,
+  const container = Engine.parseComposite(
+    <BasicEle
+      layoutBackground="#ececec"
+      layoutHeight="100vh"
+      layoutWidth="100vw"
+      layoutMargin={{ all: "4px" }}
+      layoutPadding={{ all: "8px" }}
+      layoutBorderWidth={{ left: "40px", right: "40px" }}
+      layoutBorderStyle={{ left: "solid", right: "dashed" }}
+      layoutBorderColor={{ left: "#fea500", right: "#585858" }}
+    >
+      <BasicEle></BasicEle>
+      <BasicEle></BasicEle>
+      <BasicEle></BasicEle>
+    </BasicEle>,
   );
-  console.log(container);
+  // console.log(container);
+  context["rootSlot"] = "app";
+  context["root"] = container;
+  await context.callCompilation();
+  const sourceFile = await context.createSourceFile();
+  const result = ts.createPrinter({}).printFile(sourceFile);
+  console.log(result);
 }
 
 run();

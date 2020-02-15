@@ -64,7 +64,7 @@ export abstract class SourceFileContext<T extends any> {
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
   public abstract build(): this;
   public abstract getDependencies(): Record<string, string>;
-  public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): Promise<void>;
+  public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): this;
   public abstract callCompilation(): Promise<void>;
   public abstract createSourceFile(): Promise<ts.SourceFile>;
 }

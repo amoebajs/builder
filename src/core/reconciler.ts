@@ -1,8 +1,12 @@
-import { ReactNode } from "react";
-import { FiberRoot } from "react-reconciler";
+import ts from "typescript";
+import { ReactNode, ReactText } from "react";
 import { SourceFileContext, IBasicEntityProvider } from "./base";
 import { IInnerComponent } from "./component";
 import { IConstructor } from "./decorators";
+import { IInnerDirective } from "./directive";
+import { IInnerCompnentChildRef } from "./child-ref";
+
+type IChildNodes<T> = T | T[];
 
 export type ReconcilerTarget<T> = {
   [key in keyof T]: T[key] extends [infer K, infer V][]
@@ -12,47 +16,28 @@ export type ReconcilerTarget<T> = {
     : T[key];
 };
 
-export interface IProxyComponent {
+export interface IProxyEntity {
   __useReconciler?: true;
-  __target: IConstructor<IInnerComponent>;
+  __target: IConstructor<IInnerComponent | IInnerDirective>;
 }
-
-export type IType = IProxyComponent;
-
-export interface IProps {
-  props: Record<string, any>;
-  inputs: Record<string, any>;
-  attaches: Record<string, any>;
-}
-
-export interface IContainer {
-  _rootContainer?: FiberRoot;
-}
-
-export interface IInstance {}
-
-export interface ITextInstance {}
-
-export interface IHydratableInstance {}
-
-export interface IPublicInstance {}
-
-export interface IHostContext {}
-
-export interface IUpdatePayload {}
-
-export interface IChildSet {}
-
-export interface ITimeoutHandle {}
-
-export interface INoTimeout {}
 
 export interface IEngineOptions {
   context: SourceFileContext<IBasicEntityProvider>;
 }
 
+export interface IReactEntityPayload {
+  $$typeof: symbol;
+  type: IProxyEntity;
+  key: string | null;
+  ref: null;
+  props: Record<string, IChildNodes<IReactEntityPayload | ReactText>>;
+  _owner: null;
+  _store: null;
+}
+
 export interface IEngine {
-  render(element: JSX.Element): Promise<any>;
+  parseComposite(element: JSX.Element): IInnerCompnentChildRef;
+  parseGenerator(element: JSX.Element): ts.Node;
 }
 
 export function useReconciler<T>(

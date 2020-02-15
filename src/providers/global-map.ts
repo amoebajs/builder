@@ -48,11 +48,18 @@ export interface IModuleEntry<T = any> extends IMapEntry<T> {
 
 export interface IGlobalMap {
   modules: { [key: string]: IModuleEntry<any> };
+  globalComponentList: IMapEntry<any>[];
+  globalDirectiveList: IMapEntry<any>[];
 }
 
 @Injectable()
 export class GlobalMap {
-  public readonly maps: IGlobalMap = { modules: {} };
+  public readonly maps: IGlobalMap = {
+    modules: {},
+    globalComponentList: [],
+    globalDirectiveList: [],
+  };
+
   public readonly providers: Partial<IFrameworkStructure<any>> = {};
 
   public useProvider(name: keyof IFrameworkDepts, provider: typeof BasicEntityProvider) {
@@ -76,28 +83,30 @@ export class GlobalMap {
       metadata.components.forEach(i => {
         const meta = resolveComponent(i);
         const pageName = meta.name || "[unnamed]";
-        thisModule.components[pageName] = {
+        const component = (thisModule.components[pageName] = {
           name: pageName,
           displayName: meta.displayName || pageName,
           moduleName,
           value: register(i),
           provider: metadata.provider,
           metadata: <any>{ entity: meta },
-        };
+        });
+        this.maps.globalComponentList.push(component);
       });
     }
     if (metadata.directives) {
       metadata.directives.forEach(i => {
         const meta = resolveDirective(i);
         const pipeName = meta.name || "[unnamed]";
-        thisModule.directives[pipeName] = {
+        const directive = (thisModule.directives[pipeName] = {
           name: pipeName,
           displayName: meta.displayName || pipeName,
           moduleName,
           value: register(i),
           provider: metadata.provider,
           metadata: <any>{ entity: meta },
-        };
+        });
+        this.maps.globalDirectiveList.push(directive);
       });
     }
     return this;
@@ -113,6 +122,14 @@ export class GlobalMap {
 
   public getDirective(module: string, name: string): IMapEntry<any> {
     return this.getModule(module).directives[name];
+  }
+
+  public getComponentByType(component: InjectDIToken<any>): IMapEntry<any> {
+    return this.maps.globalComponentList.find(i => i.value === component)!;
+  }
+
+  public getDirectiveByType(directive: InjectDIToken<any>): IMapEntry<any> {
+    return this.maps.globalDirectiveList.find(i => i.value === directive)!;
   }
 
   public getProvider(name: keyof IFrameworkDepts): typeof BasicEntityProvider {

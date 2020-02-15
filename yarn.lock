@@ -731,13 +731,6 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-reconciler@^0.18.0":
-  version "0.18.0"
-  resolved "https://registry.npm.taobao.org/@types/react-reconciler/download/@types/react-reconciler-0.18.0.tgz#fce2b444103f44904e73eba349ac6552e2771f64"
-  integrity sha1-/OK0RBA/RJBOc+ujSaxlUuJ3H2Q=
-  dependencies:
-    "@types/react" "*"
-
 "@types/react@*", "@types/react@^16.9.11":
   version "16.9.17"
   resolved "https://registry.npm.taobao.org/@types/react/download/@types/react-16.9.17.tgz?cache=0&sync_timestamp=1576825860124&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Freact%2Fdownload%2F%40types%2Freact-16.9.17.tgz#58f0cc0e9ec2425d1441dd7b623421a867aa253e"
@@ -6388,16 +6381,6 @@ react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.npm.taobao.org/react-lifecycles-compat/download/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha1-TxonOv38jzSIqMUWv9p4+HI1I2I=
-
-react-reconciler@0.24.0:
-  version "0.24.0"
-  resolved "https://registry.npm.taobao.org/react-reconciler/download/react-reconciler-0.24.0.tgz#5a396b2c2f5efe8554134a5935f49f546723f2dd"
-  integrity sha1-WjlrLC9e/oVUE0pZNfSfVGcj8t0=
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.2"
-    scheduler "^0.18.0"
 
 react-transition-group@^2.6.0:
   version "2.9.0"
