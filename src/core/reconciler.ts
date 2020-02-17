@@ -19,7 +19,7 @@ export type ReconcilerTarget<T> = {
 export type ReconcilerElement<T> = IConstructor<
   React.PureComponent<Partial<ReconcilerTarget<T & { children: ReactNode | ReactNode[] }>>, {}>
 > &
-  Record<string, { source: IConstructor<any>; key: string }>;
+  Record<string, React.PureComponent<any>>;
 
 export interface IProxyEntity {
   __useReconciler?: true;
