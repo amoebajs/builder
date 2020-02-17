@@ -57,12 +57,14 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
     const instance: IInnerComposition = await super.bootstrap();
     await instance.onInit();
     // 非根组件，尝试优化shake重复代码
-    if (this.__context.root.__entityId !== this.__entityId) {
-      const componentName = decideComponentName(this.__context, <any>this);
-      if (componentName !== this.__entityId) {
-        return instance;
-      }
-    }
+    // 与自定义jsx解析引擎有冲突，赞数关闭优化
+    // 后续考虑优化办法
+    // if (this.__context.root.__entityId !== this.__entityId) {
+    //   const componentName = decideComponentName(this.__context, <any>this);
+    //   if (componentName !== this.__entityId) {
+    //     return instance;
+    //   }
+    // }
     const compRef = await instance.onEmit(<any>this);
     if (compRef) {
       await compRef.onInit();
@@ -100,21 +102,22 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async bootstrap() {
     const instance: IInnerComponent = await super.bootstrap();
-    // instance.setScopeId(this.__entityId);
     await instance.onInit();
     // 非根组件，尝试优化shake重复代码
-    if (this.__context.root.__entityId !== this.__entityId) {
-      const componentName = decideComponentName(this.__context, <any>this);
-      // if (this.__refId === "GridLayout") {
-      //   console.log([componentName, this.__entityId]);
-      // }
-      if (componentName !== this.__entityId) {
-        return instance;
-      }
-    }
+    // 与自定义jsx解析引擎有冲突，赞数关闭优化
+    // 后续考虑优化办法
+    // if (this.__context.root.__entityId !== this.__entityId) {
+    //   const componentName = decideComponentName(this.__context, <any>this);
+    //   if (componentName !== this.__entityId) {
+    //     return instance;
+    //   }
+    // }
     for (const component of this.__refComponents) {
       instance.__children.push({
-        component: decideComponentName(this.__context, component),
+        // 与自定义jsx解析引擎有冲突，赞数关闭优化
+        // 后续考虑优化办法
+        // component: decideComponentName(this.__context, component),
+        component: component.__entityId,
         id: component.__entityId,
         props: { ...(<any>component.__options).props },
       });
@@ -123,10 +126,6 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     for (const directive of this.__refDirectives) {
       await directive.bootstrap();
     }
-    // if (this.__context.root.__entityId !== this.__entityId && this.__refId === "GridLayout") {
-    //   console.log("render");
-    //   console.log(instance);
-    // }
     await instance.onChildrenRender();
     await instance.onRender();
     return instance;

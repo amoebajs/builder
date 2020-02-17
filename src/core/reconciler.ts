@@ -1,12 +1,12 @@
 import ts from "typescript";
-import { ReactNode, ReactText } from "react";
+import { ReactText } from "react";
 import { SourceFileContext, IBasicEntityProvider } from "./base";
 import { IInnerComponent } from "./component";
 import { IConstructor } from "./decorators";
 import { IInnerDirective } from "./directive";
 import { IInnerCompnentChildRef } from "./child-ref";
 
-type IChildNodes<T> = T | T[];
+export type IChildNodes<T> = T | T[];
 
 export type ReconcilerTarget<T> = {
   [key in keyof T]: T[key] extends [infer K, infer V][]
@@ -16,10 +16,21 @@ export type ReconcilerTarget<T> = {
     : T[key];
 };
 
-export type ReconcilerElement<T> = IConstructor<
-  React.PureComponent<Partial<ReconcilerTarget<T & { children: ReactNode | ReactNode[] }>>, {}>
-> &
-  Record<string, IConstructor<React.PureComponent<any>>>;
+export type ReconcilerEach<T> = {
+  [key in keyof T]: IConstructor<React.PureComponent<{ value?: T[key]; children?: T[key] }, {}, {}>>;
+};
+
+export interface ReconcilerContainer {
+  Attaches: IConstructor<React.PureComponent<{}, {}, {}>>;
+  Inputs: IConstructor<React.PureComponent<{}, {}, {}>>;
+}
+
+export interface IReconcilerElement {}
+
+export type ReconcilerElement<T> = IConstructor<React.PureComponent<any, {}, {}>> &
+  ReconcilerEach<T> &
+  ReconcilerContainer &
+  Record<string, IConstructor<React.PureComponent<any, {}, {}>>>;
 
 export interface IProxyEntity {
   __useReconciler?: true;
@@ -52,7 +63,7 @@ export interface IEngine {
   parseGenerator(element: JSX.Element): ts.Node;
 }
 
-export function useReconciler<T, A>(ctor: IConstructor<T>): ReconcilerElement<T> {
+export function useReconciler<T>(ctor: IConstructor<T>): ReconcilerElement<T> {
   const innerMap: Record<string, Function> = {};
   return new Proxy<any>(ctor, {
     get(target, key: string) {
@@ -63,18 +74,14 @@ export function useReconciler<T, A>(ctor: IConstructor<T>): ReconcilerElement<T>
         return target;
       }
       if (!innerMap[key]) {
-        const proxy = (innerMap[key] = useReconciler(<any>function() {}));
-        innerMap[key] = new Proxy(proxy, {
-          get(_target, _key: string) {
-            if (_key === "__key") {
-              return key;
-            }
-            if (_key === "__parent") {
-              return target;
-            }
-            return _target[_key];
-          },
+        const proxy: any = function() {};
+        Object.defineProperties(proxy, {
+          __key: { value: key },
+          __parent: { value: target },
+          __target: { value: proxy },
+          __useReconciler: { value: true },
         });
+        innerMap[key] = proxy;
       }
       return innerMap[key];
     },

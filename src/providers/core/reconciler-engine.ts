@@ -18,6 +18,7 @@ import {
   resolveAttachProperties,
   IProxyEntity,
   IConstructor,
+  IChildNodes,
 } from "../../core";
 import { BasicComponentChildRef, BasicDirectiveChildRef } from "../entities";
 import { setBaseChildRefInfo } from "./context";
@@ -64,13 +65,21 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     }
     // 附加属性
     if (this.ifIsAttachExpression(token, parent)) {
-      return this.resolveAttachProperty(token.__key!, props.value, parent!);
+      return this.resolveAttachProperty(props, parent!);
+    }
+    // 附加属性
+    if (this.ifIsInputExpression(token, parent)) {
+      return this.resolveInputProperty(props, parent!);
     }
     throw new Error("invalid directive or component.");
   }
 
   private ifIsAttachExpression(token: IProxyEntity, parent: IParent | undefined) {
-    return parent && token.__parent && token.__parent !== parent.target.__refConstructor;
+    return parent && token.__parent && token.__parent !== parent.target.__refConstructor && token.__key === "Attaches";
+  }
+
+  private ifIsInputExpression(token: IProxyEntity, parent: IParent | undefined) {
+    return parent && token.__parent && token.__parent === parent.target.__refConstructor && token.__key === "Inputs";
   }
 
   private resolveComponent(
@@ -86,8 +95,6 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       imported = { moduleName: moduleName!, templateName: name, type: <any>ctor, importId: createEntityId() };
       context.importComponents([imported]);
     }
-    const inputs = resolveInputProperties(ctor);
-    const inputEntries = Object.entries(inputs);
     const ref = this.injector.get(BasicComponentChildRef);
     const { key: _, children, ...otherProps } = props;
     const options: ICompChildRefPluginOptions = {
@@ -97,28 +104,27 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       components: [],
       options: { input: {}, attach: {}, props: {} },
     };
-    // props into inputs
+    // props into props
     const entries = Object.entries(otherProps);
-    const newInputs: Record<string, any> = {};
+    const newProps: Record<string, any> = {};
     for (const [key, value] of entries) {
-      const found = inputEntries.find(i => i[1].realName === key);
-      if (!found) continue;
-      const [, define] = found;
-      let insertTarget = newInputs[define.name.value];
-      if (define.group) {
-        insertTarget = newInputs[define.group] || (newInputs[define.group] = {});
-      }
-      let expr: any = value;
-      if (is.object(value) && define.type.meta === "map") {
-        expr = Object.entries(value);
-      }
-      insertTarget[define.name.value] = {
+      newProps[key] = {
         type: "literal",
-        expression: expr,
+        expression: value,
       };
     }
-    options.options.input = newInputs;
+    options.options.props = newProps;
     setBaseChildRefInfo(context, <any>ref, options, ctor, parent?.target);
+    this.resolveComponentChildNodes(ref, context, children, parent);
+    return <IInnerCompnentChildRef>(<unknown>ref);
+  }
+
+  private resolveComponentChildNodes(
+    ref: BasicComponentChildRef<any>,
+    context: IResolve["context"],
+    children: IChildNodes<string | number | IReactEntityPayload>,
+    parent?: IParent,
+  ) {
     const childNodes = (<IReactEntityPayload[]>(
       ((is.array(children) ? children : [children]).filter(i => typeof i === "object") as unknown[])
     ))
@@ -132,7 +138,6 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       .filter(i => !!i);
     ref["__refComponents"] = childNodes.filter(c => c["__etype"] === "componentChildRef") as IInnerCompnentChildRef[];
     ref["__refDirectives"] = childNodes.filter(c => c["__etype"] === "directiveChildRef") as IInnerDirectiveChildRef[];
-    return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
   private resolveDirective(ctor: IConstructor<any>, context: IResolve["context"], parent: IResolve["parent"]) {
@@ -152,19 +157,63 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     return <IInnerDirectiveChildRef>(<unknown>ref);
   }
 
-  private resolveAttachProperty(attachName: string, value: any, parent: IParent) {
+  private resolveAttachProperty(props: IReactEntityPayload["props"], parent: IParent) {
     // 附加属性
     if (!parent.parent?.target) throw new Error("attach property invalid.");
     const host = parent.parent.target;
     const attaches = resolveAttachProperties(host.__refConstructor);
-    const found = Object.entries(attaches).find(i => i[1].name.value === attachName);
-    if (found) {
-      const attach = host.__options.attach[attachName] || {
-        type: "childRefs",
-        expression: [],
-      };
-      attach.expression.push({ id: parent.target.__entityId, value });
-      host.__options.attach[attachName] = attach;
+    const { children } = props;
+    const childNodes = is.array(children) ? children : [children];
+    for (const node of childNodes) {
+      if (!is.object(node)) continue;
+      const attachName = node.type.__key!;
+      const attachValue = node.props.value;
+      const found = Object.entries(attaches).find(i => i[1].realName === attachName);
+      if (found) {
+        const propName = found[1].name.value;
+        const attach = host.__options.attach[propName] || {
+          type: "childRefs",
+          expression: [],
+        };
+        attach.expression.push({ id: parent.target.__entityId, value: <any>attachValue });
+        host.__options.attach[propName] = attach;
+      }
+    }
+    return <any>null;
+  }
+
+  private resolveInputProperty(props: IReactEntityPayload["props"], parent: IParent) {
+    // 附加属性
+    if (!parent.target) throw new Error("attach property invalid.");
+    const host = parent.target;
+    const inputs = resolveInputProperties(host.__refConstructor);
+    const { children } = props;
+    const childNodes = is.array(children) ? children : [children];
+    for (const node of childNodes) {
+      if (!is.object(node)) continue;
+      const inputName = node.type.__key!;
+      let inputValue: any = node.props.value;
+      const found = Object.entries(inputs).find(i => i[1].realName === inputName);
+      if (found) {
+        const [propName, foundDefine] = found;
+        let [group, pName] = propName.split(".");
+        let container: Record<string, any>;
+        if (pName) {
+          container = host.__options.input[group] || (host.__options.input[group] = {});
+        } else {
+          pName = group;
+          container = host.__options.input || (host.__options.input = {});
+        }
+        const input = container[pName] || {
+          type: "literal",
+          expression: null,
+        };
+        if (foundDefine.type.meta === "map") {
+          inputValue = node.props.map ? Object.entries(node.props.map) : inputValue;
+        }
+        input.expression = inputValue;
+        container[pName] = input;
+      }
     }
     return <any>null;
   }
