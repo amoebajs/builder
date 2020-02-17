@@ -8,6 +8,7 @@ import {
   ReconcilerEngine,
   ICompositionCreateOptions,
   IInnerCompositionChildRef,
+  ISourceBuildOptions,
 } from "../../core";
 import {
   EntityType,
@@ -25,6 +26,7 @@ import {
 import { NotFoundError } from "../../errors";
 import { GlobalMap, IMapEntry } from "../global-map";
 import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
+import { is } from "../../utils";
 
 interface IContextTreeNode {
   scopeid: string | symbol;
@@ -74,8 +76,11 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this;
   }
 
-  public build() {
+  public build(options: Partial<ISourceBuildOptions> = {}) {
     this.dependencies = this._resolveDependencies();
+    if (!is.nullOrUndefined(options.codeShakes)) {
+      this.useCodeShakes = options.codeShakes;
+    }
     return this;
   }
 

@@ -68,6 +68,7 @@ export interface IPropertyBase extends IUnitBase {
 export interface ITypedSyntaxExpression<E extends unknown = never, P extends unknown = unknown> {
   type: E;
   syntaxType?: TypeLiteralMeta;
+  syntaxExtends?: Record<string, any>;
   expression: P;
 }
 

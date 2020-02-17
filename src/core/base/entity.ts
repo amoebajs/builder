@@ -184,7 +184,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   public setScopeId(id: string): this {
-    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
+    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z_]{7,256}$/.test(id)) throw new BasicError("entity id is invalid.");
     this.__scope = id;
     return this;
   }

@@ -35,6 +35,7 @@ interface IResolve {
   element: IReactEntityPayload;
   parent?: IParent;
   key?: string;
+  compositionKey?: string;
 }
 
 @Injectable(InjectScope.New)
@@ -47,16 +48,16 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
   }
 
   private resolveEntity(resolves: IResolve): IInnerCompnentChildRef | IInnerDirectiveChildRef {
-    const { $$typeof, type: token, props } = resolves.element;
+    const { $$typeof, type: token, props, key } = resolves.element;
     const isReactElement = $$typeof.toString() === "Symbol(react.element)";
     const isValidProxy = token.__useReconciler === true;
     if (!isReactElement || !isValidProxy) throw new Error("invalid entity composition.");
     const ctor = token.__target;
-    const { context, parent, key: entityId } = resolves;
+    const { context, parent, key: entityId, compositionKey: compId } = resolves;
     const compMeta = resolveComponent(ctor);
     if (compMeta.name) {
       // 标准组件生成器
-      return this.resolveComponent(entityId!, ctor, context, props, parent);
+      return this.resolveComponent(entityId!, compId!, key, ctor, context, props, parent);
     }
     const direMeta = resolveDirective(ctor);
     // 标准指令生成器
@@ -84,6 +85,8 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
 
   private resolveComponent(
     entityId: string,
+    compoid: string,
+    elementKey: string | null,
     ctor: IConstructor<any>,
     context: IResolve["context"],
     props: IReactEntityPayload["props"],
@@ -95,34 +98,52 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       imported = { moduleName: moduleName!, templateName: name, type: <any>ctor, importId: createEntityId() };
       context.importComponents([imported]);
     }
+    const prefix = compoid ? `${compoid}_` : "";
     const ref = this.injector.get(BasicComponentChildRef);
     const { key: _, children, ...otherProps } = props;
     const options: ICompChildRefPluginOptions = {
-      entityName: entityId || createEntityId(),
+      entityName: entityId || `${prefix}${elementKey || createEntityId()}`,
       refEntityId: imported.importId,
       directives: [],
       components: [],
       options: { input: {}, attach: {}, props: {} },
     };
-    // props into props
+    options.options.props = this.resolveProps(otherProps);
+    setBaseChildRefInfo(context, <any>ref, options, ctor, parent?.target);
+    this.resolveComponentChildNodes(ref, context, children, compoid, parent);
+    return <IInnerCompnentChildRef>(<unknown>ref);
+  }
+
+  private resolveProps(otherProps: { [x: string]: IChildNodes<string | number | IReactEntityPayload> }) {
     const entries = Object.entries(otherProps);
     const newProps: Record<string, any> = {};
     for (const [key, value] of entries) {
-      newProps[key] = {
+      const prop = (newProps[key] = {
         type: "literal",
         expression: value,
-      };
+        syntaxExtends: {},
+      });
+      // 解析props状态绑定
+      if (typeof value === "string") {
+        const result = /^(!)?([0-9a-zA-Z_\.]+)\s*\|\s*bind:(state|props)$/.exec(value);
+        if (result !== null) {
+          const reverse = result[1];
+          const vname = result[2];
+          const type = result[3];
+          prop.expression = vname;
+          prop.syntaxExtends = { reverse: reverse === "!" };
+          prop.type = type;
+        }
+      }
     }
-    options.options.props = newProps;
-    setBaseChildRefInfo(context, <any>ref, options, ctor, parent?.target);
-    this.resolveComponentChildNodes(ref, context, children, parent);
-    return <IInnerCompnentChildRef>(<unknown>ref);
+    return newProps;
   }
 
   private resolveComponentChildNodes(
     ref: BasicComponentChildRef<any>,
     context: IResolve["context"],
     children: IChildNodes<string | number | IReactEntityPayload>,
+    compoid?: string,
     parent?: IParent,
   ) {
     const childNodes = (<IReactEntityPayload[]>(
@@ -133,6 +154,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
           context,
           element: e,
           parent: { target: <IInnerCompnentChildRef>(<unknown>ref), parent },
+          compositionKey: compoid,
         }),
       )
       .filter(i => !!i);
@@ -167,7 +189,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     for (const node of childNodes) {
       if (!is.object(node)) continue;
       const attachName = node.type.__key!;
-      const attachValue = node.props.value;
+      const attachValue = node.props.value || node.props.children;
       const found = Object.entries(attaches).find(i => i[1].realName === attachName);
       if (found) {
         const propName = found[1].name.value;
@@ -192,7 +214,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     for (const node of childNodes) {
       if (!is.object(node)) continue;
       const inputName = node.type.__key!;
-      let inputValue: any = node.props.value;
+      let inputValue: any = node.props.value || node.props.children;
       const found = Object.entries(inputs).find(i => i[1].realName === inputName);
       if (found) {
         const [propName, foundDefine] = found;
@@ -230,6 +252,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
           element: <any>element,
           parent: !!parent ? { target: parent } : undefined,
           key,
+          compositionKey: key,
         }),
       parseGenerator(element: JSX.Element) {
         throw new Error("not implemented.");

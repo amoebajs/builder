@@ -103,8 +103,8 @@ export class Builder {
       .importComponents(mapComp(configs.components))
       .importDirectives(mapDire(configs.directives))
       .importCompositions(mapCpsi(configs.compositions))
-      .build();
-    await context.createRoot(mapComponentChild([configs.page])[0]);
+      .build({ codeShakes: true })
+      .createRoot(mapComponentChild([configs.page])[0]);
     await context.callCompilation();
     const sourceFile = await context.createSourceFile();
     const printer = ts.createPrinter();

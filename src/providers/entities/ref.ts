@@ -56,16 +56,19 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
   protected async bootstrap() {
     const instance: IInnerComposition = await super.bootstrap();
     await instance.onInit();
-    // 非根组件，尝试优化shake重复代码
-    // 与自定义jsx解析引擎有冲突，赞数关闭优化
-    // 后续考虑优化办法
-    // if (this.__context.root.__entityId !== this.__entityId) {
-    //   const componentName = decideComponentName(this.__context, <any>this);
-    //   if (componentName !== this.__entityId) {
-    //     return instance;
-    //   }
-    // }
     const compRef = await instance.onEmit(<any>this);
+    // 非根组件，尝试优化shake重复代码
+    // 后续考虑优化办法
+    if (this.__context.root.__entityId !== this.__entityId) {
+      const componentName = decideComponentName(this.__context, {
+        target: <any>this,
+        components: (compRef && compRef.__refComponents) || [],
+        directives: (compRef && compRef.__refDirectives) || [],
+      });
+      if (componentName !== this.__entityId) {
+        return instance;
+      }
+    }
     if (compRef) {
       await compRef.onInit();
       await compRef.bootstrap();
@@ -104,20 +107,26 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     const instance: IInnerComponent = await super.bootstrap();
     await instance.onInit();
     // 非根组件，尝试优化shake重复代码
-    // 与自定义jsx解析引擎有冲突，赞数关闭优化
     // 后续考虑优化办法
-    // if (this.__context.root.__entityId !== this.__entityId) {
-    //   const componentName = decideComponentName(this.__context, <any>this);
-    //   if (componentName !== this.__entityId) {
-    //     return instance;
-    //   }
-    // }
+    if (this.__context.root.__entityId !== this.__entityId) {
+      const componentName = decideComponentName(this.__context, {
+        target: <any>this,
+        directives: this.__refDirectives,
+        components: this.__refComponents,
+      });
+      if (componentName !== this.__entityId) {
+        return instance;
+      }
+    }
     for (const component of this.__refComponents) {
       instance.__children.push({
-        // 与自定义jsx解析引擎有冲突，赞数关闭优化
+        // 尝试优化shake重复代码
         // 后续考虑优化办法
-        // component: decideComponentName(this.__context, component),
-        component: component.__entityId,
+        component: decideComponentName(this.__context, {
+          target: component,
+          directives: (<IInnerCompnentChildRef>component).__refDirectives,
+          components: (<IInnerCompnentChildRef>component).__refComponents,
+        }),
         id: component.__entityId,
         props: { ...(<any>component.__options).props },
       });
@@ -143,16 +152,27 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
  * @param {IChildRef} i
  * @returns
  */
-function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef | IInnerCompositionChildRef) {
+function decideComponentName(
+  context: SourceFileContext<any>,
+  options: {
+    target: IInnerCompnentChildRef | IInnerCompositionChildRef;
+    components?: any[];
+    directives?: any[];
+  },
+) {
+  const i = options.target;
   const inputLen = Object.keys(i.__options.input).length;
   const attachLen = (<any>i.__options).attach && Object.keys((<any>i.__options).attach).length;
+  const compsLen = (options.components || []).length;
+  const direcLen = (options.directives || []).length;
   let defaultEntityId = i.__entityId;
-  // inputs/attaches 参数未定义，不重复生成组件
-  if (inputLen === 0 && attachLen === 0) {
-    defaultEntityId = context.defaultCompRefRecord[i.__refId];
+  if (!context["useCodeShakes"]) return defaultEntityId;
+  // 参数未定义，不重复生成组件
+  if (![inputLen, attachLen, compsLen, direcLen].some(i => i > 0)) {
+    defaultEntityId = context["defaultCompRefRecord"][i.__refId];
     if (defaultEntityId === void 0) {
       defaultEntityId = i.__entityId;
-      context.defaultCompRefRecord[i.__refId] = i.__entityId;
+      context["defaultCompRefRecord"][i.__refId] = i.__entityId;
     }
   }
   return defaultEntityId;

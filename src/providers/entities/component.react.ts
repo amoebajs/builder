@@ -292,15 +292,16 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   protected onChildrenPropResolved(name: string, prop: RecordValue<IComponentPropMap>, element: JsxElementGenerator) {
-    const { type: propType, expression: e } = prop;
+    const { type: propType, expression: e, syntaxExtends = {} } = prop;
+    const reverse = syntaxExtends.reverse || false;
     const context = this.getState(BasicState.ContextInfo);
     switch (propType) {
       case "state":
         const [p01, ...ps] = String(e).split(".");
-        element.addJsxAttr(name, `${context.name}.state.` + [p01, "value", ...ps].join("."));
+        element.addJsxAttr(name, `${reverse ? "!" : ""}${context.name}.state.` + [p01, "value", ...ps].join("."));
         break;
       case "props":
-        element.addJsxAttr(name, "props." + e);
+        element.addJsxAttr(name, `${reverse ? "!" : ""}props.${e}`);
         break;
       case "literal":
         element.addJsxAttr(name, () => this.helper.createLiteral(e));

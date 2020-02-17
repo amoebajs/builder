@@ -5,6 +5,7 @@ import { IInnerComponent } from "./component";
 import { IConstructor } from "./decorators";
 import { IInnerDirective } from "./directive";
 import { IInnerCompnentChildRef } from "./child-ref";
+import { PropAttach } from "./libs";
 
 export type IChildNodes<T> = T | T[];
 
@@ -17,7 +18,21 @@ export type ReconcilerTarget<T> = {
 };
 
 export type ReconcilerEach<T> = {
-  [key in keyof T]: IConstructor<React.PureComponent<{ value?: T[key]; children?: T[key] }, {}, {}>>;
+  [key in keyof T]: IConstructor<
+    React.PureComponent<
+      {
+        value?: T[key] extends PropAttach<infer P> ? P : T[key];
+        map?: T[key] extends [infer K, infer V][]
+          ? K extends string | number | symbol
+            ? Partial<Record<K, V>> | [K, V][]
+            : [K, V][]
+          : T[key];
+        children?: T[key] extends PropAttach<infer P> ? P : T[key];
+      },
+      {},
+      {}
+    >
+  >;
 };
 
 export interface ReconcilerContainer {

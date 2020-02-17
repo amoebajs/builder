@@ -53,6 +53,10 @@ export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   container: ENTITY;
 }
 
+export interface ISourceBuildOptions {
+  codeShakes: boolean;
+}
+
 export interface IScopedContext
   extends Map<string | symbol, IScopeStructure<EntityType, Partial<IFinalScopedContext>>> {}
 
@@ -67,12 +71,13 @@ export abstract class SourceFileContext<T extends any> {
   public directives!: IDirectiveCreateOptions[];
   public compositions!: ICompositionCreateOptions[];
   public dependencies!: Record<string, string>;
-  public defaultCompRefRecord: Record<string, string> = {};
+  protected defaultCompRefRecord: Record<string, string> = {};
+  protected useCodeShakes!: boolean;
   public abstract setProvider(provider: string): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
   public abstract importCompositions(compositions: ICompositionCreateOptions[]): this;
-  public abstract build(): this;
+  public abstract build(options?: Partial<ISourceBuildOptions>): this;
   public abstract getDependencies(): Record<string, string>;
   public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): this;
   public abstract callCompilation(): Promise<void>;
