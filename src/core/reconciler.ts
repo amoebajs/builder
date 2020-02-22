@@ -9,43 +9,45 @@ import { PropAttach } from "./libs";
 
 export type IChildNodes<T> = T | T[];
 
-export type ReconcilerTarget<T> = {
-  [key in keyof T]: T[key] extends [infer K, infer V][]
-    ? K extends string | number | symbol
-      ? Partial<Record<K, V>> | [K, V][]
-      : [K, V][]
-    : T[key];
-};
+export type ReconcilerInputMap<T> = T extends [infer K, infer V][]
+  ? K extends string | number | symbol
+    ? Partial<Record<K, V>> | [K, V][]
+    : never
+  : never;
 
-export type ReconcilerEach<T> = {
-  [key in keyof T]: IConstructor<
+export type ReconcilerInputValue<T> = T extends PropAttach<infer P> ? P : T;
+
+export interface ReconcilerChildNode<T>
+  extends IConstructor<
     React.PureComponent<
       {
-        value?: T[key] extends PropAttach<infer P> ? P : T[key];
-        map?: T[key] extends [infer K, infer V][]
-          ? K extends string | number | symbol
-            ? Partial<Record<K, V>> | [K, V][]
-            : [K, V][]
-          : T[key];
-        children?: T[key] extends PropAttach<infer P> ? P : T[key];
+        value?: ReconcilerInputValue<T>;
+        map?: ReconcilerInputMap<T>;
+        children?: ReconcilerInputValue<T>;
       },
       {},
       {}
     >
-  >;
+  > {}
+
+export type ReconcilerChildNodes<T> = {
+  [key in keyof T]: ReconcilerChildNode<T[key]>;
 };
 
 export interface ReconcilerContainer {
+  /**
+   * ## Children Attach Properties Container
+   */
   Attaches: IConstructor<React.PureComponent<{}, {}, {}>>;
+  /**
+   * ## Template Input Properties Container
+   */
   Inputs: IConstructor<React.PureComponent<{}, {}, {}>>;
 }
 
-export interface IReconcilerElement {}
+export interface ReconcilerDefinition extends IConstructor<React.PureComponent<{}, {}, {}>>, ReconcilerContainer {}
 
-export type ReconcilerElement<T> = IConstructor<React.PureComponent<any, {}, {}>> &
-  ReconcilerEach<T> &
-  ReconcilerContainer &
-  Record<string, IConstructor<React.PureComponent<any, {}, {}>>>;
+export type ReconcilerElement<T> = ReconcilerChildNodes<T> & ReconcilerDefinition;
 
 export interface IProxyEntity {
   __useReconciler?: true;
