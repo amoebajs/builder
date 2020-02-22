@@ -11,9 +11,9 @@ import {
   Injectable,
   SourceFileContext,
   ICompositionChildRefPrivates,
-  IInnerCompositionChildRef,
+  IInnerSolidEntity,
+  IInnerComposition,
 } from "../../core";
-import { IInnerComposition } from "../../core/composition";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
@@ -43,6 +43,7 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
   protected __options: ICompositionChildRefPrivates["__options"] = {
     input: {},
   };
+  protected __refComponents: ICompositionChildRefPrivates["__refComponents"] = [];
 
   public get entityInputs(): ICompositionChildRefPrivates["__options"]["input"] {
     return this.__options.input;
@@ -58,7 +59,6 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
     await instance.onInit();
     const compRef = await instance.onEmit(<any>this);
     // 非根组件，尝试优化shake重复代码
-    // 后续考虑优化办法
     if (this.__context.root.__entityId !== this.__entityId) {
       const componentName = decideComponentName(this.__context, {
         target: <any>this,
@@ -94,10 +94,7 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async onInit() {
     await super.onInit();
-    const refs: (IInnerCompnentChildRef | IInnerDirectiveChildRef | IInnerCompositionChildRef)[] = [
-      ...this.__refComponents,
-      ...this.__refDirectives,
-    ];
+    const refs: (IInnerSolidEntity | IInnerDirectiveChildRef)[] = [...this.__refComponents, ...this.__refDirectives];
     for (const ref of refs) {
       await ref.onInit();
     }
@@ -106,9 +103,10 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   protected async bootstrap() {
     const instance: IInnerComponent = await super.bootstrap();
     await instance.onInit();
-    // 非根组件，尝试优化shake重复代码
-    // 后续考虑优化办法
-    if (this.__context.root.__entityId !== this.__entityId) {
+    // __entityId与root.__entityId不同，证明是非根组件
+    // entityId和__entityId相同，无法证明是否已经执行过代码优化
+    // 满足上面两个条件，尝试优化shake重复代码
+    if (this.__context.root.__entityId !== this.__entityId && this.__entityId === this.entityId) {
       const componentName = decideComponentName(this.__context, {
         target: <any>this,
         directives: this.__refDirectives,
@@ -121,7 +119,9 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     for (const component of this.__refComponents) {
       instance.__children.push({
         // 尝试优化shake重复代码
-        // 后续考虑优化办法
+        // 优化成功后，entityId和__entityId将会不在相同
+        // entityId代表当前范围，表现为element的key字段
+        // __entityId则表现为真正引用的组件名称
         component: decideComponentName(this.__context, {
           target: component,
           directives: (<IInnerCompnentChildRef>component).__refDirectives,
@@ -155,25 +155,17 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 function decideComponentName(
   context: SourceFileContext<any>,
   options: {
-    target: IInnerCompnentChildRef | IInnerCompositionChildRef;
+    target: IInnerSolidEntity;
     components?: any[];
     directives?: any[];
   },
 ) {
   const i = options.target;
-  const inputLen = Object.keys(i.__options.input).length;
-  const attachLen = (<any>i.__options).attach && Object.keys((<any>i.__options).attach).length;
   const compsLen = (options.components || []).length;
   const direcLen = (options.directives || []).length;
   let defaultEntityId = i.__entityId;
   if (!context["useCodeShakes"]) return defaultEntityId;
+  if (compsLen !== 0 || direcLen !== 0) return defaultEntityId;
   // 参数未定义，不重复生成组件
-  if (![inputLen, attachLen, compsLen, direcLen].some(i => i > 0)) {
-    defaultEntityId = context["defaultCompRefRecord"][i.__refId];
-    if (defaultEntityId === void 0) {
-      defaultEntityId = i.__entityId;
-      context["defaultCompRefRecord"][i.__refId] = i.__entityId;
-    }
-  }
-  return defaultEntityId;
+  return context.getDefaultEntityId(i);
 }

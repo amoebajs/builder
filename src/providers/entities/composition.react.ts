@@ -14,6 +14,7 @@ export abstract class ReactComposition<T extends IPureObject = IPureObject> exte
       const instance = this.__context.reconciler.createEngine({ context: this.__context }).parseComposite(result, {
         parent: options.__parentRef,
         key: options.__entityId,
+        children: options.__refComponents || [],
       });
       instance.setScopeId(options.__entityId);
       (<any>instance).__entityId = options.__entityId;

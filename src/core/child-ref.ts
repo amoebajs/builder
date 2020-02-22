@@ -51,6 +51,7 @@ export interface ICompositionChildRefPrivates
   readonly __options: {
     input: IDirectiveInputMap;
   };
+  readonly __refComponents: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
 }
 
 export interface IInnerCompnentChildRef

@@ -1,10 +1,10 @@
 import ts from "typescript";
-import { ReactText } from "react";
+import { ReactText, PureComponent } from "react";
 import { SourceFileContext, IBasicEntityProvider } from "./base";
 import { IInnerComponent } from "./component";
 import { IConstructor } from "./decorators";
 import { IInnerDirective } from "./directive";
-import { IInnerCompnentChildRef } from "./child-ref";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "./child-ref";
 import { PropAttach } from "./libs";
 
 export type IChildNodes<T> = T | T[];
@@ -72,6 +72,7 @@ export interface IReactEntityPayload {
 
 export interface IReconcilerExtends {
   parent?: IInnerCompnentChildRef;
+  children?: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
   key?: string;
 }
 
@@ -107,6 +108,14 @@ export function useReconciler<T>(ctor: IConstructor<T>): ReconcilerElement<T> {
     },
   });
 }
+
+export class ChildrenSlotComponent extends PureComponent<{}, {}, {}> {}
+
+/**
+ * ## Reconciler ChildNodes Slot Container
+ * @support `Component` | `Composition`
+ **/
+export const ChildrenSlot = useReconciler(ChildrenSlotComponent);
 
 export abstract class ReconcilerEngine {
   abstract createEngine(options: IEngineOptions): IEngine;

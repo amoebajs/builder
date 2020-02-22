@@ -1,4 +1,6 @@
 import ts from "typescript";
+import isEqual from "lodash/isEqual";
+import pick from "lodash/pick";
 import { InjectScope, Injector } from "@bonbons/di";
 import {
   EntityConstructor,
@@ -9,6 +11,7 @@ import {
   ICompositionCreateOptions,
   IInnerCompositionChildRef,
   ISourceBuildOptions,
+  IInnerSolidEntity,
 } from "../../core";
 import {
   EntityType,
@@ -37,6 +40,8 @@ interface IContextTreeNode {
 
 @Injectable(InjectScope.New)
 export class SourceFileBasicContext<T extends IBasicEntityProvider> extends SourceFileContext<T> {
+  private uniqueList: Record<string, IInnerSolidEntity[]> = {};
+
   constructor(
     public readonly reconciler: ReconcilerEngine,
     protected readonly injector: Injector,
@@ -54,6 +59,22 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
       classes: [],
       statements: [],
     };
+  }
+
+  public getDefaultEntityId(entity: IInnerSolidEntity): string {
+    const keepList = this.uniqueList[entity.__refId];
+    if (keepList) {
+      const found = keepList.find(i =>
+        isEqual(pick(i.__options, ["input", "attach"]), pick(entity.__options, ["input", "attach"])),
+      );
+      if (found) {
+        return found.__entityId;
+      }
+      keepList.push(entity);
+      return entity.__entityId;
+    }
+    this.uniqueList[entity.__refId] = [entity];
+    return entity.__entityId;
   }
 
   public setProvider(provider: string) {
@@ -193,6 +214,9 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     const target = this.compositions.find(i => i.importId === options.refEntityId)!;
     const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     setBaseChildRefInfo(this, <any>ref, options, value, parent);
+    for (const iterator of options.components) {
+      ref["__refComponents"].push(this.createComponentRef(iterator, <any>ref));
+    }
     return <IInnerCompositionChildRef>(<unknown>ref);
   }
 

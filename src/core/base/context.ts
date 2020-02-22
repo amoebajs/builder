@@ -60,6 +60,8 @@ export interface ISourceBuildOptions {
 export interface IScopedContext
   extends Map<string | symbol, IScopeStructure<EntityType, Partial<IFinalScopedContext>>> {}
 
+export type IInnerSolidEntity = IInnerCompnentChildRef | IInnerCompositionChildRef;
+
 export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
   public astContext!: IFinalAstContext;
@@ -71,8 +73,8 @@ export abstract class SourceFileContext<T extends any> {
   public directives!: IDirectiveCreateOptions[];
   public compositions!: ICompositionCreateOptions[];
   public dependencies!: Record<string, string>;
-  protected defaultCompRefRecord: Record<string, string> = {};
   protected useCodeShakes!: boolean;
+  public abstract getDefaultEntityId(entity: IInnerSolidEntity): string;
   public abstract setProvider(provider: string): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
