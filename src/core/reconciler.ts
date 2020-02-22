@@ -45,7 +45,7 @@ export interface ReconcilerContainer {
   Inputs: IConstructor<React.PureComponent<{}, {}, {}>>;
 }
 
-export interface ReconcilerDefinition extends IConstructor<React.PureComponent<{}, {}, {}>>, ReconcilerContainer {}
+export interface ReconcilerDefinition extends IConstructor<React.PureComponent<any, {}, {}>>, ReconcilerContainer {}
 
 export type ReconcilerElement<T> = ReconcilerChildNodes<T> & ReconcilerDefinition;
 
