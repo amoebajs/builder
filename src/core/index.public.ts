@@ -11,6 +11,7 @@ export {
   Input,
   Attach,
   Extends,
+  Require,
 } from "./decorators";
 export { IDirective, BasicDirective } from "./directive";
 export { IComponent, BasicComponent } from "./component";
