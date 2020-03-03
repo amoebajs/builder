@@ -297,7 +297,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 }
 
-function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
+export function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
   return Object.entries(inputs).reduce(
     (p, c) => ({
       ...p,
