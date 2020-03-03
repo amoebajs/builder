@@ -13,6 +13,8 @@ import {
   ICompositionChildRefPrivates,
   IInnerSolidEntity,
   IInnerComposition,
+  IAfterInit,
+  IAfterRequiresInit,
 } from "../../core";
 
 @Injectable(InjectScope.New)
@@ -86,6 +88,7 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   };
   protected __refComponents: IComponentChildRefPrivates["__refComponents"] = [];
   protected __refDirectives: IComponentChildRefPrivates["__refDirectives"] = [];
+  protected __refRequires: IComponentChildRefPrivates["__refRequires"] = [];
 
   constructor() {
     super();
@@ -103,6 +106,18 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   protected async bootstrap() {
     const instance: IInnerComponent = await super.bootstrap();
     await instance.onInit();
+    const postDirectives: IInnerDirectiveChildRef[] = [];
+    // 新增afterInit钩子
+    if (hasAfterInit(instance)) {
+      await instance.afterInit();
+    }
+    for (const func of this.__refRequires) {
+      postDirectives.push(func(instance));
+    }
+    // 新增afterReqsInit钩子
+    if (hasAfterReqsInit(instance)) {
+      await instance.afterRequiresInit();
+    }
     // __entityId与root.__entityId不同，证明是非根组件
     // entityId和__entityId相同，无法证明是否已经执行过代码优化
     // 满足上面两个条件，尝试优化shake重复代码
@@ -132,6 +147,7 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
       });
       await component.bootstrap();
     }
+    this.__refDirectives.push(...postDirectives);
     for (const directive of this.__refDirectives) {
       await directive.bootstrap();
     }
@@ -139,6 +155,14 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     await instance.onRender();
     return instance;
   }
+}
+
+function hasAfterInit(instance: any): instance is IAfterInit {
+  return "afterInit" in instance && typeof instance["afterInit"] === "function";
+}
+
+function hasAfterReqsInit(instance: any): instance is IAfterRequiresInit {
+  return "afterRequiresInit" in instance && typeof instance["afterRequiresInit"] === "function";
 }
 
 /**

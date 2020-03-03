@@ -30,6 +30,14 @@ export interface IChildElement {
   props: IComponentPropMap;
 }
 
+export interface IAfterInit {
+  afterInit(): Promise<void> | void;
+}
+
+export interface IAfterRequiresInit {
+  afterRequiresInit(): Promise<void> | void;
+}
+
 export abstract class BasicComponent<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   private readonly __children: IChildElement[] = [];
   // private readonly __compositions: BasicComposition[] = [];

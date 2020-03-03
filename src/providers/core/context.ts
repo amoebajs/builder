@@ -12,6 +12,8 @@ import {
   IInnerCompositionChildRef,
   ISourceBuildOptions,
   IInnerSolidEntity,
+  resolveRequire,
+  IDirectiveInputMap,
 } from "../../core";
 import {
   EntityType,
@@ -29,7 +31,7 @@ import {
 import { NotFoundError } from "../../errors";
 import { GlobalMap, IMapEntry } from "../global-map";
 import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
-import { is } from "../../utils";
+import { is, createEntityId } from "../../utils";
 
 interface IContextTreeNode {
   scopeid: string | symbol;
@@ -198,6 +200,22 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     for (const iterator of tOptions.directives) {
       ref["__refDirectives"].push(this.createDirectiveRef(iterator, <any>ref));
     }
+    const requires = resolveRequire(value);
+    for (const { entity, inputs } of requires) {
+      const [importId, nameId] = this._checkCreateId(entity);
+      ref["__refRequires"].push((context: any) =>
+        this.createDirectiveRef(
+          {
+            refEntityId: importId,
+            entityName: nameId,
+            options: {
+              input: resentRequireInputs(inputs, context),
+            },
+          },
+          <any>ref,
+        ),
+      );
+    }
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
@@ -240,6 +258,25 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     };
   }
 
+  private _checkCreateId(entity: any): [string, string] {
+    const newId = createEntityId();
+    const exist = this.globalMap.getDirectiveByType(entity);
+    if (exist) {
+      const target = this.directives.find(i => i.moduleName === exist.moduleName && i.templateName === exist.name)!;
+      if (target) {
+        return [target.importId, newId];
+      } else {
+        this.directives.push({
+          moduleName: exist.moduleName!,
+          templateName: exist.name!,
+          importId: newId,
+          type: "directive",
+        });
+      }
+    }
+    return [newId, newId];
+  }
+
   private _resolveMetadataOfEntity(
     moduleName: string,
     type: "component" | "directive" | "composition" | "module",
@@ -258,6 +295,19 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     }
     return target;
   }
+}
+
+function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
+  return Object.entries(inputs).reduce(
+    (p, c) => ({
+      ...p,
+      [c[0]]: {
+        type: "literal",
+        expression: typeof c[1] === "function" ? c[1](context) : c[1],
+      },
+    }),
+    {},
+  );
 }
 
 export function setBaseChildRefInfo(

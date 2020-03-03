@@ -11,9 +11,10 @@ import {
   MapValueType,
 } from "./common";
 import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
-import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";
+import { IInnerCompnentChildRef, IInnerDirectiveChildRef, IInnerCompositionChildRef } from "../child-ref";
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
+import { IInnerComposition } from "../composition";
 
 export type EntityType =
   | "directive"
@@ -97,6 +98,10 @@ export interface IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     ref: IInnerDirectiveChildRef,
   ): Promise<IInnerDirective>;
+  attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerCompositionChildRef,
+  ): Promise<IInnerComposition>;
   resolveExtensionsMetadata(template: InjectDIToken<any>): {};
   afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,

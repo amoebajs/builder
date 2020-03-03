@@ -37,6 +37,7 @@ export interface IComponentChildRefPrivates extends IBasicChildRefPrivates, IEws
   };
   readonly __refComponents: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
   readonly __refDirectives: IInnerDirectiveChildRef[];
+  readonly __refRequires: ((context: any) => IInnerDirectiveChildRef)[];
 }
 
 export interface IDirectiveChildRefPrivates extends IBasicChildRefPrivates, IEwsEntityPrivates<"directiveChildRef"> {
@@ -83,13 +84,7 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
     this["__etype"] = "childref";
   }
 
-  protected async onInit() {
-    await super.onInit();
-    // console.log("init --> " + this.__refId + " : " + this.__entityId);
-  }
-
   protected async bootstrap(): Promise<any> {
-    // console.log("bootstrap --> " + this.__refId + " : " + this.__entityId);
     const instance = await this.__provider.attachInstance(this.__context, <any>this);
     this.__instanceRef = instance;
     return instance;
