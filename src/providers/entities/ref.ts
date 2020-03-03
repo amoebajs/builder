@@ -15,6 +15,9 @@ import {
   IInnerComposition,
   IAfterInit,
   IAfterRequiresInit,
+  IAfterRender,
+  IAfterDirectivesAttach,
+  IAfterChildrenRender,
 } from "../../core";
 
 @Injectable(InjectScope.New)
@@ -147,12 +150,21 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
       });
       await component.bootstrap();
     }
+    await instance.onChildrenRender();
     this.__refDirectives.push(...postDirectives);
     for (const directive of this.__refDirectives) {
       await directive.bootstrap();
     }
-    await instance.onChildrenRender();
+    if (hasAfterDirecsAttach(instance)) {
+      await instance.afterDirectivesAttach();
+    }
+    if (hasAfterChildrenRender(instance)) {
+      await instance.afterChildrenRender();
+    }
     await instance.onRender();
+    if (hasAfterRender(instance)) {
+      await instance.afterRender();
+    }
     return instance;
   }
 }
@@ -163,6 +175,18 @@ function hasAfterInit(instance: any): instance is IAfterInit {
 
 function hasAfterReqsInit(instance: any): instance is IAfterRequiresInit {
   return "afterRequiresInit" in instance && typeof instance["afterRequiresInit"] === "function";
+}
+
+function hasAfterChildrenRender(instance: any): instance is IAfterChildrenRender {
+  return "afterChildrenRender" in instance && typeof instance["afterChildrenRender"] === "function";
+}
+
+function hasAfterRender(instance: any): instance is IAfterRender {
+  return "afterRender" in instance && typeof instance["afterRender"] === "function";
+}
+
+function hasAfterDirecsAttach(instance: any): instance is IAfterDirectivesAttach {
+  return "afterDirectivesAttach" in instance && typeof instance["afterDirectivesAttach"] === "function";
 }
 
 /**

@@ -26,11 +26,14 @@ export class ReactRender {
     name: string,
     value: ts.JsxExpression | ts.StringLiteral,
   ) {
-    const target = typeof entityId === "string" ? this.getElementById(entityId) : entityId;
-    if (!target) {
-      throw new NotFoundError(`target entity [${entityId}] is not found`);
+    if (typeof entityId === "string") {
+      this.parentRef["appendChildrenHooks"].push({
+        key: entityId,
+        func: gen => this.helper.updateJsxElementAttr(gen, name, value),
+      });
+    } else {
+      this.helper.updateJsxElementAttr(entityId, name, value);
     }
-    this.helper.updateJsxElementAttr(target, name, value);
   }
 
   public appendRootState(name: string, defaultValue: unknown) {

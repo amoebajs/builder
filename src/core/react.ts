@@ -13,4 +13,5 @@ export enum BasicState {
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",
   FnsBeforeRender = "fnsBeforeRender",
+  AppendChildrenHooks = "appendChildrenHooks",
 }

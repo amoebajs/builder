@@ -13,6 +13,8 @@ import {
   StatementGenerator,
   VariableGenerator,
   resolveSyntaxInsert,
+  IAfterDirectivesAttach,
+  IAfterChildrenRender,
 } from "../../core";
 import { REACT, TYPES, classCase } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
@@ -37,13 +39,15 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
   [BasicState.FnsBeforeRender]: Function[];
+  [BasicState.AppendChildrenHooks]: { key: string; func: (node: any) => any }[];
 };
 
 type TP = IBasicReactContainerState<IPureObject>;
 type TY = IBasicReactContainerState<{}>;
 
 @Injectable(InjectScope.New)
-export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T> {
+export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T>
+  implements IAfterChildrenRender, IAfterDirectivesAttach {
   protected get unshiftVariables() {
     return this.getState(BasicState.UnshiftVariables);
   }
@@ -88,6 +92,10 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     return Array.from(this.getState(BasicState.RenderChildrenMap).values());
   }
 
+  protected get appendChildrenHooks() {
+    return this.getState(BasicState.AppendChildrenHooks);
+  }
+
   protected get renderUnshiftChildNodes() {
     return this.getState(BasicState.UnshiftNodes);
   }
@@ -117,11 +125,38 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.PushedVariables, []);
     this.setState(BasicState.ContextInfo, { name: "props.CONTEXT" });
     this.setState(BasicState.FnsBeforeRender, []);
+    this.setState(BasicState.AppendChildrenHooks, []);
   }
 
   protected async onRender() {
     await super.onRender();
     this.createFunctionRender();
+  }
+
+  /** @override */
+  public afterDirectivesAttach(): void | Promise<void> {
+    this.initFnsBeforeRender();
+    this.initReact16UseHooks();
+  }
+
+  /** @override */
+  public afterChildrenRender() {
+    const children = this.getChildren();
+    const context = this.getState(BasicState.ContextInfo);
+    for (const child of children) {
+      const defaultAttrs = { CONTEXT: `${context.name}`, key: `"${child.id}"` };
+      const element = this.helper.createViewElement(child.component, defaultAttrs);
+      // push children directives hooks
+      this.appendChildrenHooks.filter(i => i.key === child.id).forEach(({ func }) => func(element));
+      Object.entries(child.props || {}).forEach(([key, prop]) => this.onChildrenPropResolved(key, prop, element));
+      this.addRenderChildren(child.id, element);
+      if (this.onChildrenVisit) {
+        const newElement = this.onChildrenVisit(child.id, element);
+        if (newElement) {
+          this.addRenderChildren(child.id, newElement.addJsxAttrs(defaultAttrs));
+        }
+      }
+    }
   }
 
   protected setTagName(tagName: string) {
@@ -241,8 +276,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   private createFunctionRender() {
-    this.initFnsBeforeRender();
-    this.initReact16UseHooks();
     this.addFunctions([
       this.createNode("function")
         .setName(this.entityId)
@@ -267,23 +300,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           return node;
         }),
     ]);
-  }
-
-  protected async onChildrenRender() {
-    const children = this.getChildren();
-    const context = this.getState(BasicState.ContextInfo);
-    for (const child of children) {
-      const defaultAttrs = { CONTEXT: `${context.name}`, key: `"${child.id}"` };
-      const element = this.helper.createViewElement(child.component, defaultAttrs);
-      Object.entries(child.props || {}).forEach(([key, prop]) => this.onChildrenPropResolved(key, prop, element));
-      this.addRenderChildren(child.id, element);
-      if (this.onChildrenVisit) {
-        const newElement = this.onChildrenVisit(child.id, element);
-        if (newElement) {
-          this.addRenderChildren(child.id, newElement.addJsxAttrs(defaultAttrs));
-        }
-      }
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -263,22 +263,24 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
         c => c!.__etype === "componentChildRef" || c!.__etype === "compositionChildRef",
       );
       (<any>ref)["__refDirectives"] = childNodes.filter(c => c!.__etype === "directiveChildRef");
-      // 支持Require语法
-      const requires = resolveRequire(ctor);
-      for (const { entity, inputs } of requires) {
-        const [importId, nameId] = this.context["_checkCreateId"](entity);
-        (<any>ref)["__refRequires"].push((context: any) =>
-          this.context["createDirectiveRef"](
-            {
-              refEntityId: importId,
-              entityName: nameId,
-              options: {
-                input: resentRequireInputs(inputs, context),
+      if (type === "component") {
+        // 支持Require语法
+        const requires = resolveRequire(ctor);
+        for (const { entity, inputs } of requires) {
+          const [importId, nameId] = this.context["_checkCreateId"](entity);
+          (<any>ref)["__refRequires"].push((context: any) =>
+            this.context["createDirectiveRef"](
+              {
+                refEntityId: importId,
+                entityName: nameId,
+                options: {
+                  input: resentRequireInputs(inputs, context),
+                },
               },
-            },
-            <any>ref,
-          ),
-        );
+              <any>ref,
+            ),
+          );
+        }
       }
     }
   }

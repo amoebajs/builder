@@ -21,4 +21,8 @@ export abstract class ReactComposition<T extends IPureObject = IPureObject> exte
       return instance;
     }
   }
+
+  protected childKey(childId: string) {
+    return this.entityId + "_" + childId;
+  }
 }

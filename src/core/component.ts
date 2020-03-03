@@ -38,6 +38,18 @@ export interface IAfterRequiresInit {
   afterRequiresInit(): Promise<void> | void;
 }
 
+export interface IAfterChildrenRender {
+  afterChildrenRender(): Promise<void> | void;
+}
+
+export interface IAfterRender {
+  afterRender(): Promise<void> | void;
+}
+
+export interface IAfterDirectivesAttach {
+  afterDirectivesAttach(): Promise<void> | void;
+}
+
 export abstract class BasicComponent<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
   private readonly __children: IChildElement[] = [];
   // private readonly __compositions: BasicComposition[] = [];
