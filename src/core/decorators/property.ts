@@ -19,6 +19,7 @@ export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
   useEnums: IMetaTypeEnumInfo | null;
   useMap: IMetaTypeMapInfo | null;
+  useExpression: boolean;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -57,6 +58,7 @@ const defaultInput: IInputPropertyContract = {
   group: null,
   useEnums: null,
   useMap: null,
+  useExpression: false,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -72,12 +74,9 @@ export function Input(params?: any) {
   };
 }
 
-const defaultAttach: IInputPropertyContract = {
+const defaultAttach: IAttachPropertyContract = {
   name: null,
   displayName: null,
-  group: null,
-  useEnums: null,
-  useMap: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -105,7 +104,7 @@ export function defineInputProperty(target: EntityConstructor<any>, metadata: RE
   );
 }
 
-export function defineAttachProperty(target: EntityConstructor<any>, metadata: REALNAME<IInputPropertyContract>) {
+export function defineAttachProperty(target: EntityConstructor<any>, metadata: REALNAME<IAttachPropertyContract>) {
   const data = createBasicMeta(metadata, target);
   return Reflect.defineMetadata(
     PROP_ATTACH_DEFINE,
@@ -117,14 +116,17 @@ export function defineAttachProperty(target: EntityConstructor<any>, metadata: R
   );
 }
 
-function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: InjectDIToken<any>) {
+function createBasicMeta(
+  metadata: REALNAME<IInputPropertyContract | IAttachPropertyContract>,
+  target: InjectDIToken<any>,
+) {
   const propName = !metadata.name ? metadata.realName : metadata.name;
   const nameMeta = {
     value: propName,
     displayValue: metadata.displayName || null,
     i18n: metadata.i18nName ?? {},
   };
-  const groupMeta = metadata.group || null;
+  const groupMeta = (<IInputPropertyContract>metadata).group || null;
   const descMeta = !!metadata.description
     ? {
         value: metadata.description,
@@ -132,15 +134,20 @@ function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: Inj
       }
     : null;
   const designType = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
+  const meta = <IInputPropertyContract>metadata;
+  const useExpr = meta.useExpression && meta.useExpression !== null;
+  const useMap = meta.useMap && meta.useMap !== null;
+  const useEnums = meta.useEnums && meta.useEnums !== null;
   const data: IPropertyBase = {
     realName: metadata.realName,
     name: nameMeta,
     group: groupMeta,
     description: descMeta,
     type: {
-      meta: metadata.useMap !== null ? "map" : metadata.useEnums !== null ? "enums" : getMetaOfConstructor(designType),
-      enumsInfo: metadata.useEnums,
-      mapInfo: metadata.useMap,
+      expressionType: useExpr ? "complexLogic" : "literal",
+      meta: useMap ? "map" : useEnums ? "enums" : getMetaOfConstructor(designType),
+      enumsInfo: useEnums ? meta.useEnums : null,
+      mapInfo: useMap ? meta.useMap : null,
       constructor: designType,
     },
   };

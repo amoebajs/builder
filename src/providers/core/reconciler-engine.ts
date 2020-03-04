@@ -22,6 +22,7 @@ import {
   IInnerCompositionChildRef,
   resolveComposition,
   ICompositeChildRefPluginOptions,
+  IComponentProp,
 } from "../../core";
 import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
 import { setBaseChildRefInfo, SourceFileBasicContext, resentRequireInputs } from "./context";
@@ -42,6 +43,8 @@ interface IResolve {
   compositionKey?: string;
   contextChildren?: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
 }
+
+const STATE_PROP_REF_VARIABLE = /^(!)?([0-9a-zA-Z_\.]+)\s*\|\s*bind:(state|props)$/;
 
 @Injectable(InjectScope.New)
 export class ReactReconcilerEngine extends ReconcilerEngine {
@@ -212,23 +215,20 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
 
   private resolveProps(otherProps: { [x: string]: IChildNodes<string | number | IReactEntityPayload> }) {
     const entries = Object.entries(otherProps);
-    const newProps: Record<string, any> = {};
+    const newProps: Record<string, IComponentProp> = {};
     for (const [key, value] of entries) {
-      const prop = (newProps[key] = {
+      const prop = (newProps[key] = <IComponentProp>{
         type: "literal",
         expression: value,
-        syntaxExtends: {},
+        extensions: {},
       });
       // 解析props状态绑定
       if (typeof value === "string") {
-        const result = /^(!)?([0-9a-zA-Z_\.]+)\s*\|\s*bind:(state|props)$/.exec(value);
+        const result = STATE_PROP_REF_VARIABLE.exec(value);
         if (result !== null) {
-          const reverse = result[1];
-          const vname = result[2];
-          const type = result[3];
-          prop.expression = vname;
-          prop.syntaxExtends = { reverse: reverse === "!" };
-          prop.type = type;
+          prop.expression = result[2];
+          prop.extensions = { reverse: result[1] === "!" };
+          prop.type = <"state" | "props">result[3];
         }
       }
     }

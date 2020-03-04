@@ -49,6 +49,7 @@ export type IMetaTypeEnumInfo = IMetaTypeEnumRule | IMetaTypeEnumRule["allowValu
 
 export interface IMetaType {
   meta: TypeLiteralMeta;
+  expressionType: "literal" | "complexLogic";
   enumsInfo: IMetaTypeEnumInfo | null;
   mapInfo: IMetaTypeMapInfo | null;
   constructor: any;
@@ -65,11 +66,14 @@ export interface IPropertyBase extends IUnitBase {
 /**
  * 基本可扩展参数结构体
  */
-export interface ITypedSyntaxExpression<E extends unknown = never, P extends unknown = unknown> {
+export interface ITypedSyntaxExpression<
+  E extends unknown = never,
+  P extends unknown = unknown,
+  T extends Record<string, unknown> = Record<string, unknown>
+> {
   type: E;
-  syntaxType?: TypeLiteralMeta;
-  syntaxExtends?: Record<string, any>;
   expression: P;
+  extensions?: Partial<T>;
 }
 
 export type RecordValue<T> = T extends Record<string, infer P> ? P : never;
@@ -100,5 +104,28 @@ export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRe
 /** 组件的附加参数字典类型：child附加列表 */
 export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
 
+export interface ILiteralExpression extends ITypedSyntaxExpression<"literal", any, { type: TypeLiteralMeta }> {}
+
+export interface IStateExpression extends ITypedSyntaxExpression<"state", string, { reverse: boolean }> {}
+
+export interface IPropsExpression extends ITypedSyntaxExpression<"props", string, { reverse: boolean }> {}
+
+export interface IDirectiveRefExpression
+  extends ITypedSyntaxExpression<"directiveRef", { ref: string; expression: string }, {}> {}
+
+export interface IComplexLogicDefine {
+  vars?: string[];
+  expressions: string[];
+}
+
+export interface IComplexLogicExpression extends ITypedSyntaxExpression<"complexLogic", IComplexLogicDefine, {}> {}
+
+export type IComponentProp =
+  | ILiteralExpression
+  | IStateExpression
+  | IPropsExpression
+  | IDirectiveRefExpression
+  | IComplexLogicExpression;
+
 /** comp-child的prop参数字典类型：字面量+状态 */
-export type IComponentPropMap = ITypedSyntaxExpressionMap<"literal" | "state" | "props" | "directiveRef", any>;
+export type IComponentPropMap = Record<string, IComponentProp>;

@@ -3,18 +3,20 @@ import { InjectScope } from "@bonbons/di";
 import {
   BasicComponent,
   BasicState,
-  IComponentPropMap,
   IPureObject,
   Injectable,
   JsxAttributeGenerator,
   JsxElementGenerator,
   JsxExpressionGenerator,
-  RecordValue,
   StatementGenerator,
   VariableGenerator,
   resolveSyntaxInsert,
   IAfterDirectivesAttach,
   IAfterChildrenRender,
+  IComponentProp,
+  IStateExpression,
+  IPropsExpression,
+  IComplexLogicExpression,
 } from "../../core";
 import { REACT, TYPES, classCase } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
@@ -123,7 +125,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.UseMemos, []);
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
-    this.setState(BasicState.ContextInfo, { name: "props.CONTEXT" });
+    this.setState(BasicState.ContextInfo, { name: this.helper.DEFAULT_CONTEXT_NAME });
     this.setState(BasicState.FnsBeforeRender, []);
     this.setState(BasicState.AppendChildrenHooks, []);
   }
@@ -307,28 +309,39 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     // can be overrided
   }
 
-  protected onChildrenPropResolved(name: string, prop: RecordValue<IComponentPropMap>, element: JsxElementGenerator) {
-    const { type: propType, expression: e, syntaxExtends = {} } = prop;
-    const reverse = syntaxExtends.reverse || false;
+  protected onChildrenPropResolved(name: string, prop: IComponentProp, element: JsxElementGenerator) {
     const context = this.getState(BasicState.ContextInfo);
-    switch (propType) {
+    let resolved = true;
+    switch (prop.type) {
       case "state":
-        const [p01, ...ps] = String(e).split(".");
-        element.addJsxAttr(name, `${reverse ? "!" : ""}${context.name}.state.` + [p01, "value", ...ps].join("."));
+        element.addJsxAttr(name, this.helper.useStateExpression(prop, context.name));
         break;
       case "props":
-        element.addJsxAttr(name, `${reverse ? "!" : ""}props.${e}`);
+        element.addJsxAttr(name, this.helper.usePropExpression(prop));
         break;
       case "literal":
-        element.addJsxAttr(name, () => this.helper.createLiteral(e));
+        element.addJsxAttr(name, () => this.helper.createLiteral(prop.expression));
         break;
       // 引用指令内容，暂时没有实现Output相关功能
       case "directiveRef":
-        element.addJsxAttr(name, () => this.helper.createLiteral(e.ref + "_" + e.expression));
+        element.addJsxAttr(name, () =>
+          this.helper.createLiteral(prop.expression.ref + "_" + prop.expression.expression),
+        );
+        break;
+      // 复杂逻辑，用来支持自定义语法块的解析
+      case "complexLogic":
+        element.addJsxAttr(name, () => this.helper.createLiteral(prop.expression));
         break;
       default:
+        element.addJsxAttr(name, () =>
+          this.helper.createJsxArrowEventHandler(
+            ts.createIdentifier(this.helper.useComplexLogicExpression(prop, context.name)),
+          ),
+        );
+        resolved = false;
         break;
     }
+    return resolved;
   }
 
   private initReact16UseHooks() {

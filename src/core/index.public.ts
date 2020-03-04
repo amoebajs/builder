@@ -1,5 +1,5 @@
 export * from "./typescript";
-export { SourceFileContext, BasicCompilationEntity } from "./base";
+export * from "./base";
 export {
   EntityConstructor,
   Component,

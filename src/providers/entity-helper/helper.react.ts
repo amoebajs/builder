@@ -2,8 +2,16 @@ import ts from "typescript";
 import kebabCase from "lodash/kebabCase";
 import camelCase from "lodash/camelCase";
 import { InjectScope } from "@bonbons/di";
-import { is, IJsxAttrs } from "../../utils";
-import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert } from "../../core";
+import { is, IJsxAttrs, TYPES } from "../../utils";
+import {
+  IComplexLogicExpression,
+  ImportGenerator,
+  Injectable,
+  JsxElementGenerator,
+  resolveSyntaxInsert,
+  IStateExpression,
+  IPropsExpression,
+} from "../../core";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
 import { IJsxElementDefine } from "../../core/typescript/jsx-element";
@@ -24,6 +32,10 @@ export interface IFrontLibImportOptions {
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
+  public readonly DEFAULT_CONTEXT_NAME = "props.CONTEXT";
+  public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
+  public readonly CEVALUE_REGEXP = /^\$\(([0-9a-zA-Z_]+)\s+\|\s+bind:(state|props|setState)\)$/;
+
   public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
     return ts.createObjectLiteral(
       Object.entries(value)
@@ -144,6 +156,30 @@ export class ReactHelper extends BasicHelper {
     );
   }
 
+  public createJsxArrowEventHandler(expression: ts.Expression) {
+    return ts.createJsxExpression(
+      undefined,
+      ts.createArrowFunction(
+        [],
+        [],
+        [
+          ts.createParameter(
+            [],
+            [],
+            ts.createToken(ts.SyntaxKind.DotDotDotToken),
+            ts.createIdentifier("args"),
+            undefined,
+            TYPES.Any,
+            undefined,
+          ),
+        ],
+        undefined,
+        undefined,
+        ts.createBlock([ts.createStatement(expression)], false),
+      ),
+    );
+  }
+
   public updateJsxElementAttr(gen: JsxElementGenerator, name: string, value: ts.StringLiteral | ts.JsxExpression) {
     gen.pushTransformerBeforeEmit(element => updateJsxElementAttr(element, name, value));
   }
@@ -176,6 +212,42 @@ export class ReactHelper extends BasicHelper {
       importList.push(this.createImport(stylePath));
     }
     return importList;
+  }
+
+  public useStateExpression(exp: IStateExpression, contextName: string) {
+    const [p01, ...ps] = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}${contextName}.state.${[p01, "value", ...ps].join(".")}`;
+  }
+
+  public usePropExpression(exp: IPropsExpression) {
+    return `${this.useReverse(exp)}props.${exp.expression}`;
+  }
+
+  public useComplexLogicExpression(exp: IComplexLogicExpression, contextName: string) {
+    const { vars = [], expressions = [] } = exp.expression;
+    const context: Array<string> = [];
+    for (const each of vars) {
+      const result = this.DEFINE_IS_REGEXP.exec(each);
+      // console.log([each, result]);
+      if (result) {
+        const matched = this.CEVALUE_REGEXP.exec(result[2].trimLeft());
+        let value = result[2];
+        if (matched !== null) {
+          const [_, vName, vType] = matched;
+          if (vType === "props") {
+            value = `props.${vName}`;
+          } else {
+            value = `${contextName}.state.${vName}.${vType === "state" ? "value" : "setState"}`;
+          }
+        }
+        context.push(`let ${result[1]} = ${value};`);
+      }
+    }
+    return context.join("") + expressions.map(i => (i.endsWith(";") ? i : i + ";")).join("");
+  }
+
+  private useReverse(exp: IStateExpression | IPropsExpression) {
+    return exp.extensions?.reverse ?? false ? "!" : "";
   }
 }
 
