@@ -2,6 +2,7 @@ export enum BasicState {
   RenderTagName = "renderTageName",
   RenderTagAttrs = "renderTagAttrs",
   RenderChildrenMap = "renderTagChildNodes",
+  RenderChildrenRuleMap = "renderTagChildNodeRules",
   UnshiftNodes = "renderUnshiftNodes",
   PushedNodes = "renderPushedNodes",
   UseStates = "compUseStates",

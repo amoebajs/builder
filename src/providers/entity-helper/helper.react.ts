@@ -34,7 +34,7 @@ export interface IFrontLibImportOptions {
 export class ReactHelper extends BasicHelper {
   public readonly DEFAULT_CONTEXT_NAME = "props.CONTEXT";
   public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
-  public readonly CEVALUE_REGEXP = /^\$\(([0-9a-zA-Z_]+)\s+\|\s+bind:(state|props|setState)\)$/;
+  public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 
   public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
     return ts.createObjectLiteral(
@@ -88,39 +88,6 @@ export class ReactHelper extends BasicHelper {
       (children || []).map(i => (typeof i === "string" ? ts.createJsxText(i) : i)),
       ts.createJsxClosingElement(ts.createIdentifier(tagName)),
     );
-  }
-
-  public resolvePropState(expression: string): ts.PropertyAccessExpression;
-  public resolvePropState(expression: string, type: "props" | "state"): ts.PropertyAccessExpression;
-  public resolvePropState(
-    expression: string,
-    options: Partial<{
-      type: "props" | "state";
-      defaultValue: any;
-      defaultCheck: "||" | "??";
-    }>,
-  ): ts.PropertyAccessExpression;
-  public resolvePropState(expression: string, sec?: any) {
-    let type: "props" | "state" = "props";
-    let defaultCheck: "||" | "??" = "||";
-    let defaultValue: any = null;
-    if (typeof sec === "string") type = <any>sec;
-    if (typeof sec === "object") {
-      if (sec.type) type = sec.type;
-      if (sec.defaultCheck) defaultCheck = sec.defaultCheck;
-      if (sec.defaultValue !== null && sec.defaultValue !== void 0) {
-        defaultValue = sec.defaultValue;
-      }
-    }
-    let expr: ts.Expression = ts.createPropertyAccess(ts.createThis(), type + "." + expression.toString());
-    if (defaultValue !== null) {
-      expr = ts.createBinary(
-        expr,
-        defaultCheck === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
-      );
-    }
-    return expr;
   }
 
   public createReactPropsAccess(
@@ -228,22 +195,26 @@ export class ReactHelper extends BasicHelper {
     const context: Array<string> = [];
     for (const each of vars) {
       const result = this.DEFINE_IS_REGEXP.exec(each);
-      // console.log([each, result]);
       if (result) {
-        const matched = this.CEVALUE_REGEXP.exec(result[2].trimLeft());
-        let value = result[2];
-        if (matched !== null) {
-          const [_, vName, vType] = matched;
-          if (vType === "props") {
-            value = `props.${vName}`;
-          } else {
-            value = `${contextName}.state.${vName}.${vType === "state" ? "value" : "setState"}`;
-          }
-        }
+        const value = this.useBindExpression(result[2].trimLeft(), contextName);
         context.push(`let ${result[1]} = ${value};`);
       }
     }
     return [...context, ...expressions].join(" ");
+  }
+
+  private useBindExpression(target: string, contextName = this.DEFAULT_CONTEXT_NAME) {
+    const matched = this.CEVALUE_REGEXP.exec(target);
+    let value = undefined;
+    if (matched !== null) {
+      const [_, reverse, vName, vType] = matched;
+      if (vType === "props") {
+        value = `${reverse || ""}props.${vName}`;
+      } else {
+        value = `${reverse || ""}${contextName}.state.${vName}.${vType === "state" ? "value" : "setState"}`;
+      }
+    }
+    return value;
   }
 
   private useReverse(exp: IStateExpression | IPropsExpression) {

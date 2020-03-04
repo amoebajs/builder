@@ -14,9 +14,6 @@ import {
   IAfterDirectivesAttach,
   IAfterChildrenRender,
   IComponentProp,
-  IStateExpression,
-  IPropsExpression,
-  IComplexLogicExpression,
 } from "../../core";
 import { REACT, TYPES, classCase } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
@@ -26,10 +23,16 @@ export type JsxAttributeSyntaxTextType = string | ts.Expression;
 export type JsxAttributeType = JsxAttributeValueType | Record<string, JsxAttributeValueType>;
 export type JsxAttributeSyntaxType = JsxAttributeSyntaxTextType | Record<string, JsxAttributeSyntaxTextType>;
 
+export interface IVisitResult {
+  newElement?: JsxElementGenerator;
+  newDisplayRule?: any;
+}
+
 export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.RenderTagName]: string;
   [BasicState.RenderTagAttrs]: JsxAttributeGenerator[];
   [BasicState.RenderChildrenMap]: Map<string | symbol, JsxElementGenerator>;
+  [BasicState.RenderChildrenRuleMap]: Map<string | symbol, string>;
   [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
@@ -91,7 +94,11 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   }
 
   protected get renderChildNodes() {
-    return Array.from(this.getState(BasicState.RenderChildrenMap).values());
+    return Array.from(this.getState(BasicState.RenderChildrenMap).entries());
+  }
+
+  protected get renderChildNodeRules() {
+    return Array.from(this.getState(BasicState.RenderChildrenRuleMap).entries());
   }
 
   protected get appendChildrenHooks() {
@@ -116,6 +123,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.RenderTagName, REACT.Fragment);
     this.setState(BasicState.RenderTagAttrs, []);
     this.setState(BasicState.RenderChildrenMap, new Map());
+    this.setState(BasicState.RenderChildrenRuleMap, new Map());
     this.setState(BasicState.UnshiftNodes, []);
     this.setState(BasicState.PushedNodes, []);
     this.setState(BasicState.UseStates, []);
@@ -153,9 +161,13 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
       Object.entries(child.props || {}).forEach(([key, prop]) => this.onChildrenPropResolved(key, prop, element));
       this.addRenderChildren(child.id, element);
       if (this.onChildrenVisit) {
-        const newElement = this.onChildrenVisit(child.id, element);
-        if (newElement) {
-          this.addRenderChildren(child.id, newElement.addJsxAttrs(defaultAttrs));
+        const result = this.onChildrenVisit(child.id, element);
+        if (!result) continue;
+        if (result.newElement) {
+          this.addRenderChildren(child.id, result.newElement.addJsxAttrs(defaultAttrs));
+        }
+        if (result.newDisplayRule) {
+          this.getState(BasicState.RenderChildrenRuleMap).set(child.id, result.newDisplayRule);
         }
       }
     }
@@ -288,7 +300,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
               .setTagName(this.renderTagName)
               .addJsxAttrs(this.renderAttributes)
               .addJsxChildren(this.renderUnshiftChildNodes)
-              .addJsxChildren(this.renderChildNodes)
+              .addJsxChildren(this.resolveChildNodeRender())
               .addJsxChildren(this.renderPushedChildNodes),
             (<StatementGenerator<any>[]>[])
               .concat(this.unshiftVariables)
@@ -304,10 +316,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     ]);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected onChildrenVisit(scope: string | symbol, element: JsxElementGenerator): JsxElementGenerator | void {
-    // can be overrided
-  }
+  protected onChildrenVisit(scope: string | symbol, element: JsxElementGenerator): IVisitResult | void {}
 
   protected onChildrenPropResolved(name: string, prop: IComponentProp, element: JsxElementGenerator) {
     const context = this.getState(BasicState.ContextInfo);
@@ -342,6 +351,23 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
         break;
     }
     return resolved;
+  }
+
+  protected resolveChildNodeRender() {
+    const rules = this.getState(BasicState.RenderChildrenRuleMap);
+    const children = this.renderChildNodes;
+    const childNodes: (JsxExpressionGenerator | JsxElementGenerator)[] = [];
+    for (const [k, v] of children) {
+      const rule = rules.get(k);
+      if (!rule) {
+        childNodes.push(v);
+        continue;
+      }
+      childNodes.push(
+        this.createNode("jsx-expression").setExpression(() => ts.createLogicalAnd(ts.createIdentifier(rule), v.emit())),
+      );
+    }
+    return childNodes;
   }
 
   private initReact16UseHooks() {
