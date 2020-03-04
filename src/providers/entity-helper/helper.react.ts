@@ -243,7 +243,7 @@ export class ReactHelper extends BasicHelper {
         context.push(`let ${result[1]} = ${value};`);
       }
     }
-    return context.join("") + expressions.map(i => (i.endsWith(";") ? i : i + ";")).join("");
+    return [...context, ...expressions].join(" ");
   }
 
   private useReverse(exp: IStateExpression | IPropsExpression) {
