@@ -84,6 +84,10 @@ export class ReactRender {
     this.getRootState(BasicState.FnsBeforeRender).push(fn);
   }
 
+  public appendRootEleChangeFns(fn: (gen: JsxElementGenerator) => JsxElementGenerator) {
+    this.getRootState(BasicState.RootElementChangeFns).push(fn);
+  }
+
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {
     const gen = typeof entityId === "string" ? this.getElementById(entityId) : entityId;
     if (!gen) {

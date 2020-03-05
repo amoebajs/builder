@@ -44,6 +44,7 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
   [BasicState.FnsBeforeRender]: Function[];
+  [BasicState.RootElementChangeFns]: ((gen: JsxElementGenerator) => JsxElementGenerator)[];
   [BasicState.AppendChildrenHooks]: { key: string; func: (node: any) => any }[];
 };
 
@@ -135,6 +136,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.setState(BasicState.PushedVariables, []);
     this.setState(BasicState.ContextInfo, { name: this.helper.DEFAULT_CONTEXT_NAME });
     this.setState(BasicState.FnsBeforeRender, []);
+    this.setState(BasicState.RootElementChangeFns, []);
     this.setState(BasicState.AppendChildrenHooks, []);
   }
 
@@ -296,12 +298,14 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
         .pushParam({ name: "props", type: "any" })
         .pushTransformerBeforeEmit(node => {
           node.body = this.createComponentBlock(
-            this.createNode("jsx-element")
-              .setTagName(this.renderTagName)
-              .addJsxAttrs(this.renderAttributes)
-              .addJsxChildren(this.renderUnshiftChildNodes)
-              .addJsxChildren(this.resolveChildNodeRender())
-              .addJsxChildren(this.renderPushedChildNodes),
+            this.onRootElementVisit(
+              this.createNode("jsx-element")
+                .setTagName(this.renderTagName)
+                .addJsxAttrs(this.renderAttributes)
+                .addJsxChildren(this.renderUnshiftChildNodes)
+                .addJsxChildren(this.resolveChildNodeRender())
+                .addJsxChildren(this.renderPushedChildNodes),
+            ),
             (<StatementGenerator<any>[]>[])
               .concat(this.unshiftVariables)
               .concat(this.useStates)
@@ -314,6 +318,15 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
           return node;
         }),
     ]);
+  }
+
+  protected onRootElementVisit(root: JsxElementGenerator): JsxElementGenerator | JsxExpressionGenerator {
+    const fns = this.getState(BasicState.RootElementChangeFns);
+    let realGen = root;
+    for (const fn of fns) {
+      realGen = fn(realGen);
+    }
+    return realGen;
   }
 
   protected onChildrenVisit(scope: string | symbol, element: JsxElementGenerator): IVisitResult | void {}
@@ -393,11 +406,14 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     }
   }
 
-  private createComponentBlock(render: JsxElementGenerator, statements: StatementGenerator[] = []) {
+  private createComponentBlock(
+    render: JsxElementGenerator | JsxExpressionGenerator,
+    statements: StatementGenerator[] = [],
+  ) {
     return ts.createBlock(statements.map(i => i.emit()).concat(this.createComponentRenderReturn(render)));
   }
 
-  private createComponentRenderReturn(rootEle: JsxElementGenerator) {
+  private createComponentRenderReturn(rootEle: JsxElementGenerator | JsxExpressionGenerator) {
     return ts.createReturn(rootEle.emit());
   }
 }

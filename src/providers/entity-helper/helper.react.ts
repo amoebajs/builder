@@ -203,7 +203,7 @@ export class ReactHelper extends BasicHelper {
     return [...context, ...expressions].join(" ");
   }
 
-  private useBindExpression(target: string, contextName = this.DEFAULT_CONTEXT_NAME) {
+  public useBindExpression(target: string, contextName = this.DEFAULT_CONTEXT_NAME) {
     const matched = this.CEVALUE_REGEXP.exec(target);
     let value = undefined;
     if (matched !== null) {
