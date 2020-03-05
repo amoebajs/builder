@@ -88,6 +88,16 @@ export class ReactRender {
     this.getRootState(BasicState.RootElementChangeFns).push(fn);
   }
 
+  public createStateAccessSyntax(name: string) {
+    const contextName = this.getRootState(BasicState.ContextInfo).name;
+    let reverse = false;
+    if (name.startsWith("!")) {
+      name = name.slice(1);
+      reverse = true;
+    }
+    return this.helper.useStateExpression({ type: "state", expression: name, extensions: { reverse } }, contextName);
+  }
+
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {
     const gen = typeof entityId === "string" ? this.getElementById(entityId) : entityId;
     if (!gen) {
