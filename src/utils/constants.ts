@@ -22,11 +22,11 @@ export const REACT = {
   StatelessComponent: "StatelessComponent",
   Fragment: "React.Fragment",
   Render: "render",
-  UseState: "useState",
-  UseCallback: "useCallback",
-  UseEffect: "useEffect",
-  UseRef: "useRef",
-  UseMemo: "useMemo",
+  UseState: "React.useState",
+  UseCallback: "React.useCallback",
+  UseEffect: "React.useEffect",
+  UseRef: "React.useRef",
+  UseMemo: "React.useMemo",
 };
 
 export interface IJsxAttrs {

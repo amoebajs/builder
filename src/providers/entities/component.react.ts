@@ -148,7 +148,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
   /** @override */
   public afterDirectivesAttach(): void | Promise<void> {
     this.initFnsBeforeRender();
-    this.initReact16UseHooks();
   }
 
   /** @override */
@@ -295,7 +294,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     this.addFunctions([
       this.createNode("function")
         .setName(this.entityId)
-        .pushParam({ name: "props", type: "any" })
+        .pushParam({ name: REACT.Props, type: "any" })
         .pushTransformerBeforeEmit(node => {
           node.body = this.createComponentBlock(
             this.onRootElementVisit(
@@ -381,22 +380,6 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
       );
     }
     return childNodes;
-  }
-
-  private initReact16UseHooks() {
-    const imports: string[] = [];
-    if (this.useStates.length > 0) imports.push(REACT.UseState);
-    if (this.useCallbacks.length > 0) imports.push(REACT.UseCallback);
-    if (this.useEffects.length > 0) imports.push(REACT.UseEffect);
-    if (this.useRefs.length > 0) imports.push(REACT.UseRef);
-    if (this.useMemos.length > 0) imports.push(REACT.UseMemo);
-    this.addImports(
-      imports.map(name =>
-        this.createNode("import")
-          .addNamedBinding(name)
-          .setModulePath(REACT.PackageName),
-      ),
-    );
   }
 
   private initFnsBeforeRender() {

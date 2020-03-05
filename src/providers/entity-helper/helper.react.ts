@@ -2,7 +2,7 @@ import ts from "typescript";
 import kebabCase from "lodash/kebabCase";
 import camelCase from "lodash/camelCase";
 import { InjectScope } from "@bonbons/di";
-import { is, IJsxAttrs, TYPES } from "../../utils";
+import { is, IJsxAttrs, TYPES, REACT } from "../../utils";
 import {
   IComplexLogicExpression,
   ImportGenerator,
@@ -32,7 +32,7 @@ export interface IFrontLibImportOptions {
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
-  public readonly DEFAULT_CONTEXT_NAME = "props.CONTEXT";
+  public readonly DEFAULT_CONTEXT_NAME = REACT.Props + ".CONTEXT";
   public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
   public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 
@@ -98,7 +98,7 @@ export class ReactHelper extends BasicHelper {
     }>,
   ) {
     const { defaultValue, checkOperatorForDefaultValue = "||" } = options || {};
-    let expr: ts.Expression = this.createPropertyAccess("props", propName);
+    let expr: ts.Expression = this.createPropertyAccess(REACT.Props, propName);
     if (!is.undefined(defaultValue)) {
       expr = ts.createBinary(
         expr,
@@ -110,7 +110,7 @@ export class ReactHelper extends BasicHelper {
   }
 
   public createReactPropsMixinAccess(propName: string, obj: Record<string, string | number | boolean | ts.Expression>) {
-    const access = this.createPropertyAccess("props", propName);
+    const access = this.createPropertyAccess(REACT.Props, propName);
     const objExp = this.createObjectAttr(obj);
     return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
   }
@@ -209,9 +209,9 @@ export class ReactHelper extends BasicHelper {
     if (matched !== null) {
       const [_, reverse, vName, vType] = matched;
       if (vType === "props") {
-        value = `${reverse || ""}props.${vName}`;
+        value = `${reverse || ""}${REACT.Props}.${vName}`;
       } else {
-        value = `${reverse || ""}${contextName}.state.${vName}.${vType === "state" ? "value" : "setState"}`;
+        value = `${reverse || ""}${contextName}.${REACT.State}.${vName}.${vType === "state" ? "value" : "setState"}`;
       }
     }
     return value;
