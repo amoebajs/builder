@@ -18,6 +18,8 @@ import {
   resolveInputProperties,
   IInnerCompositionChildRef,
   IInnerComposition,
+  resolveEntityRefs,
+  VariableRef,
 } from "../../core";
 import { is } from "../../utils";
 import { BasicHelper } from "../entity-helper";
@@ -94,12 +96,14 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     const template = Object.getPrototypeOf(instance).constructor;
     this._setInputs(template, instance, input);
     this._setAttach(template, instance, attach);
+    this._setVariableRefs(template, instance);
     return instance;
   }
 
   private async _attachDirective(instance: IInnerDirective, { input }: IInnerDirectiveChildRef["__options"]) {
     const template = Object.getPrototypeOf(instance).constructor;
     this._setInputs(template, instance, input);
+    this._setVariableRefs(template, instance);
     return instance;
   }
 
@@ -154,6 +158,22 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
         for (const iterator of options[key].expression) {
           propAttach["_options"].set(iterator.id, iterator.value);
         }
+      }
+    }
+  }
+
+  private _setVariableRefs(template: EntityConstructor<any>, instance: IInnerComponent | IInnerDirective) {
+    const references = resolveEntityRefs(template).references;
+    for (const key in references) {
+      if (references.hasOwnProperty(key)) {
+        const alias = references[key];
+        if (!((<any>instance)[key] instanceof VariableRef)) {
+          (<any>instance)[key] = new VariableRef();
+        }
+        const varRef: VariableRef = (<any>instance)[key];
+        varRef["_host"] = <any>instance;
+        varRef["_name"] = alias;
+        varRef["_realName"] = key;
       }
     }
   }

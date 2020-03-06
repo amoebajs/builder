@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.2-alpha.1583387399768",
+  "version": "0.0.2-alpha.1583489738106",
   "main": "lib/index.js",
   "types": "es/index.d.ts",
   "module": "es/index.js",

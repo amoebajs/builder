@@ -6,3 +6,4 @@ export * from "./injectable";
 export * from "./component";
 export * from "./composite";
 export * from "./extends";
+export * from "./refs";
