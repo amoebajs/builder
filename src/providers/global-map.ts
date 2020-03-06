@@ -13,7 +13,6 @@ import {
   resolveInputProperties,
   resolveModule,
   resolvePropertyGroups,
-  resolveProps,
   ICompositionContract,
   resolveComposition,
 } from "../core";
@@ -23,15 +22,10 @@ import { wrapMetaIntoCtor } from "./entity-parser/basic";
 
 export interface IMetadataGroup {
   entity: IDirectiveContract | IComponentContract | ICompositionContract | IModuleContract;
-  inputs: { [name: string]: any };
-  attaches: { [name: string]: any };
-  props: { [name: string]: any };
-  groups: { [name: string]: any };
-  entityExtensions?: Partial<
-    IFrameworkStructure<{
-      [name: string]: any;
-    }>
-  >;
+  inputs: Record<string, any>;
+  attaches: Record<string, any>;
+  groups: Record<string, any>;
+  entityExtensions?: Partial<IFrameworkStructure<Record<string, any>>>;
 }
 
 export interface IMapEntry<T = any> {
@@ -213,7 +207,6 @@ export function getEitityMetadata(mdname: EntityConstructor<any>, provider?: Bas
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
     attaches: resolveAttachProperties(mdname),
-    props: resolveProps(mdname),
   };
   if (!!provider) {
     result.entityExtensions = provider!.resolveExtensionsMetadata(mdname);

@@ -4,6 +4,5 @@ export * from "./property";
 export * from "./directive";
 export * from "./injectable";
 export * from "./component";
-export * from "./prop";
 export * from "./composite";
 export * from "./extends";
