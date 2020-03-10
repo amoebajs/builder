@@ -6,6 +6,10 @@ import { Primitive } from "utility-types";
 
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
+  public get __engine(): typeof import("typescript") {
+    return ts;
+  }
+
   constructor(protected injector: Injector) {}
 
   public createPropertyAccess(object: string, propertyChain: string) {
