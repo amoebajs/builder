@@ -68,11 +68,11 @@ export class ReactRender<T extends IBasicReactContainerState<IPureObject> = IBas
     return this.parentRef["useMemos"];
   }
 
-  public setRootState(name: string, value: unknown) {
+  public setRootState<K extends keyof T>(name: K, value: T[K]) {
     this.parentRef["setState"](<any>name, <any>value);
   }
 
-  public getRootState(name: string) {
+  public getRootState<K extends keyof T>(name: K) {
     return this.parentRef["getState"](<any>name);
   }
 
