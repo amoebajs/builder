@@ -6,8 +6,8 @@ import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { ReactComponent, IBasicReactContainerState } from "../entities";
 
 @Injectable(InjectScope.New)
-export class ReactRender<T extends IBasicReactContainerState<IPureObject> = IBasicReactContainerState<{}>> {
-  private parentRef!: ReactComponent<T>;
+export class ReactRender<T extends Partial<IBasicReactContainerState> = IPureObject> {
+  private parentRef!: ReactComponent<IBasicReactContainerState & T>;
 
   constructor(private helper: ReactHelper) {}
 

@@ -28,7 +28,7 @@ export interface IVisitResult {
   newDisplayRule?: any;
 }
 
-export type IBasicReactContainerState<T = IPureObject> = T & {
+export interface IBasicReactContainerState {
   [BasicState.RenderTagName]: string;
   [BasicState.RenderTagAttrs]: JsxAttributeGenerator[];
   [BasicState.RenderChildrenMap]: Map<string | symbol, JsxElementGenerator>;
@@ -46,13 +46,11 @@ export type IBasicReactContainerState<T = IPureObject> = T & {
   [BasicState.FnsBeforeRender]: Function[];
   [BasicState.RootElementChangeFns]: ((gen: JsxElementGenerator) => JsxElementGenerator)[];
   [BasicState.AppendChildrenHooks]: { key: string; func: (node: any) => any }[];
-};
-
-type TP = IBasicReactContainerState<IPureObject>;
-type TY = IBasicReactContainerState<{}>;
+}
 
 @Injectable(InjectScope.New)
-export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T>
+export abstract class ReactComponent<T extends Partial<IBasicReactContainerState> = IPureObject>
+  extends BasicComponent<IBasicReactContainerState & T>
   implements IAfterChildrenRender, IAfterDirectivesAttach {
   protected get unshiftVariables() {
     return this.getState(BasicState.UnshiftVariables);
@@ -114,13 +112,17 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     return this.getState(BasicState.PushedNodes);
   }
 
-  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender<T>) {
+  constructor(
+    protected readonly helper: ReactHelper,
+    protected readonly render: ReactRender<IBasicReactContainerState & T>,
+  ) {
     super();
   }
 
   protected async onInit() {
     await super.onInit();
-    this.render["parentRef"] = this;
+    this["__state"];
+    this.render["parentRef"] = <any>this;
     this.setState(BasicState.RenderTagName, REACT.Fragment);
     this.setState(BasicState.RenderTagAttrs, []);
     this.setState(BasicState.RenderChildrenMap, new Map());

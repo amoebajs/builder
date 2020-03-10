@@ -1,6 +1,4 @@
-export interface IPureObject {
-  [prop: string]: any;
-}
+export interface IPureObject extends Record<string, any> {}
 
 export type MapValueType<T> = T extends Map<any, infer V> ? V : never;
 
