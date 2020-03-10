@@ -121,7 +121,6 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected async onInit() {
     await super.onInit();
-    this["__state"];
     this.render["parentRef"] = <any>this;
     this.setState(BasicState.RenderTagName, REACT.Fragment);
     this.setState(BasicState.RenderTagAttrs, []);
