@@ -1,13 +1,13 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { NotFoundError } from "../../errors";
-import { BasicState, Injectable, JsxElementGenerator } from "../../core";
+import { BasicState, Injectable, JsxElementGenerator, IPureObject } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
-import { ReactComponent } from "../entities";
+import { ReactComponent, IBasicReactContainerState } from "../entities";
 
 @Injectable(InjectScope.New)
-export class ReactRender {
-  private parentRef!: ReactComponent;
+export class ReactRender<T extends IBasicReactContainerState<IPureObject> = IBasicReactContainerState<{}>> {
+  private parentRef!: ReactComponent<T>;
 
   constructor(private helper: ReactHelper) {}
 
@@ -69,7 +69,7 @@ export class ReactRender {
   }
 
   public setRootState(name: string, value: unknown) {
-    this.parentRef["setState"](<any>name, value);
+    this.parentRef["setState"](<any>name, <any>value);
   }
 
   public getRootState(name: string) {

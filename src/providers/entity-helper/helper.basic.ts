@@ -1,8 +1,8 @@
 import ts from "typescript";
+import { Primitive } from "utility-types";
 import { InjectScope, Injector } from "@bonbons/di";
 import { ImportGenerator, Injectable, resolveSyntaxInsert } from "../../core";
 import { is } from "../../utils";
-import { Primitive } from "utility-types";
 
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
