@@ -7,9 +7,12 @@ import { ReactHelper, ReactRender } from "../entity-helper";
 export abstract class ReactDirective<T extends Partial<IBasicReactContainerState> = IPureObject> extends BasicDirective<
   IBasicReactContainerState & T
 > {
-  private readonly __parentRef!: ReactComponent<T>;
+  private readonly __parentRef!: ReactComponent<IBasicReactContainerState & T>;
 
-  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender<T>) {
+  constructor(
+    protected readonly helper: ReactHelper,
+    protected readonly render: ReactRender<IBasicReactContainerState & T>,
+  ) {
     super();
   }
 
