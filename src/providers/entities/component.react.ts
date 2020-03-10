@@ -114,7 +114,7 @@ export abstract class ReactComponent<T extends TP = TY> extends BasicComponent<T
     return this.getState(BasicState.PushedNodes);
   }
 
-  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender) {
+  constructor(protected readonly helper: ReactHelper, protected readonly render: ReactRender<T>) {
     super();
   }
 
