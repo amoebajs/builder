@@ -9,10 +9,15 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   protected defaultName: string | undefined = void 0;
   protected namespaceName: string | undefined = void 0;
   protected modulePath = "demo";
-  protected namedBinds: Record<string, string | undefined> = {};
+  protected namedBinds: Record<string, string[]> = {};
 
   public addNamedBinding(name: string, alias?: string) {
-    this.namedBinds[name] = alias;
+    const exist = this.namedBinds[name];
+    if (is.nullOrUndefined(exist)) {
+      this.namedBinds[name] = is.nullOrUndefined(alias) ? [] : [alias];
+    } else if (!is.nullOrUndefined(alias)) {
+      exist.push(...[alias].filter(e => exist.findIndex(i => i === e) < 0));
+    }
     return this;
   }
 
@@ -20,8 +25,8 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
     if (isAlias) {
       const entries = Object.entries(this.namedBinds);
       for (const [n, a] of entries) {
-        if (a === name) {
-          delete this.namedBinds[n];
+        if (a.findIndex(i => i === name)) {
+          this.namedBinds[n] = this.namedBinds[n].filter(i => i !== name);
           break;
         }
       }
@@ -66,7 +71,9 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
       let nameBindings: ts.NamedImports | undefined = void 0;
       if (Object.keys(this.namedBinds).length > 0) {
         nameBindings = ts.createNamedImports(
-          Object.entries(this.namedBinds).map(([n, a]) => createNamedAsImport(a, n)),
+          Object.entries(this.namedBinds)
+            .map(([n, a]) => createNamedAsImport(a, n))
+            .reduce((p, c) => [...p, ...c], []),
         );
       }
       importClause =
@@ -80,9 +87,11 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   }
 }
 
-function createNamedAsImport(alias: string | undefined, name: string): ts.ImportSpecifier {
-  return ts.createImportSpecifier(
-    is.nullOrUndefined(alias) ? void 0 : ts.createIdentifier(name),
-    ts.createIdentifier(alias || name),
+function createNamedAsImport(alias: string[], name: string): ts.ImportSpecifier[] {
+  return alias.map(a =>
+    ts.createImportSpecifier(
+      is.nullOrUndefined(alias) ? void 0 : ts.createIdentifier(name),
+      ts.createIdentifier(a || name),
+    ),
   );
 }

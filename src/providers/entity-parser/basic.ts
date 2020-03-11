@@ -197,16 +197,14 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
           imported.default.push(defaultImport.text);
         }
         if (ts.isNamedImports(namedImports)) {
-          imported.named.push(
-            ...namedImports.elements
-              .filter(specifier =>
-                imported.named.every(
-                  ([importedPropertyName, importedName]) =>
-                    importedPropertyName !== specifier.propertyName?.text && importedName !== specifier.name.text,
-                ),
-              )
-              .map(specifier => [specifier.propertyName?.text || "", specifier.name.text]),
-          );
+          const willInsert = namedImports.elements
+            .filter(specifier =>
+              imported.named.every(
+                ([alias, _]) => alias !== specifier.propertyName?.text /**  && _ !== specifier.name.text */,
+              ),
+            )
+            .map(specifier => [specifier.propertyName?.text || "", specifier.name.text]);
+          imported.named.push(...willInsert);
         } else if (ts.isNamespaceImport(namedImports) && !imported.namespace.includes(namedImports.name.text)) {
           imported.namespace.push(namedImports.name.text);
         }
