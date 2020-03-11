@@ -20,6 +20,7 @@ export interface IInputPropertyContract extends IPropertyGroupContract {
   useEnums: IMetaTypeEnumInfo | null;
   useMap: IMetaTypeMapInfo | null;
   useExpression: boolean;
+  required: boolean;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -59,6 +60,7 @@ const defaultInput: IInputPropertyContract = {
   useEnums: null,
   useMap: null,
   useExpression: false,
+  required: false,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -143,6 +145,7 @@ function createBasicMeta(
     name: nameMeta,
     group: groupMeta,
     description: descMeta,
+    required: (<IInputPropertyContract>metadata).required ?? false,
     type: {
       expressionType: useExpr ? "complexLogic" : "literal",
       meta: useMap ? "map" : useEnums ? "enums" : getMetaOfConstructor(designType),

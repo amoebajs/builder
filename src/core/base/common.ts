@@ -59,6 +59,7 @@ export interface IPropertyBase extends IUnitBase {
   realName: string;
   group: string | null;
   type: IMetaType;
+  required: boolean;
 }
 
 /**
