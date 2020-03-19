@@ -50,11 +50,11 @@ function callYarnInstall(root: string, options: Partial<IWebpackInstallOptions> 
         env: Object.assign({}, process.env),
         cwd: root,
       });
-      cp.stdout.on("data", data => {
-        options.trigger && options.trigger(data, "stdout");
+      cp.stdout.on("data", (data: Buffer) => {
+        options.trigger && options.trigger(data.toString(), "stdout");
       });
-      cp.stderr.on("data", data => {
-        options.trigger && options.trigger(data, "stderr");
+      cp.stderr.on("data", (data: Buffer) => {
+        options.trigger && options.trigger(data.toString(), "stderr");
       });
       cp.on("exit", (code, signal) => {
         if (code === 0) {
