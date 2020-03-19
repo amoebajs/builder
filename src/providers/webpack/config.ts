@@ -20,7 +20,14 @@ export interface IWebpackTypeScriptOptions {
 export interface IWebpackSandboxOptions {
   rootPath: string;
   dependencies: { [prop: string]: string };
+  install: Partial<IWebpackInstallOptions>;
+}
+
+export interface IWebpackInstallOptions {
   registry: string;
+  disturl: string;
+  type: "emit" | "trigger";
+  trigger(data: string): void;
 }
 
 export interface IWebpackOptions {
