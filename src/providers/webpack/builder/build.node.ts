@@ -45,16 +45,36 @@ function callYarnInstall(root: string, options: Partial<IWebpackInstallOptions> 
   if (options.registry !== void 0) args.push(`--registry=${options.registry}`);
   if (options.disturl !== void 0) args.push(`--disturl=${options.disturl}`);
   return new Promise((resolve, reject) => {
-    spawn(yarn, args, {
-      env: { ...process.env },
-      cwd: root,
-      stdio: ["pipe", process.stdout, process.stderr],
-    }).on("exit", (code, signal) => {
-      if (code === 0) {
-        resolve(code);
-      } else {
-        reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
-      }
-    });
+    if (options.type === "trigger") {
+      const cp = spawn(yarn, args, {
+        env: Object.assign({}, process.env),
+        cwd: root,
+      });
+      cp.stdout.on("data", data => {
+        options.trigger && options.trigger(data, "stdout");
+      });
+      cp.stderr.on("data", data => {
+        options.trigger && options.trigger(data, "stderr");
+      });
+      cp.on("exit", (code, signal) => {
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
+        }
+      });
+    } else {
+      spawn(yarn, args, {
+        env: { ...process.env },
+        cwd: root,
+        stdio: ["pipe", process.stdout, process.stderr],
+      }).on("exit", (code, signal) => {
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
+        }
+      });
+    }
   });
 }

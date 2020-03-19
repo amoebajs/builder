@@ -27,7 +27,7 @@ export interface IWebpackInstallOptions {
   registry: string;
   disturl: string;
   type: "emit" | "trigger";
-  trigger(data: string): void;
+  trigger(data: string, type: "stdout" | "stderr"): void;
 }
 
 export interface IWebpackOptions {
