@@ -10,11 +10,11 @@ export class WebpackPluginsWebProvider implements WebpackPlugins {
     throw new Error("Method not implemented.");
   }
 
-  public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
+  public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplatePluginOptions>): Plugin {
     throw new Error("Method not implemented.");
   }
 
-  public createProgressPlugin(): Plugin {
+  public createProgressPlugin(options?: Partial<import("./plugins.contract").IWebpackProgressPluginOptions>): Plugin {
     throw new Error("Method not implemented.");
   }
 }

@@ -1,7 +1,7 @@
 import { Plugin } from "webpack";
 import { Injectable } from "../../core";
 import { Path } from "../path/path.contract";
-import { IWebpackTemplateOptions, WebpackPlugins } from "./plugins/plugins.contract";
+import { IWebpackTemplatePluginOptions, WebpackPlugins } from "./plugins/plugins.contract";
 
 export interface IWebpackEntryOptions {
   app: string;
@@ -26,7 +26,7 @@ export interface IWebpackSandboxOptions {
 export interface IWebpackOptions {
   entry?: Partial<IWebpackEntryOptions>;
   output?: Partial<IWebpackOutputOptions>;
-  template?: Partial<IWebpackTemplateOptions>;
+  template?: Partial<IWebpackTemplatePluginOptions>;
   typescript?: Partial<IWebpackTypeScriptOptions>;
   sandbox?: Partial<IWebpackSandboxOptions>;
   mode?: "production" | "development";

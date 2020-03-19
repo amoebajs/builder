@@ -19,7 +19,9 @@ const defaultStyleSheets: IWebpackTemplateStyleOptions[] = [
 export class WebpackPluginsNodeProvider implements WebpackPlugins {
   constructor(protected path: Path, protected fs: Fs) {}
 
-  public createTemplatePlugin(options?: Partial<import("./plugins.contract").IWebpackTemplateOptions>): Plugin {
+  public createTemplatePlugin(
+    options: Partial<import("./plugins.contract").IWebpackTemplatePluginOptions> = {},
+  ): Plugin {
     return new HtmlWebPackPlugin({
       template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.html"),
       title: options?.title ?? "Index",
@@ -35,7 +37,9 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
     });
   }
 
-  public createProgressPlugin(): Plugin {
+  public createProgressPlugin(
+    options: Partial<import("./plugins.contract").IWebpackProgressPluginOptions> = { type: "emit" },
+  ): Plugin {
     const buildingStatus = {
       percent: "0",
       stamp: <number | null>null,
@@ -49,10 +53,19 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
       }
       const usage = stamp - buildingStatus.stamp;
       buildingStatus.percent = percent;
-      console.log(`[${(usage / 1000).toFixed(2)}s] ${chalk.green(buildingStatus.percent + "%")} ${msg}`);
+      if (options?.type === "trigger") {
+        options.trigger &&
+          options.trigger(`[${(usage / 1000).toFixed(2)}s] ${chalk.green(buildingStatus.percent + "%")} ${msg}`);
+      } else {
+        console.log(`[${(usage / 1000).toFixed(2)}s] ${chalk.green(buildingStatus.percent + "%")} ${msg}`);
+      }
       if (percent === "100.00") {
         buildingStatus.stamp = null;
-        console.log(chalk.blue("[webpack] compile successfully\n"));
+        if (options?.type === "trigger") {
+          options.trigger && options.trigger("[webpack] compile successfully\n");
+        } else {
+          console.log(chalk.blue("[webpack] compile successfully\n"));
+        }
       }
     });
   }

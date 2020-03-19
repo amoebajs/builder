@@ -13,7 +13,7 @@ export interface IWebpackTemplateStyleOptions {
   value: string;
 }
 
-export interface IWebpackTemplateOptions {
+export interface IWebpackTemplatePluginOptions {
   title: string;
   path: string;
   charset: string;
@@ -21,8 +21,13 @@ export interface IWebpackTemplateOptions {
   scripts: IWebpackTemplateScriptOptions[];
 }
 
+export interface IWebpackProgressPluginOptions {
+  type: "emit" | "trigger";
+  trigger(data: string): void;
+}
+
 @Injectable()
 export abstract class WebpackPlugins {
-  public abstract createProgressPlugin(): Plugin;
-  public abstract createTemplatePlugin(options?: Partial<IWebpackTemplateOptions>): Plugin;
+  public abstract createProgressPlugin(options?: Partial<IWebpackProgressPluginOptions>): Plugin;
+  public abstract createTemplatePlugin(options?: Partial<IWebpackTemplatePluginOptions>): Plugin;
 }
