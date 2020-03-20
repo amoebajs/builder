@@ -30,6 +30,7 @@ export type IFrameworkStructure<T> = {
 
 export const defaultFrameworkDepts: IFrameworkDepts = {
   react: {
+    "@types/react": "^16.12.0",
     react: "^16.12.0",
     reactDom: "^16.12.0",
   },
