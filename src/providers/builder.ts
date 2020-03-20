@@ -132,13 +132,20 @@ function buildResult(source: string, depts: Record<string, string>): ISourceCrea
   for (const key in depts) {
     if (depts.hasOwnProperty(key)) {
       const version = depts[key];
-      dependencies[kebabCase(key)] = version;
+      dependencies[resolvePackageName(key)] = version;
     }
   }
   return {
     sourceCode: source,
     dependencies,
   };
+}
+
+function resolvePackageName(name: string) {
+  if (/^[a-zA-Z]+$/.test(name)) {
+    return kebabCase(name);
+  }
+  return name;
 }
 
 function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, result: ISourceCreateResult) {
