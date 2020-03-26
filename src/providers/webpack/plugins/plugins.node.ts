@@ -4,16 +4,25 @@ import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { IWebpackTemplateScriptOptions, IWebpackTemplateStyleOptions, WebpackPlugins } from "./plugins.contract";
+import { WebpackPlugins, IWebpackTemplateAddOnOptions } from "./plugins.contract";
 
-const defaultScripts: IWebpackTemplateScriptOptions[] = [];
-
-const defaultStyleSheets: IWebpackTemplateStyleOptions[] = [
+const defaultAddOns: IWebpackTemplateAddOnOptions[] = [
   {
-    type: "rel-stylesheet",
-    value: "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+    tagName: "meta",
+    properties: {
+      charset: "utf-8",
+    },
+  },
+  {
+    tagName: "link",
+    properties: {
+      rel: "stylesheet",
+      href: "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+    },
   },
 ];
+
+const block = "    ";
 
 @Injectable()
 export class WebpackPluginsNodeProvider implements WebpackPlugins {
@@ -22,16 +31,23 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
   public createTemplatePlugin(
     options: Partial<import("./plugins.contract").IWebpackTemplatePluginOptions> = {},
   ): Plugin {
+    const addOns = options?.addons ?? defaultAddOns;
     return new HtmlWebPackPlugin({
       template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.html"),
-      title: options?.title ?? "Index",
-      charset: options?.charset ?? "utf-8",
-      styleList: (options?.styles ?? defaultStyleSheets)
-        .map(style => createStyle(style, "    "))
+      baseSlot: createbBaseSlot(addOns, block),
+      metaList: addOns
+        .filter(i => i.tagName === "meta")
+        .map(meta => createMeta(meta, block))
         .join("\n")
         .slice(4),
-      scriptList: (options?.scripts ?? defaultScripts)
-        .map(script => createScript(script, "    "))
+      styleList: addOns
+        .filter(i => i.tagName === "link" || i.tagName === "style")
+        .map(style => createStyle(style, block))
+        .join("\n")
+        .slice(4),
+      scriptList: addOns
+        .filter(i => i.tagName === "scripts")
+        .map(script => createScript(script, block))
         .join("\n")
         .slice(4),
     });
@@ -71,28 +87,36 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
   }
 }
 
-function createStyle(style: IWebpackTemplateStyleOptions, block = "") {
-  switch (style.type) {
-    case "rel-stylesheet":
-      return `${block}<link rel="stylesheet" href="${style.value}"/>`;
-    case "inline-style":
-      return `${block}<style>\n${style.value}\n${block}</style>`;
+function createbBaseSlot(addons: IWebpackTemplateAddOnOptions[], block = "") {
+  const base = addons.find(i => i.tagName === "base");
+  return !!base ? `${block}<base href=${base.properties?.href}/>` : "";
+}
+
+function createMeta(meta: IWebpackTemplateAddOnOptions, block = "") {
+  const items = Object.entries(meta)
+    .map(([k, v]) => `${k}="${String(v)}"`)
+    .join(" ");
+  return `${block}<meta ${items}/>`;
+}
+
+function createStyle(style: IWebpackTemplateAddOnOptions, block = "") {
+  switch (style.tagName) {
+    case "link":
+      return `${block}<link rel="${style.properties?.rel ?? "stylesheet"}" href="${style.properties?.href}"/>`;
+    case "style":
+      return `${block}<style>\n${style.properties?.value}\n${block}</style>`;
     default:
       return block;
   }
 }
 
-function createScript(script: IWebpackTemplateScriptOptions, block = "") {
-  const deferToken = script.defer ? `defer="${script.defer}"` : undefined;
-  const asyncToken = script.async ? `async="${script.async}"` : undefined;
-  let adds = [deferToken, asyncToken].filter(i => !!i).join(" ");
+function createScript(script: IWebpackTemplateAddOnOptions, block = "") {
+  let adds = (script.attributes ?? []).filter(i => !!i).join(" ");
   adds = adds.length === 0 ? adds + " " : " " + adds + " ";
-  switch (script.type) {
-    case "src-javascript":
-      return `${block}<script type="text/javascript"${adds}src="${script.value}"></script>`;
-    case "inline-javascript":
-      return `${block}<script type="text/javascript"${adds}>\n${script.value}\n${block}</script>`;
-    default:
-      return block;
+  const type = script.properties?.type ?? "text/javascript";
+  if (script.properties?.src) {
+    return `${block}<script type="${type}"${adds}src="${script.properties?.src}"></script>`;
+  } else {
+    return `${block}<script type="${type}"${adds}>\n${script.properties?.value}\n${block}</script>`;
   }
 }

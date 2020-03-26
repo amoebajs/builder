@@ -1,24 +1,15 @@
 import { Plugin } from "webpack";
 import { Injectable } from "../../../core";
 
-export interface IWebpackTemplateScriptOptions {
-  type: "inline-javascript" | "src-javascript";
-  defer?: string | boolean;
-  async?: string | boolean;
-  value: string;
-}
-
-export interface IWebpackTemplateStyleOptions {
-  type: "rel-stylesheet" | "inline-style";
-  value: string;
+export interface IWebpackTemplateAddOnOptions {
+  tagName: string;
+  attributes?: string[];
+  properties?: Record<string, any>;
 }
 
 export interface IWebpackTemplatePluginOptions {
-  title: string;
   path: string;
-  charset: string;
-  styles: IWebpackTemplateStyleOptions[];
-  scripts: IWebpackTemplateScriptOptions[];
+  addons: Array<IWebpackTemplateAddOnOptions>;
 }
 
 export interface IWebpackProgressPluginOptions {

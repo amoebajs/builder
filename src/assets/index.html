@@ -1,8 +1,8 @@
 <html>
   <head>
-    <meta charset="<%= htmlWebpackPlugin.options.charset %>" />
-    <title><%= htmlWebpackPlugin.options.title %></title>
-    <%= htmlWebpackPlugin.options.styleList %>
+    <%= htmlWebpackPlugin.options.metaList %>
+    <title><%= htmlWebpackPlugin.options.titleSlot %></title>
+    <%= htmlWebpackPlugin.options.baseSlot %> <%= htmlWebpackPlugin.options.styleList %>
   </head>
   <body>
     <div id="app"></div>
