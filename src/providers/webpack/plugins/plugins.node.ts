@@ -112,30 +112,39 @@ function createbBaseSlot(addons: IWebpackTemplateAddOnOptions[], block = "") {
 }
 
 function createMeta(meta: IWebpackTemplateAddOnOptions, block = "") {
-  const items = Object.entries(meta)
-    .map(([k, v]) => `${k}="${String(v)}"`)
-    .join(" ");
-  return `${block}<meta ${items}/>`;
+  return `${block}<meta ${getAttibutes(meta)}${getProperties(meta)}/>`;
 }
 
 function createStyle(type: "link" | "style", style: IWebpackTemplateAddOnOptions, block = "") {
+  const attrs = getAttibutes(style);
   switch (type) {
     case "link":
-      return `${block}<link rel="${style.properties?.rel ?? "stylesheet"}" href="${style.properties?.href}"/>`;
+      return `${block}<link ${attrs}${getProperties(style)}/>`;
     case "style":
-      return `${block}<style>\n${style.properties?.value}\n${block}</style>`;
+      return `${block}<style ${attrs}>\n${style.properties?.value}\n${block}</style>`;
     default:
       return block;
   }
 }
 
 function createScript(script: IWebpackTemplateAddOnOptions, block = "") {
-  let adds = (script.attributes ?? []).filter(i => !!i).join(" ");
-  adds = adds.length === 0 ? adds + " " : " " + adds + " ";
+  const adds = getAttibutes(script);
   const type = script.properties?.type ?? "text/javascript";
   if (script.properties?.src) {
     return `${block}<script type="${type}"${adds}src="${script.properties?.src}"></script>`;
   } else {
     return `${block}<script type="${type}"${adds}>\n${script.properties?.value}\n${block}</script>`;
   }
+}
+
+function getProperties(style: IWebpackTemplateAddOnOptions) {
+  return Object.entries(style.properties ?? {})
+    .map(([k, v]) => `${k}="${String(v)}"`)
+    .join(" ");
+}
+
+function getAttibutes(entry: IWebpackTemplateAddOnOptions) {
+  let adds = (entry.attributes ?? []).filter(i => !!i).join(" ");
+  adds = adds.length === 0 ? adds + " " : " " + adds + " ";
+  return adds;
 }
