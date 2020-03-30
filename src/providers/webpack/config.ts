@@ -24,6 +24,8 @@ export interface IWebpackSandboxOptions {
 }
 
 export interface IWebpackInstallOptions {
+  command: string;
+  args: string[];
   registry: string;
   disturl: string;
   type: "emit" | "trigger";

@@ -46,7 +46,7 @@ function callYarnInstall(root: string, options: Partial<IWebpackInstallOptions> 
   if (options.disturl !== void 0) args.push(`--disturl=${options.disturl}`);
   return new Promise((resolve, reject) => {
     if (options.type === "trigger") {
-      const cp = spawn(yarn, args, {
+      const cp = spawn(options.command ?? yarn, options?.args ?? args, {
         env: Object.assign({}, process.env),
         cwd: root,
       });
