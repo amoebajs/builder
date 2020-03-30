@@ -2,14 +2,14 @@ import { Plugin } from "webpack";
 import { Injectable } from "../../../core";
 
 export interface IWebpackTemplateAddOnOptions {
-  tagName: string;
   attributes?: string[];
   properties?: Record<string, any>;
 }
 
 export interface IWebpackTemplatePluginOptions {
   path: string;
-  addons: Array<IWebpackTemplateAddOnOptions>;
+  title: string;
+  addons: Record<string, IWebpackTemplateAddOnOptions[]>;
 }
 
 export interface IWebpackProgressPluginOptions {

@@ -6,21 +6,30 @@ import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
 import { WebpackPlugins, IWebpackTemplateAddOnOptions } from "./plugins.contract";
 
-const defaultAddOns: IWebpackTemplateAddOnOptions[] = [
-  {
-    tagName: "meta",
-    properties: {
-      charset: "utf-8",
+const defaultAddOns: Record<string, IWebpackTemplateAddOnOptions[]> = {
+  meta: [
+    {
+      properties: {
+        charset: "utf-8",
+      },
     },
-  },
-  {
-    tagName: "link",
-    properties: {
-      rel: "stylesheet",
-      href: "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+  ],
+  title: [
+    {
+      properties: {
+        value: "Index",
+      },
     },
-  },
-];
+  ],
+  link: [
+    {
+      properties: {
+        rel: "stylesheet",
+        href: "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+      },
+    },
+  ],
+};
 
 const block = "    ";
 
@@ -31,22 +40,27 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
   public createTemplatePlugin(
     options: Partial<import("./plugins.contract").IWebpackTemplatePluginOptions> = {},
   ): Plugin {
-    const addOns = options?.addons ?? defaultAddOns;
+    const addOns: Record<string, IWebpackTemplateAddOnOptions[]> = {
+      ...defaultAddOns,
+      ...options?.addons,
+    };
     return new HtmlWebPackPlugin({
-      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.html"),
-      baseSlot: createbBaseSlot(addOns, block),
-      metaList: addOns
-        .filter(i => i.tagName === "meta")
+      template: options?.path ?? this.path.resolve(__dirname, "..", "..", "..", "assets", "index.ejs"),
+      titleSlot: createbTitleSlot(addOns.title ?? [], block),
+      baseSlot: createbBaseSlot(addOns.base ?? [], block),
+      faviconSlot: createbBaseSlot(addOns.base ?? [], block),
+      metaList: (addOns.meta ?? [])
         .map(meta => createMeta(meta, block))
         .join("\n")
         .slice(4),
-      styleList: addOns
-        .filter(i => i.tagName === "link" || i.tagName === "style")
-        .map(style => createStyle(style, block))
+      styleList: [
+        ...(addOns.style ?? []).map(i => ({ ...i, _type: "style" })),
+        ...(addOns.link ?? []).map(i => ({ ...i, _type: "link" })),
+      ]
+        .map(style => createStyle(<any>style._type, style, block))
         .join("\n")
         .slice(4),
-      scriptList: addOns
-        .filter(i => i.tagName === "scripts")
+      scriptList: (addOns.script ?? [])
         .map(script => createScript(script, block))
         .join("\n")
         .slice(4),
@@ -87,8 +101,13 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
   }
 }
 
+function createbTitleSlot(addons: IWebpackTemplateAddOnOptions[], block = "") {
+  const title = addons[0];
+  return !!title ? `${block}<title>${title.properties?.value}</title>` : "";
+}
+
 function createbBaseSlot(addons: IWebpackTemplateAddOnOptions[], block = "") {
-  const base = addons.find(i => i.tagName === "base");
+  const base = addons[0];
   return !!base ? `${block}<base href=${base.properties?.href}/>` : "";
 }
 
@@ -99,8 +118,8 @@ function createMeta(meta: IWebpackTemplateAddOnOptions, block = "") {
   return `${block}<meta ${items}/>`;
 }
 
-function createStyle(style: IWebpackTemplateAddOnOptions, block = "") {
-  switch (style.tagName) {
+function createStyle(type: "link" | "style", style: IWebpackTemplateAddOnOptions, block = "") {
+  switch (type) {
     case "link":
       return `${block}<link rel="${style.properties?.rel ?? "stylesheet"}" href="${style.properties?.href}"/>`;
     case "style":
