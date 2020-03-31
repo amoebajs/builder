@@ -277,6 +277,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.unshiftVariables.push(
       this.createNode("variable").addField({
         name,
+        type: "any",
         initValue: initilizer && (() => initilizer),
       }),
     );
@@ -286,6 +287,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.pushedVariables.push(
       this.createNode("variable").addField({
         name,
+        type: "any",
         initValue: initilizer && (() => initilizer),
       }),
     );
