@@ -183,11 +183,12 @@ export class ReactHelper extends BasicHelper {
 
   public useStateExpression(exp: IStateExpression, contextName: string) {
     const [p01, ...ps] = String(exp.expression).split(".");
-    return `${this.useReverse(exp)}${contextName}.state.${[p01, "value", ...ps].join(".")}`;
+    return `${this.useReverse(exp)}${contextName}?.state?.${[p01, "value", ...ps].join("?.")}`;
   }
 
   public usePropExpression(exp: IPropsExpression) {
-    return `${this.useReverse(exp)}props.${exp.expression}`;
+    const ps = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}props?.${ps.join("?.")}`;
   }
 
   public useComplexLogicExpression(exp: IComplexLogicExpression, contextName: string) {
