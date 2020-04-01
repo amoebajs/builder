@@ -1,4 +1,5 @@
 import uuid from "uuid/v4";
+import { classCase } from "./case";
 
 export * from "./constants";
 export * from "./case";
@@ -13,4 +14,12 @@ export function createEntityId() {
       .split("-")
       .join("")
   );
+}
+
+export function connectDirectiveRequie(parentScope: string, newId: string): string {
+  return parentScope + "_" + newId;
+}
+
+export function connectReferenceName(entityid: string, name: string) {
+  return entityid + "_" + classCase(name);
 }

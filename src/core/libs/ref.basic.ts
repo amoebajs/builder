@@ -1,5 +1,5 @@
 import { IInnerEwsEntity } from "../base";
-import { classCase } from "../../utils";
+import { classCase, connectReferenceName } from "../../utils";
 
 export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
   private _name!: string;
@@ -7,7 +7,7 @@ export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
   private _host!: T;
 
   public get name() {
-    return this._host?.entityId + "_" + classCase(this._name);
+    return connectReferenceName(this._host?.entityId!, this._name);
   }
 
   constructor() {}

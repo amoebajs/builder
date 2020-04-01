@@ -3,13 +3,17 @@ import { InjectScope } from "@bonbons/di";
 import { NotFoundError } from "../../errors";
 import { BasicState, Injectable, JsxElementGenerator, IPureObject } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
-import { ReactComponent, IBasicReactContainerState } from "../entities";
+import { ReactComponent, IBasicReactContainerState as IS } from "../entities";
+import { BasicRender } from "./render.basic";
+import { connectDirectiveRequie, connectReferenceName } from "../../utils";
 
 @Injectable(InjectScope.New)
-export class ReactRender<T extends Partial<IBasicReactContainerState> = IPureObject> {
-  private parentRef!: ReactComponent<IBasicReactContainerState & T>;
+export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRender<T> {
+  protected parentRef!: ReactComponent<IS & T>;
 
-  constructor(private helper: ReactHelper) {}
+  constructor(protected helper: ReactHelper) {
+    super(helper);
+  }
 
   public getElementById(entityId: string) {
     const map = this.parentRef["renderChildMap"];
@@ -68,34 +72,30 @@ export class ReactRender<T extends Partial<IBasicReactContainerState> = IPureObj
     return this.parentRef["useMemos"];
   }
 
-  public setRootState<K extends keyof (IBasicReactContainerState & T)>(name: K, value: T[K]): void {
-    this.parentRef["setState"](<any>name, <any>value);
-  }
-
-  public getRootState<K extends keyof (IBasicReactContainerState & T)>(name: K): (IBasicReactContainerState & T)[K] {
-    return this.parentRef["getState"](<any>name);
-  }
-
   public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
     this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }
 
   public appendRootFnBeforeRender(fn: Function) {
-    this.getRootState(BasicState.FnsBeforeRender).push(fn);
+    (this.getRootState(BasicState.FnsBeforeRender) as any[]).push(fn);
   }
 
   public appendRootEleChangeFns(fn: (gen: JsxElementGenerator) => JsxElementGenerator) {
-    this.getRootState(BasicState.RootElementChangeFns).push(fn);
+    (this.getRootState(BasicState.RootElementChangeFns) as any[]).push(fn);
   }
 
   public createStateAccessSyntax(name: string) {
-    const contextName = this.getRootState(BasicState.ContextInfo).name;
+    const contextName = (this.getRootState(BasicState.ContextInfo) as any).name;
     let reverse = false;
     if (name.startsWith("!")) {
       name = name.slice(1);
       reverse = true;
     }
     return this.helper.useStateExpression({ type: "state", expression: name, extensions: { reverse } }, contextName);
+  }
+
+  public createDirectiveRefAccess(directive: string, refname: string) {
+    return connectReferenceName(connectDirectiveRequie(this.parentRef.entityId, directive), refname);
   }
 
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {

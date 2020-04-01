@@ -31,7 +31,7 @@ import {
 import { NotFoundError } from "../../errors";
 import { GlobalMap, IMapEntry } from "../global-map";
 import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
-import { is, createEntityId } from "../../utils";
+import { is, createEntityId, connectDirectiveRequie } from "../../utils";
 
 interface IContextTreeNode {
   scopeid: string | symbol;
@@ -269,7 +269,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   private _checkCreateId(entity: any, parentScope?: string, thisScope?: string | symbol): [string, string] {
     let newId = (thisScope ?? createEntityId()).toString();
     if (!is.nullOrUndefined(parentScope)) {
-      newId = parentScope + "_" + newId;
+      newId = connectDirectiveRequie(parentScope, newId);
     }
     const exist = this.globalMap.getDirectiveByType(entity);
     if (exist) {
