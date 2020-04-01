@@ -218,13 +218,16 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
         };
       }
     }
-    const combinedImportDeclarations: ts.ImportDeclaration[] = [];
+    const nsImports: ts.ImportDeclaration[] = [];
+    const dfImports: ts.ImportDeclaration[] = [];
+    const nmImports: ts.ImportDeclaration[] = [];
+    const noImports: ts.ImportDeclaration[] = [];
     for (const [moduleName, imports] of Object.entries(record)) {
       for (const namespaceImport of imports.namespace) {
-        combinedImportDeclarations.push(helper.createNamespaceImport(moduleName, namespaceImport).emit());
+        nsImports.push(helper.createNamespaceImport(moduleName, namespaceImport).emit());
       }
       for (const defaultImport of imports.default) {
-        combinedImportDeclarations.push(
+        dfImports.push(
           helper.createImport(moduleName, defaultImport, imports.named.length ? imports.named : undefined).emit(),
         );
         // 具名导入跟随默认导入创建完成后删除，避免接下来重复创建
@@ -232,12 +235,12 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
       }
       if (imports.named.length) {
         // 如果没有默认导入，此处创建具名导入
-        combinedImportDeclarations.push(helper.createImport(moduleName, undefined, imports.named).emit());
+        nmImports.push(helper.createImport(moduleName, undefined, imports.named).emit());
       }
       if (!imports.named.length && !imports.default.length && !imports.namespace.length) {
-        combinedImportDeclarations.push(helper.createImport(moduleName).emit());
+        noImports.push(helper.createImport(moduleName).emit());
       }
     }
-    return combinedImportDeclarations;
+    return [...nsImports, ...nmImports, ...dfImports, ...noImports];
   }
 }

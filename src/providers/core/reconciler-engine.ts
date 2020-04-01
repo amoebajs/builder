@@ -7,7 +7,6 @@ import {
   IReactEntityPayload,
   resolveComponent,
   resolveDirective,
-  resolveRequire,
   IDirecChildRefPluginOptions,
   ICompChildRefPluginOptions,
   IInnerCompnentChildRef,
@@ -25,7 +24,7 @@ import {
   IComponentProp,
 } from "../../core";
 import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
-import { setBaseChildRefInfo, SourceFileBasicContext, resentRequireInputs } from "./context";
+import { setBaseChildRefInfo, SourceFileBasicContext } from "./context";
 import { createEntityId, is } from "../../utils";
 import { GlobalMap } from "../global-map";
 import { BasicEntityProvider } from "../entity-parser";
@@ -265,22 +264,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       (<any>ref)["__refDirectives"] = childNodes.filter(c => c!.__etype === "directiveChildRef");
       if (type === "component") {
         // 支持Require语法
-        const requires = resolveRequire(ctor);
-        for (const { entity, inputs } of requires) {
-          const [importId, nameId] = this.context["_checkCreateId"](entity);
-          (<any>ref)["__refRequires"].push((context: any) =>
-            this.context["createDirectiveRef"](
-              {
-                refEntityId: importId,
-                entityName: nameId,
-                options: {
-                  input: resentRequireInputs(inputs, context),
-                },
-              },
-              <any>ref,
-            ),
-          );
-        }
+        this.context["_resolveComponentRequires"](<any>ref, ctor, <any>ref);
       }
     }
   }

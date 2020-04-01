@@ -200,22 +200,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     for (const iterator of tOptions.directives) {
       ref["__refDirectives"].push(this.createDirectiveRef(iterator, <any>ref));
     }
-    const requires = resolveRequire(value);
-    for (const { entity, inputs } of requires) {
-      const [importId, nameId] = this._checkCreateId(entity);
-      ref["__refRequires"].push((context: any) =>
-        this.createDirectiveRef(
-          {
-            refEntityId: importId,
-            entityName: nameId,
-            options: {
-              input: resentRequireInputs(inputs, context),
-            },
-          },
-          <any>ref,
-        ),
-      );
-    }
+    this._resolveComponentRequires(ref, value, <any>ref);
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
@@ -238,6 +223,29 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return <IInnerCompositionChildRef>(<unknown>ref);
   }
 
+  private _resolveComponentRequires(
+    ref: BasicComponentChildRef<any>,
+    value: EntityConstructor<any>,
+    parent?: IInnerCompnentChildRef,
+  ) {
+    const requires = resolveRequire(value);
+    for (const { entity, inputs, scopeId } of requires) {
+      const [importId, nameId] = this._checkCreateId(entity, parent?.__entityId, scopeId);
+      ref["__refRequires"].push((context: any) =>
+        this.createDirectiveRef(
+          {
+            refEntityId: importId,
+            entityName: nameId,
+            options: {
+              input: resentRequireInputs(inputs, context),
+            },
+          },
+          <any>ref,
+        ),
+      );
+    }
+  }
+
   private _resolveDependencies() {
     const deptsList: Record<string, string>[] = [];
     for (const iterator of this.components) {
@@ -258,8 +266,11 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     };
   }
 
-  private _checkCreateId(entity: any): [string, string] {
-    const newId = createEntityId();
+  private _checkCreateId(entity: any, parentScope?: string, thisScope?: string | symbol): [string, string] {
+    let newId = (thisScope ?? createEntityId()).toString();
+    if (!is.nullOrUndefined(parentScope)) {
+      newId = parentScope + "_" + newId;
+    }
     const exist = this.globalMap.getDirectiveByType(entity);
     if (exist) {
       const target = this.directives.find(i => i.moduleName === exist.moduleName && i.templateName === exist.name)!;
@@ -297,7 +308,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 }
 
-export function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
+function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
   return Object.entries(inputs).reduce(
     (p, c) => ({
       ...p,

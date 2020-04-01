@@ -56,6 +56,7 @@ export type IRequireInputsContract = Record<string, unknown | ((fields: any) => 
 
 export interface IRequireContract {
   type: string;
+  scopeId?: string | symbol;
   entity: EntityConstructor<any>;
   inputs: IRequireInputsContract;
 }
@@ -96,12 +97,29 @@ export function Component(define: any) {
 }
 
 export function Require(entity: EntityConstructor<any>): ClassDecorator;
+export function Require(entity: EntityConstructor<any>, scopeId: string | symbol): ClassDecorator;
 export function Require(entity: EntityConstructor<any>, inputs: IRequireInputsContract): ClassDecorator;
-export function Require(entity: EntityConstructor<any>, inputs: any = {}) {
+export function Require(
+  entity: EntityConstructor<any>,
+  scopeId: string | symbol,
+  inputs: IRequireInputsContract,
+): ClassDecorator;
+export function Require(entity: EntityConstructor<any>, ...args: any[]) {
+  let [p01, p02] = args;
+  let inputs!: IRequireInputsContract;
+  let scope!: string;
+  if (typeof p01 === "string") {
+    scope = p01;
+    inputs = p02;
+  } else {
+    inputs = p01;
+  }
   return function requireFn(target: EntityConstructor<any>) {
+    const existList = resolveRequire(target, []);
     defineRequire(target, [
       {
         type: resolveEntityMetaType(entity),
+        scopeId: scope ?? `_Require${existList.length}`,
         entity,
         inputs,
       },
