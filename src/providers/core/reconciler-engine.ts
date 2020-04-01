@@ -39,8 +39,22 @@ interface IResolve {
   element: IReactEntityPayload;
   parent?: IParent;
   key?: string;
+  childIndex?: number;
   compositionKey?: string;
   contextChildren?: (IInnerCompnentChildRef | IInnerCompositionChildRef)[];
+}
+
+interface IChildPass {
+  // entity key of scope
+  entityId: string;
+  compoid: string;
+  // jsx key field
+  elementKey: string | null;
+  ctor: IConstructor<any>;
+  props: IReactEntityPayload["props"];
+  parent: IResolve["parent"];
+  contextChildren?: any[];
+  childidx?: number;
 }
 
 const STATE_PROP_REF_VARIABLE = /^(!)?([0-9a-zA-Z_\.]+)\s*\|\s*bind:(state|props)$/;
@@ -62,7 +76,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     const isValidProxy = token.__useReconciler === true;
     if (!isReactElement || !isValidProxy) throw new Error("invalid entity composition.");
     const ctor = token.__target;
-    const { context, parent, key: entityId, compositionKey: compId, contextChildren } = resolves;
+    const { parent, key: entityId, compositionKey: compId, contextChildren, childIndex } = resolves;
     // 附加属性
     if (this.ifIsAttachExpression(token, parent)) {
       return this.resolveAttachProperty(props, parent!);
@@ -77,27 +91,48 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       for (const child of children) {
         const fn = child.__etype === "componentChildRef" ? "resolveComponent" : "resolveComposition";
         const id = child.__entityId;
-        const ref = this[fn](id, compId!, id, <any>child.__refConstructor, {}, parent, []);
+        const ref = this[fn]({
+          entityId: id,
+          compoid: compId!,
+          elementKey: id,
+          ctor: <any>child.__refConstructor,
+          props: {},
+          parent,
+          contextChildren: [],
+          childidx: children.indexOf(child),
+        });
         // hack readonly
         (<any>ref).__options = child.__options;
         return ref;
       }
       return null;
     }
+
+    const cpass: IChildPass = {
+      entityId: entityId!,
+      compoid: compId!,
+      elementKey: key,
+      ctor,
+      props,
+      parent,
+      contextChildren,
+      childidx: childIndex,
+    };
+
     // 标准指令生成器
     const direMeta = resolveDirective(ctor);
     if (direMeta.name) {
-      return this.resolveDirective(entityId!, compId!, key, ctor, props, parent);
+      return this.resolveDirective(cpass);
     }
     // 标准组件生成器
     const compMeta = resolveComponent(ctor);
     if (compMeta.name) {
-      return this.resolveComponent(entityId!, compId!, key, ctor, props, parent, contextChildren);
+      return this.resolveComponent(cpass);
     }
     // 标准捆绑
     const compsiMeta = resolveComposition(ctor);
     if (compsiMeta.name) {
-      return this.resolveComposition(entityId!, compId!, key, ctor, props, parent, contextChildren);
+      return this.resolveComposition(cpass);
     }
     throw new Error("invalid directive or component.");
   }
@@ -114,16 +149,14 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     return parent && token.__parent && token.__parent === parent.target.__refConstructor && token.__key === "Inputs";
   }
 
-  private resolveComposition(
-    entityId: string,
-    compoid: string,
-    elementKey: string | null,
-    ctor: IConstructor<any>,
-    props: IReactEntityPayload["props"],
-    parent: IResolve["parent"],
-    contextChildren?: any[],
-  ) {
-    const { entityName, imported } = this.resolveEntityName("cs", ctor, { elementKey, compoid, entityId });
+  private resolveComposition(pass: IChildPass) {
+    const { elementKey, compoid, ctor, entityId, childidx, props, parent, contextChildren } = pass;
+    const { entityName, imported } = this.resolveEntityName("cs", ctor, {
+      elementKey,
+      compoid,
+      entityId,
+      compoIdx: childidx,
+    });
     const options: ICompositeChildRefPluginOptions = {
       entityName,
       refEntityId: imported.importId,
@@ -137,16 +170,14 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
-  private resolveComponent(
-    entityId: string,
-    compoid: string,
-    elementKey: string | null,
-    ctor: IConstructor<any>,
-    props: IReactEntityPayload["props"],
-    parent: IResolve["parent"],
-    contextChildren?: any[],
-  ) {
-    const { entityName, imported } = this.resolveEntityName("c", ctor, { elementKey, compoid, entityId });
+  private resolveComponent(pass: IChildPass) {
+    const { elementKey, compoid, ctor, entityId, childidx, props, parent, contextChildren } = pass;
+    const { entityName, imported } = this.resolveEntityName("c", ctor, {
+      elementKey,
+      compoid,
+      entityId,
+      compoIdx: childidx,
+    });
     const options: ICompChildRefPluginOptions = {
       entityName,
       refEntityId: imported.importId,
@@ -159,18 +190,18 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     const ref = this.injector.get(BasicComponentChildRef);
     setBaseChildRefInfo(this.context, <any>ref, options, ctor, <any>parent?.target);
     this.resolveComponentChildNodes({ type: "component", ref, ctor, children, compoid, parent, contextChildren });
+    // console.log(ref.entityId);
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
-  private resolveDirective(
-    entityId: string,
-    compoid: string,
-    elementKey: string | null,
-    ctor: IConstructor<any>,
-    props: IReactEntityPayload["props"],
-    parent: IResolve["parent"],
-  ) {
-    const { entityName, imported } = this.resolveEntityName("d", ctor, { elementKey, compoid, entityId });
+  private resolveDirective(pass: IChildPass) {
+    const { elementKey, compoid, ctor, entityId, childidx, props, parent } = pass;
+    const { entityName, imported } = this.resolveEntityName("d", ctor, {
+      elementKey,
+      compoid,
+      entityId,
+      compoIdx: childidx,
+    });
     const options: IDirecChildRefPluginOptions = {
       entityName,
       refEntityId: imported.importId,
@@ -194,7 +225,12 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
   private resolveEntityName(
     type: "c" | "cs" | "d",
     ctor: IConstructor<any>,
-    payload: { elementKey: string | null; entityId: string; compoid: string },
+    payload: {
+      elementKey: string | null;
+      entityId: string;
+      compoid: string;
+      compoIdx?: number;
+    },
   ) {
     const typedf = type === "c" ? "components" : type === "cs" ? "compositions" : "directives";
     const getFnN = type === "c" ? "getComponentByType" : type === "cs" ? "getCompositionByType" : "getDirectiveByType";
@@ -207,7 +243,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     }
     const prefix = payload.compoid ? `${payload.compoid}_` : "";
     return {
-      entityName: payload.entityId || `${prefix}${payload.elementKey || createEntityId()}`,
+      entityName: payload.entityId ?? `${prefix}_${payload.elementKey ?? `ChildEntity${payload.compoIdx ?? 0}`}`,
       imported,
     };
   }
@@ -243,17 +279,18 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
     parent?: IParent;
     contextChildren?: any[];
   }) {
-    const { type, children, ref, ctor, contextChildren, compoid, parent } = state;
+    const { type, children, ref, ctor, contextChildren, parent } = state;
     const childNodes = (<IReactEntityPayload[]>(
       ((is.array(children) ? children : [children]).filter(i => typeof i === "object") as unknown[])
     ))
-      .map(e =>
+      .map((e, idx) =>
         this.resolveEntity({
           context: this.context,
           element: e,
           parent: { target: <IInnerCompnentChildRef>(<unknown>ref), parent },
-          compositionKey: compoid,
+          compositionKey: ref.entityId,
           contextChildren,
+          childIndex: idx,
         }),
       )
       .filter(i => !!i);
