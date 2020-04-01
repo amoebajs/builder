@@ -210,9 +210,9 @@ export class ReactHelper extends BasicHelper {
     if (matched !== null) {
       const [_, reverse, vName, vType] = matched;
       if (vType === "props") {
-        value = `${reverse || ""}${REACT.Props}.${vName}`;
+        value = `${reverse || ""}${REACT.Props}?.${vName}`;
       } else {
-        value = `${reverse || ""}${contextName}.${REACT.State}.${vName}.${vType === "state" ? "value" : "setState"}`;
+        value = `${reverse || ""}${contextName}?.${REACT.State}?.${vName}?.${vType === "state" ? "value" : "setState"}`;
       }
     }
     return value;
