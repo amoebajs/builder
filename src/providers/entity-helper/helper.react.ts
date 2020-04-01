@@ -36,19 +36,6 @@ export class ReactHelper extends BasicHelper {
   public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
   public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 
-  public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
-    return ts.createObjectLiteral(
-      Object.entries(value)
-        .filter(i => i[1] !== void 0)
-        .map(([n, v]) =>
-          ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            resolveSyntaxInsert(typeof v, v, (_, e) => e),
-          ),
-        ),
-    );
-  }
-
   public createViewElement(
     tagnname: string,
     attrs: Record<string, IJsxAttrDefine> = {},
@@ -113,14 +100,6 @@ export class ReactHelper extends BasicHelper {
     const access = this.createPropertyAccess(REACT.Props, propName);
     const objExp = this.createObjectAttr(obj);
     return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
-  }
-
-  public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
-    return ts.createCall(
-      ts.createIdentifier(name),
-      undefined,
-      parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
-    );
   }
 
   public createJsxArrowEventHandler(expression: ts.Expression) {

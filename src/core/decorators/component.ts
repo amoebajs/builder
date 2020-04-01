@@ -120,8 +120,8 @@ export function Require(entity: EntityConstructor<any>, ...args: any[]) {
       {
         type: resolveEntityMetaType(entity),
         scopeId: scope ?? `_Require${existList.length}`,
+        inputs: inputs ?? {},
         entity,
-        inputs,
       },
     ]);
     return <any>target;
