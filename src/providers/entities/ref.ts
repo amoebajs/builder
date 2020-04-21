@@ -1,21 +1,21 @@
 import { InjectScope } from "@bonbons/di";
 import {
-  Injectable,
   BasicChildRef,
-  SourceFileContext,
-  IInnerSolidEntity,
+  IAfterChildrenRender,
+  IAfterDirectivesAttach,
+  IAfterInit,
+  IAfterRender,
+  IAfterRequiresInit,
   IComponentChildRefPrivates,
+  ICompositionChildRefPrivates,
   IDirectiveChildRefPrivates,
   IInnerCompnentChildRef,
   IInnerComponent,
   IInnerDirectiveChildRef,
+  IInnerSolidEntity,
   IPureObject,
-  ICompositionChildRefPrivates,
-  IAfterInit,
-  IAfterRequiresInit,
-  IAfterRender,
-  IAfterDirectivesAttach,
-  IAfterChildrenRender,
+  Injectable,
+  SourceFileContext,
 } from "../../core";
 
 @Injectable(InjectScope.New)
@@ -207,7 +207,7 @@ function decideComponentName(
   const i = options.target;
   const compsLen = (options.components || []).length;
   const direcLen = (options.directives || []).length;
-  let defaultEntityId = i.__entityId;
+  const defaultEntityId = i.__entityId;
   if (!context["useCodeShakes"]) return defaultEntityId;
   if (compsLen !== 0 || direcLen !== 0) return defaultEntityId;
   // 参数未定义，不重复生成组件

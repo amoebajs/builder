@@ -4,10 +4,10 @@ import {
   EntityConstructor,
   IBasicEntityProvider,
   IInnerCompnentChildRef,
+  IInnerCompositionChildRef,
   IInnerDirectiveChildRef,
   Injectable,
   SourceFileContext,
-  IInnerCompositionChildRef,
 } from "../../core";
 import { REACT } from "../../utils";
 import { ReactDirective } from "../entities";

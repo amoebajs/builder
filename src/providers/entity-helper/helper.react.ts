@@ -2,15 +2,15 @@ import ts from "typescript";
 import kebabCase from "lodash/kebabCase";
 import camelCase from "lodash/camelCase";
 import { InjectScope } from "@bonbons/di";
-import { is, IJsxAttrs, TYPES, REACT } from "../../utils";
+import { IJsxAttrs, REACT, TYPES, is } from "../../utils";
 import {
   IComplexLogicExpression,
+  IPropsExpression,
+  IStateExpression,
   ImportGenerator,
   Injectable,
   JsxElementGenerator,
   resolveSyntaxInsert,
-  IStateExpression,
-  IPropsExpression,
 } from "../../core";
 import { BasicHelper } from "./helper.basic";
 import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";

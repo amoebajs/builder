@@ -2,11 +2,11 @@ import {
   EntityConstructor,
   IBasicI18NContract,
   UnnamedPartial,
-  resolveParams,
   defineEntityMetaType,
   resolveEntityMetaType,
+  resolveParams,
 } from "./base";
-import { resolveExtends, Extends } from "./extends";
+import { Extends, resolveExtends } from "./extends";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
 export const REQUIRE_DEFINE = "ambjs::require_define";
@@ -105,7 +105,7 @@ export function Require(
   inputs: IRequireInputsContract,
 ): ClassDecorator;
 export function Require(entity: EntityConstructor<any>, ...args: any[]) {
-  let [p01, p02] = args;
+  const [p01, p02] = args;
   let inputs!: IRequireInputsContract;
   let scope!: string;
   if (typeof p01 === "string") {

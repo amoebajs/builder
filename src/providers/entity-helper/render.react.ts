@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
 import { NotFoundError } from "../../errors";
-import { BasicState, Injectable, JsxElementGenerator, IPureObject } from "../../core";
+import { BasicState, IPureObject, Injectable, JsxElementGenerator } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
-import { ReactComponent, IBasicReactContainerState as IS } from "../entities";
+import { IBasicReactContainerState as IS, ReactComponent } from "../entities";
 import { BasicRender } from "./render.basic";
 import { connectDirectiveRequie, connectReferenceName } from "../../utils";
 

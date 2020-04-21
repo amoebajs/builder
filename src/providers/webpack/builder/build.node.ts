@@ -4,7 +4,7 @@ import { BasicError } from "../../../errors";
 import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { IWebpackOptions, WebpackConfig, IWebpackInstallOptions, IWebpackSandboxOptions } from "../config";
+import { IWebpackInstallOptions, IWebpackOptions, IWebpackSandboxOptions, WebpackConfig } from "../config";
 import { WebpackBuild } from "./build.contract";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";

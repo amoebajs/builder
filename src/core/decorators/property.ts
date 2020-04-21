@@ -4,9 +4,9 @@ import {
   EntityConstructor,
   IBasicI18NContract,
   UnnamedPartial,
+  resolveEntityMetaType,
   resolveParams,
   setDisplayI18NMeta,
-  resolveEntityMetaType,
 } from "./base";
 import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase } from "../base/common";
 import { resolveExtends } from "./extends";

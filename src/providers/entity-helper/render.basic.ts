@@ -1,5 +1,5 @@
 import { InjectScope } from "@bonbons/di";
-import { Injectable, IPureObject, BasicComponent } from "../../core";
+import { BasicComponent, IPureObject, Injectable } from "../../core";
 import { BasicHelper } from "./helper.basic";
 
 @Injectable(InjectScope.New)

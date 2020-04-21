@@ -3,8 +3,8 @@ import {
   EntityType,
   ICompChildRefPluginOptions,
   IComponentCreateOptions,
-  IDirectiveCreateOptions,
   ICompositionCreateOptions,
+  IDirectiveCreateOptions,
 } from "./entity";
 import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "../child-ref";
 import {

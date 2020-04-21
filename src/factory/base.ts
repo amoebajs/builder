@@ -1,6 +1,7 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
   BasicComponentChildRef,
+  BasicCompositionChildRef,
   BasicDirectiveChildRef,
   BasicEntityProvider,
   BasicHelper,
@@ -8,17 +9,19 @@ import {
   GlobalMap,
   HtmlBundle,
   ReactComponent,
+  ReactComposition,
   ReactDirective,
   ReactEntityProvider,
   ReactHelper,
+  ReactReconcilerEngine,
   ReactRender,
   SourceFileBasicContext,
   WebpackConfig,
-  ReactReconcilerEngine,
-  BasicCompositionChildRef,
-  ReactComposition,
 } from "../providers";
 import {
+  BasicComponent,
+  BasicComposition,
+  BasicDirective,
   DeclarationGenerator,
   EntityConstructor,
   ExpressionGenerator,
@@ -31,15 +34,12 @@ import {
   JsxElementGenerator,
   JsxExpressionGenerator,
   NodeGenerator,
+  ReconcilerEngine,
   SourceFileContext,
   StatementGenerator,
   VariableGenerator,
   getInjectScope,
   resolveDepts,
-  ReconcilerEngine,
-  BasicComponent,
-  BasicDirective,
-  BasicComposition,
 } from "../core";
 
 export interface IFactoryOptions {

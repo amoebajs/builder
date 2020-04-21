@@ -4,16 +4,16 @@ import pick from "lodash/pick";
 import { InjectScope, Injector } from "@bonbons/di";
 import {
   EntityConstructor,
-  Injectable,
-  IDynamicRefPluginOptions,
   ICompositeChildRefPluginOptions,
-  ReconcilerEngine,
   ICompositionCreateOptions,
-  IInnerCompositionChildRef,
-  ISourceBuildOptions,
-  IInnerSolidEntity,
-  resolveRequire,
   IDirectiveInputMap,
+  IDynamicRefPluginOptions,
+  IInnerCompositionChildRef,
+  IInnerSolidEntity,
+  ISourceBuildOptions,
+  Injectable,
+  ReconcilerEngine,
+  resolveRequire,
 } from "../../core";
 import {
   EntityType,
@@ -30,8 +30,8 @@ import {
 } from "../../core";
 import { NotFoundError } from "../../errors";
 import { GlobalMap, IMapEntry } from "../global-map";
-import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
-import { is, createEntityId, connectDirectiveRequie } from "../../utils";
+import { BasicComponentChildRef, BasicCompositionChildRef, BasicDirectiveChildRef } from "../entities";
+import { connectDirectiveRequie, createEntityId, is } from "../../utils";
 
 interface IContextTreeNode {
   scopeid: string | symbol;

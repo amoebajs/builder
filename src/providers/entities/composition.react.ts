@@ -1,5 +1,5 @@
 import { InjectScope } from "@bonbons/di";
-import { IPureObject, Injectable, BasicComposition, IInnerCompositionChildRef } from "../../core";
+import { BasicComposition, IInnerCompositionChildRef, IPureObject, Injectable } from "../../core";
 import { ReactHelper } from "../entity-helper";
 
 @Injectable(InjectScope.New)

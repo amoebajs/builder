@@ -1,5 +1,5 @@
 import { IInnerEwsEntity } from "../base";
-import { classCase, connectReferenceName } from "../../utils";
+import { connectReferenceName } from "../../utils";
 
 export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
   private _name!: string;

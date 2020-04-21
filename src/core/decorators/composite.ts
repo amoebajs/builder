@@ -1,4 +1,4 @@
-import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, defineEntityMetaType } from "./base";
+import { EntityConstructor, IBasicI18NContract, UnnamedPartial, defineEntityMetaType, resolveParams } from "./base";
 
 export const COMPOSITION_DEFINE = "ambjs::composition_define";
 

@@ -8,18 +8,18 @@ import {
   IDirectiveInputMap,
   IInnerCompnentChildRef,
   IInnerComponent,
+  IInnerComposition,
+  IInnerCompositionChildRef,
   IInnerDirective,
   IInnerDirectiveChildRef,
   ITypedSyntaxExpressionMap,
   Injectable,
   PropAttach,
   SourceFileContext,
-  resolveAttachProperties,
-  resolveInputProperties,
-  IInnerCompositionChildRef,
-  IInnerComposition,
-  resolveEntityRefs,
   VariableRef,
+  resolveAttachProperties,
+  resolveEntityRefs,
+  resolveInputProperties,
 } from "../../core";
 import { is } from "../../utils";
 import { BasicHelper } from "../entity-helper";

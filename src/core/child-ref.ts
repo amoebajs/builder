@@ -1,10 +1,10 @@
 import {
   BasicCompilationEntity,
+  IBasicEntityProvider,
   IComponentAttachMap,
   IComponentInputMap,
   IComponentPropMap,
   IDirectiveInputMap,
-  IBasicEntityProvider,
   IEwsEntity,
   IEwsEntityPrivates,
   IEwsEntityProtectedHooks,

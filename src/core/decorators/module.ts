@@ -1,4 +1,4 @@
-import { EntityConstructor, defaultFrameworkDepts, IFrameworkDepts, defineEntityMetaType } from "./base";
+import { EntityConstructor, IFrameworkDepts, defaultFrameworkDepts, defineEntityMetaType } from "./base";
 
 export const MODULE_DEFINE = "ambjs::module_define";
 

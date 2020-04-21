@@ -1,30 +1,30 @@
-import { Injector, InjectScope } from "@bonbons/di";
+import { InjectScope, Injector } from "@bonbons/di";
 import {
-  ReconcilerEngine,
-  IEngineOptions,
-  Injectable,
-  IEngine,
-  IReactEntityPayload,
-  resolveComponent,
-  resolveDirective,
-  IDirecChildRefPluginOptions,
-  ICompChildRefPluginOptions,
-  IInnerCompnentChildRef,
-  IInnerDirectiveChildRef,
-  resolveInputProperties,
-  IReconcilerExtends,
-  resolveAttachProperties,
-  IProxyEntity,
-  IConstructor,
-  IChildNodes,
   ChildrenSlotComponent,
-  IInnerCompositionChildRef,
-  resolveComposition,
-  ICompositeChildRefPluginOptions,
+  IChildNodes,
+  ICompChildRefPluginOptions,
   IComponentProp,
+  ICompositeChildRefPluginOptions,
+  IConstructor,
+  IDirecChildRefPluginOptions,
+  IEngine,
+  IEngineOptions,
+  IInnerCompnentChildRef,
+  IInnerCompositionChildRef,
+  IInnerDirectiveChildRef,
+  IProxyEntity,
+  IReactEntityPayload,
+  IReconcilerExtends,
+  Injectable,
+  ReconcilerEngine,
+  resolveAttachProperties,
+  resolveComponent,
+  resolveComposition,
+  resolveDirective,
+  resolveInputProperties,
 } from "../../core";
-import { BasicComponentChildRef, BasicDirectiveChildRef, BasicCompositionChildRef } from "../entities";
-import { setBaseChildRefInfo, SourceFileBasicContext } from "./context";
+import { BasicComponentChildRef, BasicCompositionChildRef, BasicDirectiveChildRef } from "../entities";
+import { SourceFileBasicContext, setBaseChildRefInfo } from "./context";
 import { createEntityId, is } from "../../utils";
 import { GlobalMap } from "../global-map";
 import { BasicEntityProvider } from "../entity-parser";
@@ -345,6 +345,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       const found = Object.entries(inputs).find(i => i[1].realName === inputName);
       if (found) {
         const [propName, foundDefine] = found;
+        // eslint-disable-next-line prefer-const
         let [group, pName] = propName.split(".");
         let container: Record<string, any>;
         if (pName) {

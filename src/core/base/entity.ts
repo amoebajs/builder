@@ -11,7 +11,7 @@ import {
   MapValueType,
 } from "./common";
 import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
-import { IInnerCompnentChildRef, IInnerDirectiveChildRef, IInnerCompositionChildRef } from "../child-ref";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef, IInnerDirectiveChildRef } from "../child-ref";
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
 import { IInnerComposition } from "../composition";

@@ -17,7 +17,7 @@ const defaults: IEntityRefContract = {
 export function Reference(): PropertyDecorator;
 export function Reference(name: string): PropertyDecorator;
 export function Reference(name?: string) {
-  return function referenceFac(target: any, propertykey: string, descriptor?: PropertyDescriptor) {
+  return function referenceFac(target: any, propertykey: string, _?: PropertyDescriptor) {
     defineEntityRefs(target.constructor, {
       ...defaults,
       references: {

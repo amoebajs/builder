@@ -4,7 +4,7 @@ import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { WebpackPlugins, IWebpackTemplateAddOnOptions } from "./plugins.contract";
+import { IWebpackTemplateAddOnOptions, WebpackPlugins } from "./plugins.contract";
 
 const defaultAddOns: Record<string, IWebpackTemplateAddOnOptions[]> = {
   meta: [

@@ -3,6 +3,9 @@ import { InjectScope } from "@bonbons/di";
 import {
   BasicComponent,
   BasicState,
+  IAfterChildrenRender,
+  IAfterDirectivesAttach,
+  IComponentProp,
   IPureObject,
   Injectable,
   JsxAttributeGenerator,
@@ -11,9 +14,6 @@ import {
   StatementGenerator,
   VariableGenerator,
   resolveSyntaxInsert,
-  IAfterDirectivesAttach,
-  IAfterChildrenRender,
-  IComponentProp,
 } from "../../core";
 import { REACT, TYPES, classCase } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
@@ -331,7 +331,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     return realGen;
   }
 
-  protected onChildrenVisit(scope: string | symbol, element: JsxElementGenerator): IVisitResult | void {}
+  protected onChildrenVisit(_: string | symbol, __: JsxElementGenerator): IVisitResult | void {}
 
   protected onChildrenPropResolved(name: string, prop: IComponentProp, element: JsxElementGenerator) {
     const context = this.getState(BasicState.ContextInfo);

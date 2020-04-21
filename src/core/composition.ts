@@ -1,5 +1,5 @@
 import { BasicCompilationEntity, IEwsEntity, IEwsEntityPrivates, IEwsEntityProtectedHooks, IPureObject } from "./base";
-import { BasicChildRef, IInnerCompositionChildRef, IInnerCompnentChildRef } from "./child-ref";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "./child-ref";
 
 export interface IComposition extends IEwsEntity {}
 
@@ -30,5 +30,5 @@ export abstract class BasicComposition<T extends IPureObject = IPureObject> exte
   protected async onRender(): Promise<JSX.Element | void> {}
 
   /** @override */
-  protected async onEmit(options: IInnerCompositionChildRef): Promise<IInnerCompnentChildRef | void> {}
+  protected async onEmit(_: IInnerCompositionChildRef): Promise<IInnerCompnentChildRef | void> {}
 }

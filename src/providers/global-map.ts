@@ -2,6 +2,7 @@ import { InjectDIToken } from "@bonbons/di";
 import {
   EntityConstructor,
   IComponentContract,
+  ICompositionContract,
   IDirectiveContract,
   IFrameworkDepts,
   IFrameworkStructure,
@@ -9,12 +10,11 @@ import {
   Injectable,
   resolveAttachProperties,
   resolveComponent,
+  resolveComposition,
   resolveDirective,
   resolveInputProperties,
   resolveModule,
   resolvePropertyGroups,
-  ICompositionContract,
-  resolveComposition,
 } from "../core";
 import { BasicError } from "../errors";
 import { BasicEntityProvider } from "./entity-parser";

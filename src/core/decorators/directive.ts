@@ -3,11 +3,11 @@ import {
   IBasicI18NContract,
   IConstructor,
   UnnamedPartial,
-  resolveParams,
   defineEntityMetaType,
   resolveEntityMetaType,
+  resolveParams,
 } from "./base";
-import { resolveExtends, Extends } from "./extends";
+import { Extends, resolveExtends } from "./extends";
 
 export const DIRECTIVE_DEFINE = "ambjs::directive_define";
 

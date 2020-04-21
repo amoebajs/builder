@@ -1,6 +1,6 @@
 import ts from "typescript";
-import { ReactText, PureComponent } from "react";
-import { SourceFileContext, IBasicEntityProvider } from "./base";
+import { PureComponent, ReactText } from "react";
+import { IBasicEntityProvider, SourceFileContext } from "./base";
 import { IInnerComponent } from "./component";
 import { IConstructor } from "./decorators";
 import { IInnerDirective } from "./directive";
@@ -17,7 +17,7 @@ export type ReconcilerInputMap<T> = T extends [infer K, infer V][]
 
 export type ReconcilerInputValue<T> = T extends PropAttach<infer P> ? P : T;
 
-export interface ReconcilerChildNode<T>
+export interface IReconcilerChildNode<T>
   extends IConstructor<
     React.PureComponent<
       {
@@ -31,10 +31,10 @@ export interface ReconcilerChildNode<T>
   > {}
 
 export type ReconcilerChildNodes<T> = {
-  [key in keyof T]: ReconcilerChildNode<T[key]>;
+  [key in keyof T]: IReconcilerChildNode<T[key]>;
 };
 
-export interface ReconcilerContainer {
+export interface IReconcilerContainer {
   /**
    * ## Children Attach Properties Container
    */
@@ -45,9 +45,9 @@ export interface ReconcilerContainer {
   Inputs: IConstructor<React.PureComponent<{}, {}, {}>>;
 }
 
-export interface ReconcilerDefinition extends IConstructor<React.PureComponent<any, {}, {}>>, ReconcilerContainer {}
+export interface IReconcilerDefinition extends IConstructor<React.PureComponent<any, {}, {}>>, IReconcilerContainer {}
 
-export type ReconcilerElement<T> = ReconcilerChildNodes<T> & ReconcilerDefinition;
+export type ReconcilerElement<T> = ReconcilerChildNodes<T> & IReconcilerDefinition;
 
 export interface IProxyEntity {
   __useReconciler?: true;
@@ -103,7 +103,7 @@ export function useReconciler<T>(ctor: IConstructor<T>): ReconcilerElement<T> {
       }
       return innerMap[key];
     },
-    set(target, key, value) {
+    set(_, __, ___) {
       return false;
     },
   });
