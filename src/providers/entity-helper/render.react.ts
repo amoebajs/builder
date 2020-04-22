@@ -4,24 +4,21 @@ import { NotFoundError } from "../../errors";
 import { BasicState, IPureObject, Injectable, JsxElementGenerator } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { IBasicReactContainerState as IS, ReactComponent } from "../entities";
-import { BasicRender } from "./render.basic";
+import { BasicRender, EntityRenderDelegate } from "./render.basic";
 import { connectDirectiveRequie, connectReferenceName } from "../../utils";
 
 @Injectable(InjectScope.New)
-export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRender<T> {
-  protected parentRef!: ReactComponent<IS & T>;
-
-  constructor(protected helper: ReactHelper) {
-    super(helper);
-  }
+export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
+  protected ref!: ReactComponent<T>;
+  protected helper!: ReactHelper;
 
   public getElementById(entityId: string) {
-    const map = this.parentRef["renderChildMap"];
+    const map = this.ref["renderChildMap"];
     return map.get(entityId) || null;
   }
 
   public setElementById(entityId: string, element: any) {
-    const map = this.parentRef["renderChildMap"];
+    const map = this.ref["renderChildMap"];
     map.set(entityId, element);
   }
 
@@ -31,7 +28,7 @@ export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRende
     value: ts.JsxExpression | ts.StringLiteral,
   ) {
     if (typeof entityId === "string") {
-      this.parentRef["appendChildrenHooks"].push({
+      this.ref["appendChildrenHooks"].push({
         key: entityId,
         func: gen => this.helper.updateJsxElementAttr(gen, name, value),
       });
@@ -40,52 +37,52 @@ export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRende
     }
   }
 
-  public appendRootState(name: string, defaultValue: unknown) {
-    this.parentRef["addUseState"](name, defaultValue);
+  public appendState(name: string, defaultValue: unknown) {
+    this.ref["addUseState"](name, defaultValue);
   }
 
-  public getRootStates() {
-    return this.parentRef["useStates"];
+  public getStates() {
+    return this.ref["useStates"];
   }
 
-  public appendRootCallback(name: string, callback: Function | string, deps?: string[]) {
-    this.parentRef["addUseCallback"](name, callback, deps);
+  public appendCallback(name: string, callback: Function | string, deps?: string[]) {
+    this.ref["addUseCallback"](name, callback, deps);
   }
 
-  public getRootCallbacks() {
-    return this.parentRef["useCallbacks"];
+  public getCallbacks() {
+    return this.ref["useCallbacks"];
   }
 
-  public getRootEffects() {
-    return this.parentRef["useEffects"];
+  public getEffects() {
+    return this.ref["useEffects"];
   }
 
-  public appendRootRef(name: string, defaultValue: unknown) {
-    this.parentRef["addUseRef"](name, defaultValue);
+  public appendRef(name: string, defaultValue: unknown) {
+    this.ref["addUseRef"](name, defaultValue);
   }
 
-  public getRootRefs() {
-    return this.parentRef["useRefs"];
+  public getRefs() {
+    return this.ref["useRefs"];
   }
 
-  public getRootMemos() {
-    return this.parentRef["useMemos"];
+  public getMemos() {
+    return this.ref["useMemos"];
   }
 
-  public appendRootVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
-    this.parentRef[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
+  public appendVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
+    this.ref[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }
 
-  public appendRootFnBeforeRender(fn: Function) {
-    (this.getRootState(BasicState.FnsBeforeRender) as any[]).push(fn);
+  public appendFnBeforeRender(fn: Function) {
+    (this.ref["getState"](BasicState.FnsBeforeRender) as any[]).push(fn);
   }
 
-  public appendRootEleChangeFns(fn: (gen: JsxElementGenerator) => JsxElementGenerator) {
-    (this.getRootState(BasicState.RootElementChangeFns) as any[]).push(fn);
+  public appendEleChangeFns(fn: (gen: JsxElementGenerator) => JsxElementGenerator) {
+    (this.ref["getState"](BasicState.RootElementChangeFns) as any[]).push(fn);
   }
 
   public createStateAccessSyntax(name: string) {
-    const contextName = (this.getRootState(BasicState.ContextInfo) as any).name;
+    const contextName = (this.ref["getState"](BasicState.ContextInfo) as any).name;
     let reverse = false;
     if (name.startsWith("!")) {
       name = name.slice(1);
@@ -95,7 +92,7 @@ export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRende
   }
 
   public createDirectiveRefAccess(directive: string, refname: string) {
-    return connectReferenceName(connectDirectiveRequie(this.parentRef.entityId, directive), refname);
+    return connectReferenceName(connectDirectiveRequie(this.ref.entityId, directive), refname);
   }
 
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {
@@ -104,6 +101,19 @@ export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRende
       throw new NotFoundError(`target entity [${entityId}] is not found`);
     }
     gen.pushTransformerBeforeEmit(element => updateJsxElementStyle(element, this.helper.createObjectLiteral(value)));
+  }
+}
+
+@Injectable(InjectScope.New)
+export class ReactRender<T extends Partial<IS> = IPureObject> extends BasicRender<T> {
+  protected parentRef!: ReactComponent<IS & T>;
+
+  constructor(
+    public readonly helper: ReactHelper,
+    public readonly component: ReactEntityRenderDelegate<IS & T>,
+    public readonly root: ReactEntityRenderDelegate<IS & T>,
+  ) {
+    super(helper, component, root);
   }
 }
 

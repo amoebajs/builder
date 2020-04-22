@@ -5,13 +5,16 @@ import {
   BasicDirectiveChildRef,
   BasicEntityProvider,
   BasicHelper,
+  BasicRender,
   Builder,
+  EntityRenderDelegate,
   GlobalMap,
   HtmlBundle,
   ReactComponent,
   ReactComposition,
   ReactDirective,
   ReactEntityProvider,
+  ReactEntityRenderDelegate,
   ReactHelper,
   ReactReconcilerEngine,
   ReactRender,
@@ -89,8 +92,11 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(ReactComponent);
     this.useProvider(ReactComposition);
     this.useProvider(BasicHelper);
+    this.useProvider(BasicRender);
     this.useProvider(ReactHelper);
     this.useProvider(ReactRender);
+    this.useProvider(EntityRenderDelegate);
+    this.useProvider(ReactEntityRenderDelegate);
     this.useProvider(BasicDirectiveChildRef);
     this.useProvider(BasicComponentChildRef);
     this.useProvider(BasicCompositionChildRef);
