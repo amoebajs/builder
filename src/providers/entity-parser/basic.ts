@@ -48,13 +48,13 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     const instance: IInnerComponent | IInnerDirective | IInnerComposition = this.injector.get(ref.__refConstructor);
     switch (ref.__etype) {
       case "componentChildRef":
-        await this._attachComponent(<IInnerComponent>instance, (<IInnerCompnentChildRef>ref).__options);
+        await this.attachComponent(<IInnerComponent>instance, (<IInnerCompnentChildRef>ref).__options);
         break;
       case "compositionChildRef":
-        await this._attachComposition(<IInnerComposition>instance, (<IInnerCompositionChildRef>ref).__options);
+        await this.attachComposition(<IInnerComposition>instance, (<IInnerCompositionChildRef>ref).__options);
         break;
       case "directiveChildRef":
-        await this._attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
+        await this.attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
         break;
       default:
         // DO NOTHING
@@ -131,7 +131,7 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return statements;
   }
 
-  private async _attachComponent(instance: IInnerComponent, { input, attach }: IInnerCompnentChildRef["__options"]) {
+  protected async attachComponent(instance: IInnerComponent, { input, attach }: IInnerCompnentChildRef["__options"]) {
     const template = Object.getPrototypeOf(instance).constructor;
     this._setInputs(template, instance, input);
     this._setAttach(template, instance, attach);
@@ -139,14 +139,14 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return instance;
   }
 
-  private async _attachDirective(instance: IInnerDirective, { input }: IInnerDirectiveChildRef["__options"]) {
+  protected async attachDirective(instance: IInnerDirective, { input }: IInnerDirectiveChildRef["__options"]) {
     const template = Object.getPrototypeOf(instance).constructor;
     this._setInputs(template, instance, input);
     this._setVariableRefs(template, instance);
     return instance;
   }
 
-  private async _attachComposition(instance: IInnerComposition, { input }: IInnerCompositionChildRef["__options"]) {
+  protected async attachComposition(instance: IInnerComposition, { input }: IInnerCompositionChildRef["__options"]) {
     const template = Object.getPrototypeOf(instance).constructor;
     this._setInputs(template, instance, input);
     return instance;

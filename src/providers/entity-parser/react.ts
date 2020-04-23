@@ -4,10 +4,13 @@ import {
   EntityConstructor,
   IBasicEntityProvider,
   IInnerCompnentChildRef,
+  IInnerComponent,
   IInnerCompositionChildRef,
   IInnerDirectiveChildRef,
   Injectable,
+  Observer,
   SourceFileContext,
+  resolveObservables,
 } from "../../core";
 import { REACT } from "../../utils";
 import { ReactDirective } from "../entities";
@@ -43,6 +46,29 @@ export class ReactEntityProvider extends BasicEntityProvider {
       });
     }
     return instance;
+  }
+
+  protected async attachComponent(instance: IInnerComponent, options: IInnerCompnentChildRef["__options"]) {
+    await super.attachComponent(instance, options);
+    const template = Object.getPrototypeOf(instance).constructor;
+    this._setEventTrigger(template, instance);
+    return instance;
+  }
+
+  private _setEventTrigger(template: EntityConstructor<any>, instance: IInnerComponent) {
+    const observables = resolveObservables(template).observables;
+    for (const key in observables) {
+      if (observables.hasOwnProperty(key)) {
+        const alias = observables[key];
+        if (!((<any>instance)[key] instanceof Observer)) {
+          (<any>instance)[key] = new Observer();
+        }
+        const varRef: Observer = (<any>instance)[key];
+        varRef["_host"] = <any>instance;
+        varRef["_name"] = alias;
+        varRef["_realName"] = key;
+      }
+    }
   }
 
   public afterImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ts.ImportDeclaration[]) {

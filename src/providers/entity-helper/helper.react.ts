@@ -166,6 +166,11 @@ export class ReactHelper extends BasicHelper {
     return `${this.useReverse(exp)}${contextName}?.state?.${[p01, "value", ...ps].join("?.")}`;
   }
 
+  public useObserverExpression(exp: IStateExpression, contextName: string) {
+    const [p01, ...ps] = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}${contextName}?.notification?.${[p01, "data", ...ps].join("?.")}`;
+  }
+
   public usePropExpression(exp: IPropsExpression) {
     const ps = String(exp.expression).split(".");
     return `${this.useReverse(exp)}props?.${ps.join("?.")}`;

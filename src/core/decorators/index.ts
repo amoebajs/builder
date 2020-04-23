@@ -7,3 +7,4 @@ export * from "./component";
 export * from "./composite";
 export * from "./extends";
 export * from "./refs";
+export * from "./observable";

@@ -41,32 +41,24 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     this.ref["addUseState"](name, defaultValue);
   }
 
-  public getStates() {
-    return this.ref["useStates"];
-  }
-
-  public appendCallback(name: string, callback: Function | string, deps?: string[]) {
+  public appendCallback(name: string, callback: unknown, deps?: string[]) {
     this.ref["addUseCallback"](name, callback, deps);
   }
 
-  public getCallbacks() {
-    return this.ref["useCallbacks"];
-  }
-
-  public getEffects() {
-    return this.ref["useEffects"];
+  public appendEffect(name: string, callback: unknown, deps?: string[]) {
+    this.ref["addUseEffect"](name, callback, deps);
   }
 
   public appendRef(name: string, defaultValue: unknown) {
     this.ref["addUseRef"](name, defaultValue);
   }
 
-  public getRefs() {
-    return this.ref["useRefs"];
+  public appendObserver(name: string, defaults?: unknown) {
+    this.ref["addUseObserver"](name, defaults);
   }
 
-  public getMemos() {
-    return this.ref["useMemos"];
+  public appendObservable(name: string, target: string, callback: unknown) {
+    this.ref["addUseObservables"](name, target, callback);
   }
 
   public appendVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
@@ -79,6 +71,34 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
 
   public appendEleChangeFns(fn: (gen: JsxElementGenerator) => JsxElementGenerator) {
     (this.ref["getState"](BasicState.RootElementChangeFns) as any[]).push(fn);
+  }
+
+  public getStates() {
+    return this.ref["useStates"];
+  }
+
+  public getCallbacks() {
+    return this.ref["useCallbacks"];
+  }
+
+  public getEffects() {
+    return this.ref["useEffects"];
+  }
+
+  public getRefs() {
+    return this.ref["useRefs"];
+  }
+
+  public getMemos() {
+    return this.ref["useMemos"];
+  }
+
+  public getObservers() {
+    return this.ref["useObservers"];
+  }
+
+  public getObservables() {
+    return this.ref["useObservables"];
   }
 
   public createStateAccessSyntax(name: string) {

@@ -11,6 +11,7 @@ export enum BasicState {
   UseRefs = "compUseRefs",
   UseMemos = "compUseMemos",
   UseObservers = "compUseObservers",
+  UseObservables = "compUseObservables",
   ContextInfo = "rootContextInfo",
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",
