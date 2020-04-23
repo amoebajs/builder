@@ -25,6 +25,13 @@ export class ReactEntityProvider extends BasicEntityProvider {
     ref: IInnerCompnentChildRef | IInnerCompositionChildRef | IInnerDirectiveChildRef,
   ): Promise<any> {
     const instance = await super.attachInstance(context, ref);
+    Object.defineProperty(instance, "__rootRef", {
+      enumerable: true,
+      configurable: false,
+      get() {
+        return ref.__rootRef && ref.__rootRef.__instanceRef;
+      },
+    });
     if (ref.__etype === "directiveChildRef") {
       const directive: ReactDirective = instance;
       Object.defineProperty(directive, "__parentRef", {
@@ -32,13 +39,6 @@ export class ReactEntityProvider extends BasicEntityProvider {
         configurable: false,
         get() {
           return ref.__parentRef && ref.__parentRef.__instanceRef;
-        },
-      });
-      Object.defineProperty(directive, "__rootRef", {
-        enumerable: true,
-        configurable: false,
-        get() {
-          return ref.__rootRef && ref.__rootRef.__instanceRef;
         },
       });
     }

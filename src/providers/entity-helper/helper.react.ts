@@ -187,7 +187,7 @@ export class ReactHelper extends BasicHelper {
     const matched = this.CEVALUE_REGEXP.exec(target);
     let value = undefined;
     if (matched !== null) {
-      const [_, reverse, vName, vType] = matched;
+      const [, reverse, vName, vType] = matched;
       if (vType === "props") {
         value = `${reverse || ""}${REACT.Props}?.${vName}`;
       } else {

@@ -122,6 +122,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   public afterCreate() {
     this.render["parentRef"] = <any>this;
+    this.render["rootRef"] = <any>this.__context.root.__instanceRef;
     this.render["beforeInit"]();
   }
 
