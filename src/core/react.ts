@@ -10,6 +10,7 @@ export enum BasicState {
   UseEffects = "compUseEffects",
   UseRefs = "compUseRefs",
   UseMemos = "compUseMemos",
+  UseObservers = "compUseObservers",
   ContextInfo = "rootContextInfo",
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",

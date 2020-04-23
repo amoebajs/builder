@@ -37,6 +37,7 @@ export interface IBasicReactContainerState {
   [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
+  [BasicState.UseObservers]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
   [BasicState.UseRefs]: VariableGenerator[];
@@ -83,6 +84,10 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected get useMemos() {
     return this.getState(BasicState.UseMemos);
+  }
+
+  protected get useObservers() {
+    return this.getState(BasicState.UseObservers);
   }
 
   protected get renderTagName() {
@@ -144,6 +149,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.setState(BasicState.UseEffects, []);
     this.setState(BasicState.UseRefs, []);
     this.setState(BasicState.UseMemos, []);
+    this.setState(BasicState.UseObservers, []);
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
     this.setState(BasicState.FnsBeforeRender, []);
@@ -154,7 +160,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected async onRender() {
     await super.onRender();
-    this.createRootContextState();
+    this.createRootContext();
     this.createFunctionRender();
   }
 
@@ -415,10 +421,17 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     return ts.createReturn(rootEle.emit());
   }
 
-  private createRootContextState() {
+  private createRootContext() {
     const { name, emit } = this.getState(BasicState.ContextInfo);
     if (!emit) return;
-    const body = ts.createObjectLiteral(
+    this.render.component.appendVariable(
+      name,
+      ts.createObjectLiteral([ts.createPropertyAssignment(REACT.State, this.createRootContextStates())]),
+    );
+  }
+
+  private createRootContextStates() {
+    return ts.createObjectLiteral(
       this.useStates.map(i => {
         const name = getReactStateName(i);
         return ts.createPropertyAssignment(
@@ -430,9 +443,20 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         );
       }),
     );
-    this.render.component.appendVariable(
-      name,
-      ts.createObjectLiteral([ts.createPropertyAssignment(REACT.State, body)]),
+  }
+
+  private createRootContextObservers() {
+    return ts.createObjectLiteral(
+      this.useObservers.map(i => {
+        const name = getReactStateName(i);
+        return ts.createPropertyAssignment(
+          name,
+          ts.createObjectLiteral([
+            ts.createPropertyAssignment("value", ts.createIdentifier(name)),
+            ts.createPropertyAssignment("setState", ts.createIdentifier("set" + classCase(name))),
+          ]),
+        );
+      }),
     );
   }
 }
