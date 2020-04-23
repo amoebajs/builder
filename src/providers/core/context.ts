@@ -202,7 +202,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
       // 非根节点，直接递归
       // 根节点，优先创建
       this._setComponentOrCompositionChildren(tOptions, ref);
-      this._resolveComponentRequires(ref, value, <any>parent);
+      this._resolveComponentRequires(ref, value);
     }
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
@@ -222,7 +222,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     setBaseChildRefInfo(this, <any>ref, options, value, parent);
     if (!!parent) {
       this._setComponentOrCompositionChildren(options, ref);
-      this._resolveComponentRequires(ref, value, <any>parent);
+      this._resolveComponentRequires(ref, value);
     }
     return <IInnerCompositionChildRef>(<unknown>ref);
   }
@@ -257,12 +257,11 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   private _resolveComponentRequires(
     ref: BasicComponentChildRef<any> | BasicCompositionChildRef<any>,
     value: EntityConstructor<any>,
-    parent?: IInnerCompnentChildRef,
   ) {
-    if ("__refRequires" in ref && !!parent) {
+    if ("__refRequires" in ref) {
       const requires = resolveRequire(value);
       for (const { entity, inputs, scopeId } of requires) {
-        const [importId, nameId] = this._checkCreateId(entity, parent?.__entityId, scopeId);
+        const [importId, nameId] = this._checkCreateId(entity, ref["__entityId"], scopeId);
         ref["__refRequires"].push((context: any) =>
           this.createDirectiveRef(
             {

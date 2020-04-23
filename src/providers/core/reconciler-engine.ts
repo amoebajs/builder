@@ -163,6 +163,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       components: [],
       options: { input: {} },
     };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { key: _, children } = props;
     const ref = this.injector.get(BasicCompositionChildRef);
     setBaseChildRefInfo(this.context, <any>ref, options, ctor, <any>parent?.target);
@@ -185,6 +186,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       components: [],
       options: { input: {}, attach: {}, props: {} },
     };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { key: _, children, ...otherProps } = props;
     options.options.props = this.resolveProps(otherProps);
     const ref = this.injector.get(BasicComponentChildRef);
@@ -207,6 +209,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       refEntityId: imported.importId,
       options: { input: {} },
     };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { key: _, children } = props;
     const ref = this.injector.get(BasicDirectiveChildRef);
     setBaseChildRefInfo(this.context, <any>ref, options, ctor, <any>parent?.target);
@@ -301,7 +304,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
       (<any>ref)["__refDirectives"] = childNodes.filter(c => c!.__etype === "directiveChildRef");
       if (type === "component") {
         // 支持Require语法
-        this.context["_resolveComponentRequires"](<any>ref, ctor, <any>ref);
+        this.context["_resolveComponentRequires"](<any>ref, ctor);
       }
     }
   }
@@ -383,7 +386,7 @@ export class ReactReconcilerEngine extends ReconcilerEngine {
           compositionKey: key,
           key,
         }),
-      parseGenerator(element: JSX.Element) {
+      parseGenerator(_: JSX.Element) {
         throw new Error("not implemented.");
       },
     });
