@@ -259,7 +259,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     value: EntityConstructor<any>,
     parent?: IInnerCompnentChildRef,
   ) {
-    if ("__refRequires" in ref) {
+    if ("__refRequires" in ref && !!parent) {
       const requires = resolveRequire(value);
       for (const { entity, inputs, scopeId } of requires) {
         const [importId, nameId] = this._checkCreateId(entity, parent?.__entityId, scopeId);
