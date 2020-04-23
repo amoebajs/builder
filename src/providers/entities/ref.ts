@@ -10,7 +10,6 @@ import {
   IComponentChildRefPrivates,
   ICompositionChildRefPrivates,
   IDirectiveChildRefPrivates,
-  IInnerCompnentChildRef,
   IInnerComponent,
   IInnerDirectiveChildRef,
   IInnerSolidEntity,
@@ -56,16 +55,17 @@ export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObje
   protected async bootstrap() {
     const compRef = await this.__instanceRef.onEmit(<any>this);
     // 非根组件，尝试优化shake重复代码
-    if (this.__context.root.__entityId !== this.__entityId) {
-      const componentName = decideComponentName(this.__context, {
-        target: <any>this,
-        components: (compRef && compRef.__refComponents) || [],
-        directives: (compRef && compRef.__refDirectives) || [],
-      });
-      if (componentName !== this.__entityId) {
-        return this.__instanceRef;
-      }
-    }
+    // 暂时关闭
+    // if (this.__context.root.__entityId !== this.__entityId) {
+    //   const componentName = decideComponentName(this.__context, {
+    //     target: <any>this,
+    //     components: (compRef && compRef.__refComponents) || [],
+    //     directives: (compRef && compRef.__refDirectives) || [],
+    //   });
+    //   if (componentName !== this.__entityId) {
+    //     return this.__instanceRef;
+    //   }
+    // }
     if (compRef) {
       await compRef.onInit();
       await compRef.bootstrap();
@@ -124,28 +124,31 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     // __entityId与root.__entityId不同，证明是非根组件
     // entityId和__entityId相同，无法证明是否已经执行过代码优化
     // 满足上面两个条件，尝试优化shake重复代码
-    if (this.__context.root.__entityId !== this.__entityId && this.__entityId === this.entityId) {
-      const componentName = decideComponentName(this.__context, {
-        target: <any>this,
-        directives: this.__refDirectives,
-        components: this.__refComponents,
-      });
-      if (componentName !== this.__entityId) {
-        return instance;
-      }
-    }
+    // 暂时关闭
+    // if (this.__context.root.__entityId !== this.__entityId && this.__entityId === this.entityId) {
+    //   const componentName = decideComponentName(this.__context, {
+    //     target: <any>this,
+    //     directives: this.__refDirectives,
+    //     components: this.__refComponents,
+    //   });
+    //   if (componentName !== this.__entityId) {
+    //     return instance;
+    //   }
+    // }
     for (const component of this.__refComponents) {
       component.__instanceRef.onInit();
       instance.__children.push({
+        component: component.__entityId,
         // 尝试优化shake重复代码
         // 优化成功后，entityId和__entityId将会不在相同
         // entityId代表当前范围，表现为element的key字段
         // __entityId则表现为真正引用的组件名称
-        component: decideComponentName(this.__context, {
-          target: component,
-          directives: (<IInnerCompnentChildRef>component).__refDirectives,
-          components: (<IInnerCompnentChildRef>component).__refComponents,
-        }),
+        // 暂时关闭
+        // component: decideComponentName(this.__context, {
+        //   target: component,
+        //   directives: (<IInnerCompnentChildRef>component).__refDirectives,
+        //   components: (<IInnerCompnentChildRef>component).__refComponents,
+        // }),
         id: component.__entityId,
         props: { ...(<any>component.__options).props },
       });

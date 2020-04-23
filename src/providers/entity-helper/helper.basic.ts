@@ -73,11 +73,11 @@ export class BasicHelper {
         let name: string;
         if (is.string(named)) {
           name = named;
-          gen.addNamedBinding(name);
+          gen.addNamedBinding(name, name);
         } else {
           propertyName = named[0];
           name = named[1];
-          gen.addNamedBinding(name, propertyName);
+          gen.addNamedBinding(name ?? propertyName, propertyName);
         }
       });
     }
@@ -131,5 +131,9 @@ export class BasicHelper {
           ),
         ),
     );
+  }
+
+  public createSyntaxExpression(expression: string): ts.Expression {
+    return ts.createIdentifier(expression);
   }
 }

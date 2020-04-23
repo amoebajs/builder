@@ -33,6 +33,7 @@ export const defaultFrameworkDepts: IFrameworkDepts = {
     "@types/react": "^16.9.7",
     react: "^16.12.0",
     reactDom: "^16.12.0",
+    rxjs: "^6.5.0",
   },
 };
 

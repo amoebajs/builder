@@ -11,12 +11,12 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   protected modulePath = "demo";
   protected namedBinds: Record<string, string[]> = {};
 
-  public addNamedBinding(name: string, alias?: string) {
-    const exist = this.namedBinds[name];
+  public addNamedBinding(variable: string, source: string) {
+    const exist = this.namedBinds[variable];
     if (is.nullOrUndefined(exist)) {
-      this.namedBinds[name] = is.nullOrUndefined(alias) ? [] : [alias];
-    } else if (!is.nullOrUndefined(alias)) {
-      exist.push(...[alias].filter(e => exist.findIndex(i => i === e) < 0));
+      this.namedBinds[variable] = is.nullOrUndefined(source) ? [variable] : [source];
+    } else if (!is.nullOrUndefined(source)) {
+      exist.push(...[source].filter(e => exist.findIndex(i => i === e) < 0));
     }
     return this;
   }
@@ -72,7 +72,7 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
       if (Object.keys(this.namedBinds).length > 0) {
         nameBindings = ts.createNamedImports(
           Object.entries(this.namedBinds)
-            .map(([n, a]) => createNamedAsImport(a, n))
+            .map(([n, ss]) => createNamedAsImport(ss, n))
             .reduce((p, c) => [...p, ...c], []),
         );
       }
@@ -87,11 +87,11 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   }
 }
 
-function createNamedAsImport(alias: string[], name: string): ts.ImportSpecifier[] {
-  return alias.map(a =>
+function createNamedAsImport(source: string[], name: string): ts.ImportSpecifier[] {
+  return source.map(a =>
     ts.createImportSpecifier(
-      is.nullOrUndefined(alias) ? void 0 : ts.createIdentifier(name),
-      ts.createIdentifier(a || name),
+      is.nullOrUndefined(a) || a === "" || a === name ? void 0 : ts.createIdentifier(a),
+      ts.createIdentifier(name),
     ),
   );
 }

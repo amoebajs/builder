@@ -46,6 +46,14 @@ export interface IFinalAstContext {
   statements: ts.Statement[];
 }
 
+export interface IFinalGeneratorContext {
+  imports: ImportGenerator[];
+  variables: VariableGenerator[];
+  classes: ClassGenerator[];
+  functions: FunctionGenerator[];
+  statements: ts.Statement[];
+}
+
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
   parent: string | symbol | undefined;
@@ -64,6 +72,7 @@ export type IInnerSolidEntity = IInnerCompnentChildRef | IInnerCompositionChildR
 
 export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
+  public genContext!: IFinalGeneratorContext;
   public astContext!: IFinalAstContext;
   public provider!: T;
   public reconciler!: ReconcilerEngine;

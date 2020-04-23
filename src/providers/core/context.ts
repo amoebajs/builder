@@ -54,6 +54,13 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     this.directives = [];
     this.compositions = [];
     this.dependencies = {};
+    this.genContext = {
+      imports: [],
+      variables: [],
+      functions: [],
+      classes: [],
+      statements: [],
+    };
     this.astContext = {
       imports: [],
       variables: [],
@@ -160,18 +167,30 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     }
     // 暂时没有控制范围, component / directive
     const { imports = [], functions = [], classes = [], variables = [] } = node.container;
-    this.astContext.imports.push(...imports.map(i => i.emit()));
-    this.astContext.functions.push(...functions.map(i => i.emit()));
-    this.astContext.classes.push(...classes.map(i => i.emit()));
-    this.astContext.variables.push(...variables.map(i => i.emit()));
+    this.genContext.imports.push(...imports);
+    this.genContext.functions.push(...functions);
+    this.genContext.classes.push(...classes);
+    this.genContext.variables.push(...variables);
   }
 
   private callStatementsHooks() {
     this.astContext = {
-      imports: this.provider.afterImportsCreated(this, this.astContext.imports),
-      variables: this.provider.afterVariablesCreated(this, this.astContext.variables),
-      classes: this.provider.afterClassesCreated(this, this.astContext.classes),
-      functions: this.provider.afterFunctionsCreated(this, this.astContext.functions),
+      imports: this.provider.afterImportsCreated(
+        this,
+        this.provider.beforeImportsCreated(this, this.genContext.imports).map(i => i.emit()),
+      ),
+      variables: this.provider.afterVariablesCreated(
+        this,
+        this.provider.beforeVariablesCreated(this, this.genContext.variables).map(i => i.emit()),
+      ),
+      classes: this.provider.afterClassesCreated(
+        this,
+        this.provider.beforeClassesCreated(this, this.genContext.classes).map(i => i.emit()),
+      ),
+      functions: this.provider.afterFunctionsCreated(
+        this,
+        this.provider.beforeFunctionsCreated(this, this.genContext.functions).map(i => i.emit()),
+      ),
       statements: this.provider.afterAllCreated(this, []),
     };
   }

@@ -15,6 +15,7 @@ import { IInnerCompnentChildRef, IInnerCompositionChildRef, IInnerDirectiveChild
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
 import { IInnerComposition } from "../composition";
+import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../typescript";
 
 export type EntityType =
   | "directive"
@@ -103,6 +104,16 @@ export interface IBasicEntityProvider {
     ref: IInnerCompositionChildRef,
   ): Promise<IInnerComposition>;
   resolveExtensionsMetadata(template: InjectDIToken<any>): {};
+  beforeImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ImportGenerator[]): ImportGenerator[];
+  beforeVariablesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    variables: VariableGenerator[],
+  ): VariableGenerator[];
+  beforeClassesCreated(context: SourceFileContext<IBasicEntityProvider>, classes: ClassGenerator[]): ClassGenerator[];
+  beforeFunctionsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: FunctionGenerator[],
+  ): FunctionGenerator[];
   afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],

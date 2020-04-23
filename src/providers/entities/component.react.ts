@@ -312,6 +312,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   }
 
   private createFunctionRender() {
+    this.initFrameworkImports();
     this.addFunctions([
       this.createNode("function")
         .setName(this.entityId)
@@ -410,6 +411,18 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     }
   }
 
+  private initFrameworkImports() {
+    const { emit } = this.getState(BasicState.ContextInfo);
+    if (!emit) return;
+    if (this.useObservers.length > 0) {
+      this.addImports([
+        this.createNode("import")
+          .addNamedBinding("Subject", "Subject")
+          .setModulePath("rxjs/_esm2015/internal/Subject"),
+      ]);
+    }
+  }
+
   private createComponentBlock(
     render: JsxElementGenerator | JsxExpressionGenerator,
     statements: StatementGenerator[] = [],
@@ -426,7 +439,10 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     if (!emit) return;
     this.render.component.appendVariable(
       name,
-      ts.createObjectLiteral([ts.createPropertyAssignment(REACT.State, this.createRootContextStates())]),
+      ts.createObjectLiteral([
+        ts.createPropertyAssignment(REACT.State, this.createRootContextStates()),
+        ts.createPropertyAssignment("trigger", this.createRootContextObservers()),
+      ]),
     );
   }
 
@@ -452,8 +468,8 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         return ts.createPropertyAssignment(
           name,
           ts.createObjectLiteral([
-            ts.createPropertyAssignment("value", ts.createIdentifier(name)),
-            ts.createPropertyAssignment("setState", ts.createIdentifier("set" + classCase(name))),
+            ts.createPropertyAssignment("data", ts.createIdentifier(name + ".asObservable()")),
+            ts.createPropertyAssignment("next", ts.createIdentifier(`(data: any) => ${name}.next(data)`)),
           ]),
         );
       }),

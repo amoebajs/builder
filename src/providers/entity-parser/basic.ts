@@ -1,7 +1,9 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import {
+  ClassGenerator,
   EntityConstructor,
+  FunctionGenerator,
   IBasicEntityProvider,
   IComponentAttachMap,
   IComponentInputMap,
@@ -13,9 +15,11 @@ import {
   IInnerDirective,
   IInnerDirectiveChildRef,
   ITypedSyntaxExpressionMap,
+  ImportGenerator,
   Injectable,
   PropAttach,
   SourceFileContext,
+  VariableGenerator,
   VariableRef,
   resolveAttachProperties,
   resolveEntityRefs,
@@ -67,11 +71,39 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return {};
   }
 
+  public beforeImportsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    imports: ImportGenerator[],
+  ): ImportGenerator[] {
+    return this._combineImports(imports);
+  }
+
+  public beforeVariablesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    variables: VariableGenerator[],
+  ): VariableGenerator[] {
+    return variables;
+  }
+
+  public beforeClassesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    classes: ClassGenerator[],
+  ): ClassGenerator[] {
+    return classes;
+  }
+
+  public beforeFunctionsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: FunctionGenerator[],
+  ): FunctionGenerator[] {
+    return funcs;
+  }
+
   public afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],
   ): ts.ImportDeclaration[] {
-    return this._combineImports(imports);
+    return imports;
   }
 
   public afterVariablesCreated(
@@ -185,69 +217,57 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     }
   }
 
-  private _combineImports(raw: ts.ImportDeclaration[]) {
-    const { helper } = this;
-    const record: Record<
-      string,
-      {
-        default: string[];
-        named: string[][];
-        namespace: string[];
-      }
-    > = {};
-    for (const { moduleSpecifier: moduleName, importClause } of raw) {
-      const defaultImport = importClause?.name;
-      const namedImports = importClause?.namedBindings || ts.createNamedImports([]);
-      const imported = record[(<ts.StringLiteral>moduleName).text];
-      if (imported) {
-        if (defaultImport && !imported.default.includes(defaultImport.text)) {
-          imported.default.push(defaultImport.text);
+  private _combineImports(raw: ImportGenerator[]): ImportGenerator[] {
+    const defaults: ImportGenerator[] = [];
+    const nameds: ImportGenerator[] = [];
+    const namespaces: ImportGenerator[] = [];
+    const nos: ImportGenerator[] = [];
+    for (const item of raw) {
+      let operated = false;
+      if (!is.nullOrUndefined(item["defaultName"])) {
+        operated = true;
+        if (!defaults.find(i => i["defaultName"] === item["defaultName"] && i["modulePath"] === item["modulePath"])) {
+          defaults.push(new ImportGenerator().setDefaultName(item["defaultName"]).setModulePath(item["modulePath"]));
         }
-        if (ts.isNamedImports(namedImports)) {
-          const willInsert = namedImports.elements
-            .filter(specifier =>
-              imported.named.every(
-                ([alias, _]) => alias !== specifier.propertyName?.text /**  && _ !== specifier.name.text */,
+      }
+      if (item["namedBinds"] && Object.keys(item["namedBinds"]).length > 0) {
+        operated = true;
+        const found = nameds.find(i => i["modulePath"] === item["modulePath"]);
+        const entries = Object.entries(item["namedBinds"]);
+        for (const [variable, sources] of entries) {
+          if (found) {
+            if (is.nullOrUndefined(found["namedBinds"][variable])) {
+              found["namedBinds"][variable] = sources;
+            } else {
+              found["namedBinds"][variable] = found["namedBinds"][variable].concat(
+                sources.filter(i => !found["namedBinds"][variable].includes(i)),
+              );
+            }
+          } else {
+            nameds.push(
+              ...sources.map(source =>
+                new ImportGenerator().addNamedBinding(variable, source).setModulePath(item["modulePath"]),
               ),
-            )
-            .map(specifier => [specifier.propertyName?.text || "", specifier.name.text]);
-          imported.named.push(...willInsert);
-        } else if (ts.isNamespaceImport(namedImports) && !imported.namespace.includes(namedImports.name.text)) {
-          imported.namespace.push(namedImports.name.text);
+            );
+          }
         }
-      } else {
-        record[(<ts.StringLiteral>moduleName).text] = {
-          default: defaultImport ? [defaultImport.text] : [],
-          named: ts.isNamedImports(namedImports)
-            ? namedImports.elements.map(specifier => [specifier.propertyName?.text || "", specifier.name.text])
-            : [],
-          namespace: ts.isNamespaceImport(namedImports) ? [namedImports.name.text] : [],
-        };
+      }
+      if (!is.nullOrUndefined(item["namespaceName"])) {
+        operated = true;
+        if (
+          !namespaces.find(i => i["namespaceName"] === item["namespaceName"] && i["modulePath"] === item["modulePath"])
+        ) {
+          defaults.push(
+            new ImportGenerator().setNamespaceName(item["namespaceName"]).setModulePath(item["modulePath"]),
+          );
+        }
+      }
+      if (!operated) {
+        if (!nos.find(i => i["modulePath"] === item["modulePath"])) {
+          nos.push(new ImportGenerator().setModulePath(item["modulePath"]));
+        }
       }
     }
-    const nsImports: ts.ImportDeclaration[] = [];
-    const dfImports: ts.ImportDeclaration[] = [];
-    const nmImports: ts.ImportDeclaration[] = [];
-    const noImports: ts.ImportDeclaration[] = [];
-    for (const [moduleName, imports] of Object.entries(record)) {
-      for (const namespaceImport of imports.namespace) {
-        nsImports.push(helper.createNamespaceImport(moduleName, namespaceImport).emit());
-      }
-      for (const defaultImport of imports.default) {
-        dfImports.push(
-          helper.createImport(moduleName, defaultImport, imports.named.length ? imports.named : undefined).emit(),
-        );
-        // 具名导入跟随默认导入创建完成后删除，避免接下来重复创建
-        imports.named = [];
-      }
-      if (imports.named.length) {
-        // 如果没有默认导入，此处创建具名导入
-        nmImports.push(helper.createImport(moduleName, undefined, imports.named).emit());
-      }
-      if (!imports.named.length && !imports.default.length && !imports.namespace.length) {
-        noImports.push(helper.createImport(moduleName).emit());
-      }
-    }
-    return [...nsImports, ...nmImports, ...dfImports, ...noImports];
+    return [...namespaces, ...defaults, ...nameds, ...nos];
   }
 }
