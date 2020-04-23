@@ -117,7 +117,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     const component = this.components.find(i => i.importId === options.refEntityId)!;
     const value = this.getEntity(component);
     this._setComponentOrCompositionChildren(options, <any>this.root);
-    this._resolveComponentRequires(<any>this.root, value, <any>parent);
+    this._resolveComponentRequires(<any>this.root, value);
     return this;
   }
 
