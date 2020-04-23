@@ -4,6 +4,7 @@ import {
   BasicComponent,
   BasicState,
   IAfterChildrenRender,
+  IAfterCreate,
   IAfterDirectivesAttach,
   IComponentProp,
   IPureObject,
@@ -51,7 +52,7 @@ export interface IBasicReactContainerState {
 @Injectable(InjectScope.New)
 export abstract class ReactComponent<T extends Partial<IBasicReactContainerState> = IPureObject>
   extends BasicComponent<IBasicReactContainerState & T>
-  implements IAfterChildrenRender, IAfterDirectivesAttach {
+  implements IAfterCreate, IAfterChildrenRender, IAfterDirectivesAttach {
   protected get unshiftVariables() {
     return this.getState(BasicState.UnshiftVariables);
   }
@@ -119,9 +120,13 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     super();
   }
 
+  public afterCreate() {
+    this.render["parentRef"] = <any>this;
+    this.render["beforeInit"]();
+  }
+
   protected async onInit() {
     await super.onInit();
-    this.render["parentRef"] = <any>this;
     this.setState(BasicState.RenderTagName, REACT.Fragment);
     this.setState(BasicState.RenderTagAttrs, []);
     this.setState(BasicState.RenderChildrenMap, new Map());

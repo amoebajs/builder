@@ -30,6 +30,10 @@ export interface IChildElement {
   props: IComponentPropMap;
 }
 
+export interface IAfterCreate {
+  afterCreate(): Promise<void> | void;
+}
+
 export interface IAfterInit {
   afterInit(): Promise<void> | void;
 }

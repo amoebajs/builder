@@ -42,12 +42,19 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     ref: IInnerCompnentChildRef | IInnerDirectiveChildRef | IInnerCompositionChildRef,
   ): Promise<any> {
     const instance: IInnerComponent | IInnerDirective | IInnerComposition = this.injector.get(ref.__refConstructor);
-    if (ref.__etype === "componentChildRef") {
-      await this._attachComponent(<IInnerComponent>instance, (<IInnerCompnentChildRef>ref).__options);
-    } else if (ref.__etype === "compositionChildRef") {
-      await this._attachComposition(<IInnerComposition>instance, (<IInnerCompositionChildRef>ref).__options);
-    } else {
-      await this._attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
+    switch (ref.__etype) {
+      case "componentChildRef":
+        await this._attachComponent(<IInnerComponent>instance, (<IInnerCompnentChildRef>ref).__options);
+        break;
+      case "compositionChildRef":
+        await this._attachComposition(<IInnerComposition>instance, (<IInnerCompositionChildRef>ref).__options);
+        break;
+      case "directiveChildRef":
+        await this._attachDirective(<IInnerDirective>instance, (<IInnerDirectiveChildRef>ref).__options);
+        break;
+      default:
+        // DO NOTHING
+        break;
     }
     instance.setScopeId(ref.__entityId);
     instance.setParentId(ref.__parent);
@@ -64,7 +71,7 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],
   ): ts.ImportDeclaration[] {
-    return this.combineImports(imports);
+    return this._combineImports(imports);
   }
 
   public afterVariablesCreated(
@@ -178,7 +185,7 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     }
   }
 
-  private combineImports(raw: ts.ImportDeclaration[]) {
+  private _combineImports(raw: ts.ImportDeclaration[]) {
     const { helper } = this;
     const record: Record<
       string,

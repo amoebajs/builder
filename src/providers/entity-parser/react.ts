@@ -34,6 +34,13 @@ export class ReactEntityProvider extends BasicEntityProvider {
           return ref.__parentRef && ref.__parentRef.__instanceRef;
         },
       });
+      Object.defineProperty(directive, "__rootRef", {
+        enumerable: true,
+        configurable: false,
+        get() {
+          return ref.__rootRef && ref.__rootRef.__instanceRef;
+        },
+      });
     }
     return instance;
   }

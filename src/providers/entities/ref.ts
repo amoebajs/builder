@@ -2,6 +2,7 @@ import { InjectScope } from "@bonbons/di";
 import {
   BasicChildRef,
   IAfterChildrenRender,
+  IAfterCreate,
   IAfterDirectivesAttach,
   IAfterInit,
   IAfterRender,
@@ -109,6 +110,9 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async bootstrap() {
     const instance: IInnerComponent = this.__instanceRef;
+    if (hasAfterCreate(instance)) {
+      await instance.afterCreate();
+    }
     await instance.onInit();
     // 新增afterInit钩子
     if (hasAfterInit(instance)) {
@@ -163,6 +167,10 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
     }
     return instance;
   }
+}
+
+function hasAfterCreate(instance: any): instance is IAfterCreate {
+  return "afterCreate" in instance && typeof instance["afterCreate"] === "function";
 }
 
 function hasAfterInit(instance: any): instance is IAfterInit {

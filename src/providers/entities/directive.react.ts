@@ -8,6 +8,7 @@ export abstract class ReactDirective<T extends Partial<IBasicReactContainerState
   IBasicReactContainerState & T
 > {
   private readonly __parentRef!: ReactComponent<IBasicReactContainerState & T>;
+  private readonly __rootRef!: ReactComponent<IBasicReactContainerState & T>;
 
   constructor(
     protected readonly helper: ReactHelper,
@@ -19,5 +20,7 @@ export abstract class ReactDirective<T extends Partial<IBasicReactContainerState
   protected async onInit() {
     await super.onInit();
     this.render["parentRef"] = <any>this.__parentRef;
+    this.render["rootRef"] = <any>this.__rootRef;
+    this.render["beforeInit"]();
   }
 }

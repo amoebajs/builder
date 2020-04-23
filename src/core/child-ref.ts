@@ -28,6 +28,7 @@ export interface IBasicChildRefPrivates {
   readonly __options: {};
   readonly __provider: IBasicEntityProvider;
   readonly __parentRef: IInnerCompnentChildRef | undefined;
+  readonly __rootRef: IInnerCompnentChildRef | undefined;
   readonly __instanceRef: any;
 }
 
@@ -85,6 +86,7 @@ export abstract class BasicChildRef<T extends IPureObject = IPureObject> extends
   protected __entityId!: IBasicChildRefPrivates["__entityId"];
   protected __options: IBasicChildRefPrivates["__options"] = {};
   protected __provider!: IBasicChildRefPrivates["__provider"];
+  protected __rootRef!: IBasicChildRefPrivates["__rootRef"];
   protected __parentRef!: IBasicChildRefPrivates["__parentRef"];
   protected __instanceRef!: IBasicChildRefPrivates["__instanceRef"];
 
