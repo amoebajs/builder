@@ -33,6 +33,7 @@ export interface IFrontLibImportOptions {
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
   public readonly DEFAULT_CONTEXT_NAME = REACT.Props + ".CONTEXT";
+  public readonly DEFAULT_ROOT_CONTEXT_NAME = "__CONTEXT__";
   public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
   public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 

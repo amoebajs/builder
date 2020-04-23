@@ -41,7 +41,7 @@ export interface IBasicReactContainerState {
   [BasicState.UseEffects]: VariableGenerator[];
   [BasicState.UseRefs]: VariableGenerator[];
   [BasicState.UseMemos]: VariableGenerator[];
-  [BasicState.ContextInfo]: { name: string };
+  [BasicState.ContextInfo]: { name: string; emit: boolean };
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
   [BasicState.FnsBeforeRender]: Function[];
@@ -53,6 +53,10 @@ export interface IBasicReactContainerState {
 export abstract class ReactComponent<T extends Partial<IBasicReactContainerState> = IPureObject>
   extends BasicComponent<IBasicReactContainerState & T>
   implements IAfterCreate, IAfterChildrenRender, IAfterDirectivesAttach {
+  protected get isRoot() {
+    return this.__context.root.__entityId === this.__scope;
+  }
+
   protected get unshiftVariables() {
     return this.getState(BasicState.UnshiftVariables);
   }
@@ -128,6 +132,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected async onInit() {
     await super.onInit();
+    const { DEFAULT_ROOT_CONTEXT_NAME: rname, DEFAULT_CONTEXT_NAME: cname } = this.helper;
     this.setState(BasicState.RenderTagName, REACT.Fragment);
     this.setState(BasicState.RenderTagAttrs, []);
     this.setState(BasicState.RenderChildrenMap, new Map());
@@ -141,14 +146,15 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.setState(BasicState.UseMemos, []);
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
-    this.setState(BasicState.ContextInfo, { name: this.helper.DEFAULT_CONTEXT_NAME });
     this.setState(BasicState.FnsBeforeRender, []);
     this.setState(BasicState.RootElementChangeFns, []);
     this.setState(BasicState.AppendChildrenHooks, []);
+    this.setState(BasicState.ContextInfo, { name: this.isRoot ? rname : cname, emit: this.isRoot });
   }
 
   protected async onRender() {
     await super.onRender();
+    this.createRootContextState();
     this.createFunctionRender();
   }
 
@@ -408,4 +414,32 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   private createComponentRenderReturn(rootEle: JsxElementGenerator | JsxExpressionGenerator) {
     return ts.createReturn(rootEle.emit());
   }
+
+  private createRootContextState() {
+    const { name, emit } = this.getState(BasicState.ContextInfo);
+    if (!emit) return;
+    const body = ts.createObjectLiteral(
+      this.useStates.map(i => {
+        const name = getReactStateName(i);
+        return ts.createPropertyAssignment(
+          name,
+          ts.createObjectLiteral([
+            ts.createPropertyAssignment("value", ts.createIdentifier(name)),
+            ts.createPropertyAssignment("setState", ts.createIdentifier("set" + classCase(name))),
+          ]),
+        );
+      }),
+    );
+    this.render.component.appendVariable(
+      name,
+      ts.createObjectLiteral([ts.createPropertyAssignment(REACT.State, body)]),
+    );
+  }
+}
+
+function getReactStateName(variable: VariableGenerator) {
+  // 获取第一个变量内部名（arrayBinding形式的变量是没有名字的，是一个_nxxx的内部名）
+  const placeholder = Object.keys(variable["variables"])[0];
+  // 获取真实的react组件state名称
+  return variable["variables"][placeholder].arrayBinding[0];
 }
