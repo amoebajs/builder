@@ -34,7 +34,7 @@ export interface IFrontLibImportOptions {
 export class ReactHelper extends BasicHelper {
   public readonly DEFAULT_CONTEXT_NAME = REACT.Props + ".CONTEXT";
   public readonly DEFAULT_ROOT_CONTEXT_NAME = "__CONTEXT__";
-  public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+is\s+(.+)$/;
+  public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+=\s+(.+)$/;
   public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 
   public createViewElement(
@@ -176,8 +176,8 @@ export class ReactHelper extends BasicHelper {
     return `${this.useReverse(exp)}props?.${ps.join("?.")}`;
   }
 
-  public useComplexLogicExpression(exp: IComplexLogicExpression, contextName: string) {
-    const { vars = [], expressions = [] } = exp.expression;
+  public useComplexLogicExpression(exp: IComplexLogicExpression["expression"], contextName: string) {
+    const { vars = [], expressions = [] } = exp;
     const context: Array<string> = [];
     for (const each of vars) {
       const result = this.DEFINE_IS_REGEXP.exec(each);

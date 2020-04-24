@@ -20,7 +20,7 @@ export interface IDescriptionMeta extends IWeakDescriptionMeta {
 
 export type IBasicLiteralType = string | boolean | number | object;
 
-export interface IEntityRefExpression {
+export interface ICildAttachRefExpression {
   id: string;
   value: string;
 }
@@ -101,7 +101,7 @@ export type IDirectiveInputEntityRefMap = ITypedSyntaxExpressionGroupMap<"entity
 export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputEntityRefMap;
 
 /** 组件的附加参数字典类型：child附加列表 */
-export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
+export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<ICildAttachRefExpression>>;
 
 export interface ILiteralExpression extends ITypedSyntaxExpression<"literal", any, { type: TypeLiteralMeta }> {}
 

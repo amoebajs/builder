@@ -452,7 +452,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
       case "complexLogic":
         element.addJsxAttr(name, () =>
           this.helper.createJsxArrowEventHandler(
-            ts.createIdentifier(this.helper.useComplexLogicExpression(prop, context.name)),
+            ts.createIdentifier(this.helper.useComplexLogicExpression(prop.expression, context.name)),
           ),
         );
         break;
