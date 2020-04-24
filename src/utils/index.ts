@@ -16,7 +16,7 @@ export function createEntityId() {
   );
 }
 
-export function connectDirectiveRequie(parentScope: string, newId: string): string {
+export function connectParentChildEntityScope(parentScope: string, newId: string): string {
   return parentScope + "_" + newId;
 }
 

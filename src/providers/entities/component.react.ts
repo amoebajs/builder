@@ -31,6 +31,21 @@ export interface IVisitResult {
   newDisplayRule?: any;
 }
 
+export interface IChildrenHook {
+  key: string;
+  func: (node: any) => any;
+}
+
+export interface IContextInfo {
+  name: string;
+  emit: boolean;
+}
+
+export interface IObserverUse {
+  value: VariableGenerator;
+  type: "subject" | "behavior";
+}
+
 export interface IBasicReactContainerState {
   [BasicState.RenderTagName]: string;
   [BasicState.RenderTagAttrs]: JsxAttributeGenerator[];
@@ -39,18 +54,18 @@ export interface IBasicReactContainerState {
   [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
-  [BasicState.UseObservers]: VariableGenerator[];
+  [BasicState.UseObservers]: IObserverUse[];
   [BasicState.UseObservables]: VariableGenerator[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
   [BasicState.UseRefs]: VariableGenerator[];
   [BasicState.UseMemos]: VariableGenerator[];
-  [BasicState.ContextInfo]: { name: string; emit: boolean };
+  [BasicState.ContextInfo]: IContextInfo;
   [BasicState.PushedVariables]: StatementGenerator<any>[];
   [BasicState.UnshiftVariables]: StatementGenerator<any>[];
   [BasicState.FnsBeforeRender]: Function[];
   [BasicState.RootElementChangeFns]: ((gen: JsxElementGenerator) => JsxElementGenerator)[];
-  [BasicState.AppendChildrenHooks]: { key: string; func: (node: any) => any }[];
+  [BasicState.AppendChildrenHooks]: IChildrenHook[];
 }
 
 @Injectable(InjectScope.New)
@@ -322,19 +337,19 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   }
 
   protected addUseObserver(name: string, defaultValue?: unknown) {
-    const expression = is.nullOrUndefined(defaultValue)
-      ? "new Subject<any>()"
-      : `new BehaviorSubject<any>(${defaultValue})`;
-    this.useObservers.push(
-      this.createNode("variable").addField({
+    const hasDefault = is.nullOrUndefined(defaultValue);
+    const expression = hasDefault ? "new Subject<any>()" : `new BehaviorSubject<any>(${defaultValue})`;
+    this.useObservers.push({
+      type: hasDefault ? "subject" : "behavior",
+      value: this.createNode("variable").addField({
         name,
         initValue: `React.useMemo(() => ${expression}, [])`,
       }),
-    );
+    });
   }
 
   protected addUseObservables(name: string, target: string, defaultValue: unknown) {
-    this.useObservers.push(
+    this.useObservables.push(
       this.createNode("variable").addField({
         name,
         initValue: () => {
@@ -395,7 +410,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
               .concat(this.useEffects)
               .concat(this.useRefs)
               .concat(this.useMemos)
-              .concat(this.useObservers)
+              .concat(this.useObservers.map(i => i.value))
               .concat(this.pushedVariables),
           );
           return node;
@@ -428,7 +443,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         element.addJsxAttr(name, () => this.helper.createLiteral(prop.expression));
         break;
       // 引用指令内容，暂时没有实现Output相关功能
-      case "directiveRef":
+      case "entityRef":
         element.addJsxAttr(name, () =>
           this.helper.createLiteral(prop.expression.ref + "_" + prop.expression.expression),
         );
@@ -476,11 +491,15 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   private initFrameworkImports() {
     const { emit } = this.getState(BasicState.ContextInfo);
     if (!emit) return;
-    if (this.useObservers.length > 0) {
+    if (this.useObservers.filter(i => i.type === "subject").length > 0) {
       this.addImports([
         this.createNode("import")
           .addNamedBinding("Subject", "Subject")
           .setModulePath("rxjs/_esm2015/internal/Subject"),
+      ]);
+    }
+    if (this.useObservers.filter(i => i.type === "behavior").length > 0) {
+      this.addImports([
         this.createNode("import")
           .addNamedBinding("BehaviorSubject", "BehaviorSubject")
           .setModulePath("rxjs/_esm2015/internal/BehaviorSubject"),
@@ -529,7 +548,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   private createRootContextObservers() {
     return ts.createObjectLiteral(
       this.useObservers.map(i => {
-        const name = getVariableName(i);
+        const name = getVariableName(i.value);
         return ts.createPropertyAssignment(
           name,
           ts.createObjectLiteral([

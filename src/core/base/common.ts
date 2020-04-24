@@ -95,10 +95,10 @@ export interface ITypedSyntaxExpressionGroupMap<E extends unknown = never, P ext
 export type IComponentInputMap = ITypedSyntaxExpressionGroupMap<"literal", IBasicLiteralType>;
 
 /** 指令的输入参数字典类型：指令引用 */
-export type IDirectiveInputDirectiveRefMap = ITypedSyntaxExpressionGroupMap<"directiveRef", IEntityRefExpression>;
+export type IDirectiveInputEntityRefMap = ITypedSyntaxExpressionGroupMap<"entityRef", IEntityRefExpression>;
 
 /** 指令的输入参数字典类型：字面量+指令引用 */
-export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRefMap;
+export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputEntityRefMap;
 
 /** 组件的附加参数字典类型：child附加列表 */
 export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
@@ -109,8 +109,12 @@ export interface IStateExpression extends ITypedSyntaxExpression<"state", string
 
 export interface IPropsExpression extends ITypedSyntaxExpression<"props", string, { reverse: boolean }> {}
 
-export interface IDirectiveRefExpression
-  extends ITypedSyntaxExpression<"directiveRef", { ref: string; expression: string }, {}> {}
+export interface IEntityRefExpression
+  extends ITypedSyntaxExpression<
+    "entityRef",
+    { ref: string; type: "reference" | "observable"; expression: string },
+    {}
+  > {}
 
 export interface IComplexLogicDefine {
   vars?: string[];
@@ -123,7 +127,7 @@ export type IComponentProp =
   | ILiteralExpression
   | IStateExpression
   | IPropsExpression
-  | IDirectiveRefExpression
+  | IEntityRefExpression
   | IComplexLogicExpression;
 
 /** comp-child的prop参数字典类型：字面量+状态 */

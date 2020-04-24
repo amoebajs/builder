@@ -173,7 +173,7 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
         if (value.type === "literal") {
           (<any>instance)[input.realName] = value.expression;
         }
-        if (value.type === "directiveRef") {
+        if (value.type === "entityRef") {
           // TODO
         }
         // TODO 后续支持其他属性类型

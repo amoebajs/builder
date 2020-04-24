@@ -5,7 +5,7 @@ import { BasicState, IPureObject, Injectable, JsxElementGenerator } from "../../
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
 import { IBasicReactContainerState as IS, ReactComponent } from "../entities";
 import { BasicRender, EntityRenderDelegate } from "./render.basic";
-import { connectDirectiveRequie, connectReferenceName } from "../../utils";
+import { connectParentChildEntityScope, connectReferenceName } from "../../utils";
 
 @Injectable(InjectScope.New)
 export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
@@ -111,8 +111,8 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     return this.helper.useStateExpression({ type: "state", expression: name, extensions: { reverse } }, contextName);
   }
 
-  public createDirectiveRefAccess(directive: string, refname: string) {
-    return connectReferenceName(connectDirectiveRequie(this.ref.entityId, directive), refname);
+  public createEntityRefAccess(directive: string, refname: string) {
+    return connectReferenceName(connectParentChildEntityScope(this.ref.entityId, directive), refname);
   }
 
   public appendJsxStyles(entityId: string | JsxElementGenerator, value: Record<string, unknown>) {
