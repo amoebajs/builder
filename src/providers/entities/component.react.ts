@@ -450,14 +450,13 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         break;
       // 复杂逻辑，用来支持自定义语法块的解析
       case "complexLogic":
-        element.addJsxAttr(name, () => this.helper.createLiteral(prop.expression));
-        break;
-      default:
         element.addJsxAttr(name, () =>
           this.helper.createJsxArrowEventHandler(
             ts.createIdentifier(this.helper.useComplexLogicExpression(prop, context.name)),
           ),
         );
+        break;
+      default:
         resolved = false;
         break;
     }
