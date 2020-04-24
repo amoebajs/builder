@@ -225,6 +225,11 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     }
   }
 
+  protected getNamedObserver(name: string, target?: "observable" | "next" | "data") {
+    const { name: context } = this.getState(BasicState.ContextInfo);
+    return `${context}.data.${name}${is.nullOrUndefined(target) ? "" : "."}${target ?? ""}`;
+  }
+
   protected setTagName(tagName: string) {
     this.setState(BasicState.RenderTagName, tagName);
   }
@@ -356,7 +361,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
           const { name: context } = this.getState(BasicState.ContextInfo);
           return ts.createIdentifier(
             REACT.UseEffect +
-              `(() => { const __subp = ${context}.data.${target}.data.subscrible(${defaultValue}); return () => { __subp.unsubscribe(); } }, [])`,
+              `(() => { const __subp = ${context}.data.${target}.observable.subscribe(${defaultValue}); return () => { __subp.unsubscribe(); } }, [])`,
           );
         },
       }),
@@ -411,6 +416,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
               .concat(this.useRefs)
               .concat(this.useMemos)
               .concat(this.useObservers.map(i => i.value))
+              .concat(this.useObservables)
               .concat(this.pushedVariables),
           );
           return node;
@@ -551,8 +557,16 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         return ts.createPropertyAssignment(
           name,
           ts.createObjectLiteral([
-            ts.createPropertyAssignment("data", ts.createIdentifier(name + ".asObservable()")),
+            ts.createPropertyAssignment("observable", ts.createIdentifier(name + ".asObservable()")),
             ts.createPropertyAssignment("next", ts.createIdentifier(`(data: any) => ${name}.next(data)`)),
+            ts.createGetAccessor(
+              [],
+              [],
+              "data",
+              [],
+              void 0,
+              ts.createBlock([ts.createReturn(ts.createIdentifier(name + ".getValue()"))]),
+            ),
           ]),
         );
       }),
