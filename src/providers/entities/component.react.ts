@@ -49,9 +49,16 @@ export interface IObserverUse {
   type: "subject" | "behavior";
 }
 
+export interface IAttrUse {
+  name: string;
+  type: "object" | "value";
+  value: Function | Record<string, any>;
+  node: JsxAttributeGenerator;
+}
+
 export interface IBasicReactContainerState {
   [BasicState.RenderTagName]: string;
-  [BasicState.RenderTagAttrs]: JsxAttributeGenerator[];
+  [BasicState.RenderTagAttrs]: IAttrUse[];
   [BasicState.RenderChildrenMap]: Map<string | symbol, JsxElementGenerator>;
   [BasicState.RenderChildrenRuleMap]: Map<string | symbol, string>;
   [BasicState.UnshiftNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
@@ -237,28 +244,44 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.setState(BasicState.RenderTagName, this.getRefName(tagName));
   }
 
+  private createUpdateAttrUse(name: VariableRefName) {
+    const key: string = this.getRefName(name);
+    const index = this.renderAttributes.findIndex(i => i.name === name);
+    let target = this.renderAttributes[index];
+    if (index < 0) {
+      this.renderAttributes.push(
+        (target = {
+          name: key,
+          type: "value",
+          value: <any>null,
+          node: this.createNode("jsx-attribute").setName(key),
+        }),
+      );
+    } else {
+      target.type = "value";
+    }
+    return target;
+  }
+
   protected addAttributeWithObject(name: VariableRefName, obj: Record<string, JsxAttributeValueType>) {
-    this.renderAttributes.push(
-      this.createNode("jsx-attribute")
-        .setName(this.getRefName(name))
-        .setValue(() => this.helper.createObjectAttr(obj)),
-    );
+    let newobj: Record<string, any> = { ...obj };
+    const target = this.createUpdateAttrUse(name);
+    target.type = "object";
+    if (typeof target.value === "object") newobj = { ...target.value, ...newobj };
+    target.value = newobj;
   }
 
   protected addAttributeWithValue(name: VariableRefName, value: JsxAttributeValueType) {
-    this.renderAttributes.push(
-      this.createNode("jsx-attribute")
-        .setName(this.getRefName(name))
-        .setValue(() => resolveSyntaxInsert(typeof value, value, (_, e) => e)),
-    );
+    const target = this.createUpdateAttrUse(name);
+    const result = this.getExpression(value);
+    target.value =
+      typeof result === "function" ? result : () => resolveSyntaxInsert(typeof result, result, (_, e) => e);
   }
 
   protected addAttributeWithSyntaxText(name: VariableRefName, value: JsxAttributeSyntaxTextType) {
-    this.renderAttributes.push(
-      this.createNode("jsx-attribute")
-        .setName(this.getRefName(name))
-        .setValue(this.getExpression(value)),
-    );
+    const target = this.createUpdateAttrUse(name);
+    const result = this.getExpression(value);
+    target.value = typeof result === "string" ? () => ts.createIdentifier(result) : result;
   }
 
   protected addAttributesWithMap(map: Record<string, JsxAttributeType>) {
@@ -274,6 +297,15 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
       typeof attr === "object"
         ? this.addAttributeWithObject(name, <any>attr)
         : this.addAttributeWithSyntaxText(name, attr);
+    }
+  }
+
+  protected useAttr(i: IAttrUse) {
+    switch (i.type) {
+      case "object":
+        return i.node.setValue(() => this.helper.createObjectAttr(<Record<string, any>>i.value));
+      default:
+        return i.node.setValue(<() => ts.Expression>i.value);
     }
   }
 
@@ -451,7 +483,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
             this.onRootElementVisit(
               this.createNode("jsx-element")
                 .setTagName(this.renderTagName)
-                .addJsxAttrs(this.renderAttributes)
+                .addJsxAttrs(this.renderAttributes.map(i => this.useAttr(i)))
                 .addJsxChildren(this.renderUnshiftChildNodes)
                 .addJsxChildren(this.resolveChildNodeRender())
                 .addJsxChildren(this.renderPushedChildNodes),
