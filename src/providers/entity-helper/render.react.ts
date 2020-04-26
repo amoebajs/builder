@@ -3,7 +3,7 @@ import { InjectScope } from "@bonbons/di";
 import { NotFoundError } from "../../errors";
 import { BasicState, IPureObject, Injectable, JsxElementGenerator } from "../../core";
 import { ReactHelper, updateJsxElementAttr } from "./helper.react";
-import { IBasicReactContainerState as IS, ReactComponent } from "../entities";
+import { IBasicReactContainerState as IS, ReactComponent, VariableRefName } from "../entities";
 import { BasicRender, EntityRenderDelegate } from "./render.basic";
 import { connectParentChildEntityScope, connectReferenceName } from "../../utils";
 
@@ -37,27 +37,27 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     }
   }
 
-  public appendState(name: string, defaultValue: unknown) {
+  public appendState(VariableRefName: string, defaultValue: unknown) {
     this.ref["addUseState"](name, defaultValue);
   }
 
-  public appendCallback(name: string, callback: unknown, deps?: string[]) {
+  public appendCallback(VariableRefName: string, callback: unknown, deps?: VariableRefName[]) {
     this.ref["addUseCallback"](name, callback, deps);
   }
 
-  public appendEffect(name: string, callback: unknown, deps?: string[]) {
+  public appendEffect(VariableRefName: string, callback: unknown, deps?: VariableRefName[]) {
     this.ref["addUseEffect"](name, callback, deps);
   }
 
-  public appendRef(name: string, defaultValue: unknown) {
+  public appendRef(name: VariableRefName, defaultValue: unknown) {
     this.ref["addUseRef"](name, defaultValue);
   }
 
-  public appendObserver(name: string, defaults?: unknown) {
+  public appendObserver(name: VariableRefName, defaults?: unknown) {
     this.ref["addUseObserver"](name, defaults);
   }
 
-  public appendObservable(name: string, expr: unknown, varName?: string) {
+  public appendObservable(name: string, expr: VariableRefName, varName?: VariableRefName) {
     this.ref["addUseObservables"](name, expr, varName);
   }
 

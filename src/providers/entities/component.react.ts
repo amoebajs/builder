@@ -13,16 +13,19 @@ import {
   JsxAttributeGenerator,
   JsxElementGenerator,
   JsxExpressionGenerator,
+  Observer,
   StatementGenerator,
   VariableGenerator,
+  VariableRef,
   resolveObservables,
   resolveSyntaxInsert,
 } from "../../core";
 import { REACT, TYPES, classCase, is } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
 
+export type VariableRefName = string | VariableRef | Observer;
 export type JsxAttributeValueType = number | string | boolean | ts.Expression;
-export type JsxAttributeSyntaxTextType = string | ts.Expression;
+export type JsxAttributeSyntaxTextType = VariableRefName | ts.Expression;
 export type JsxAttributeType = JsxAttributeValueType | Record<string, JsxAttributeValueType>;
 export type JsxAttributeSyntaxType = JsxAttributeSyntaxTextType | Record<string, JsxAttributeSyntaxTextType>;
 
@@ -225,36 +228,36 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     }
   }
 
-  protected getNamedObserver(name: string, target?: "observable" | "next" | "data") {
+  protected getNamedObserver(name: VariableRefName, target?: "observable" | "next" | "data") {
     const { name: context } = this.getState(BasicState.ContextInfo);
-    return `${context}.data.${name}${is.nullOrUndefined(target) ? "" : "."}${target ?? ""}`;
+    return `${context}.data.${this.getRefName(name)}${is.nullOrUndefined(target) ? "" : "."}${target ?? ""}`;
   }
 
-  protected setTagName(tagName: string) {
-    this.setState(BasicState.RenderTagName, tagName);
+  protected setTagName(tagName: VariableRefName) {
+    this.setState(BasicState.RenderTagName, this.getRefName(tagName));
   }
 
-  protected addAttributeWithObject(name: string, obj: Record<string, JsxAttributeValueType>) {
+  protected addAttributeWithObject(name: VariableRefName, obj: Record<string, JsxAttributeValueType>) {
     this.renderAttributes.push(
       this.createNode("jsx-attribute")
-        .setName(name)
+        .setName(this.getRefName(name))
         .setValue(() => this.helper.createObjectAttr(obj)),
     );
   }
 
-  protected addAttributeWithValue(name: string, value: JsxAttributeValueType) {
+  protected addAttributeWithValue(name: VariableRefName, value: JsxAttributeValueType) {
     this.renderAttributes.push(
       this.createNode("jsx-attribute")
-        .setName(name)
+        .setName(this.getRefName(name))
         .setValue(() => resolveSyntaxInsert(typeof value, value, (_, e) => e)),
     );
   }
 
-  protected addAttributeWithSyntaxText(name: string, value: JsxAttributeSyntaxTextType) {
+  protected addAttributeWithSyntaxText(name: VariableRefName, value: JsxAttributeSyntaxTextType) {
     this.renderAttributes.push(
       this.createNode("jsx-attribute")
-        .setName(name)
-        .setValue(typeof value === "string" ? value : () => value),
+        .setName(this.getRefName(name))
+        .setValue(this.getExpression(value)),
     );
   }
 
@@ -274,8 +277,8 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     }
   }
 
-  protected addRenderChildren(id: string, element: JsxElementGenerator) {
-    this.getState(BasicState.RenderChildrenMap).set(id, element);
+  protected addRenderChildren(id: VariableRefName, element: JsxElementGenerator) {
+    this.getState(BasicState.RenderChildrenMap).set(this.getRefName(id), element);
   }
 
   protected addRenderPushedChild(element: JsxElementGenerator | JsxExpressionGenerator) {
@@ -286,63 +289,68 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.renderUnshiftChildNodes.push(element);
   }
 
-  protected addUseState(name: string, value: unknown, setStateName?: string) {
+  protected addUseState(name: VariableRefName, value: unknown, setStateName?: VariableRefName) {
     this.useStates.push(
       this.createNode("variable").addField({
-        arrayBinding: [name, setStateName ?? this.getSetState(name)],
+        arrayBinding: [this.getRefName(name), this.getRefName(setStateName ?? this.getSetState(name))],
         initValue: () =>
           ts.createCall(
             ts.createIdentifier(REACT.UseState),
             [TYPES.Any],
-            [ts.isObjectLiteralExpression(<ts.Node>value) ? <ts.Expression>value : ts.createIdentifier(String(value))],
+            [
+              ts.isObjectLiteralExpression(<ts.Node>value)
+                ? <ts.Expression>value
+                : ts.createIdentifier(String(this.getExpression(value))),
+            ],
           ),
       }),
     );
   }
 
-  protected addUseCallback(name: string, callback: unknown, deps: string[] = []) {
+  protected addUseCallback(name: VariableRefName, expression: unknown, deps: VariableRefName[] = []) {
     this.useCallbacks.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseCallback, [
-            ts.createIdentifier(String(callback)),
-            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+            ts.createIdentifier(String(this.getExpression(expression))),
+            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(this.getRefName(dep)))),
           ]),
       }),
     );
   }
 
-  protected addUseEffect(name: string, callback: unknown, deps: string[] = []) {
+  protected addUseEffect(name: VariableRefName, expression: unknown, deps: VariableRefName[] = []) {
     this.useEffects.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseEffect, [
-            ts.createIdentifier(String(callback)),
-            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+            ts.createIdentifier(String(this.getExpression(expression))),
+            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(this.getRefName(dep)))),
           ]),
       }),
     );
   }
 
-  protected addUseMemo(name: string, expression: unknown, deps: string[] = []) {
+  protected addUseMemo(name: VariableRefName, expression: unknown, deps: VariableRefName[] = []) {
+    const result = this.getExpression(expression);
     this.useEffects.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseMemo, [
-            typeof expression === "string" ? ts.createIdentifier(expression) : <ts.Expression>expression,
-            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+            typeof result === "function" ? result() : ts.createIdentifier(result),
+            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(this.getRefName(dep)))),
           ]),
       }),
     );
   }
 
-  protected addUseRef(name: string, defaultValue: unknown) {
+  protected addUseRef(name: VariableRefName, defaultValue: unknown) {
     this.useRefs.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         // 临时支持对象表达式
         initValue: () =>
           ts.createCall(
@@ -358,58 +366,78 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     );
   }
 
-  protected addUseObserver(name: string, defaultValue?: unknown) {
+  protected addUseObserver(name: VariableRefName, defaultValue?: unknown) {
     const hasDefault = is.nullOrUndefined(defaultValue);
     const expression = hasDefault ? "new Subject<any>()" : `new BehaviorSubject<any>(${defaultValue})`;
     this.useObservers.push({
       type: hasDefault ? "subject" : "behavior",
       value: this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         initValue: expression,
       }),
     });
   }
 
-  protected addUseObservables(target: string, expr: unknown, varName?: string) {
+  protected addUseObservables(target: VariableRefName, expr: VariableRefName, varName?: VariableRefName) {
     const expression = () => {
       const { name: context } = this.getState(BasicState.ContextInfo);
       return ts.createIdentifier(
         REACT.UseEffect +
-          `(() => { const __subp = ${context}.data.${target}.observable.subscribe(${expr}); return () => { __subp.unsubscribe(); } }, [])`,
+          `(() => { const __subp = ${context}.data.${this.getRefName(
+            target,
+          )}.observable.subscribe(${this.getExpressionValue(expr)}); return () => { __subp.unsubscribe(); } }, [])`,
       );
     };
     this.useObservables.push(
       !!varName
         ? this.createNode("variable").addField({
-            name: varName,
+            name: this.getRefName(varName),
             initValue: expression,
           })
         : this.createNode("statement").setValue(expression),
     );
   }
 
-  protected addUnshiftVariable(name: string, initilizer?: ts.Expression) {
+  protected addUnshiftVariable(name: VariableRefName, initilizer?: ts.Expression) {
     this.unshiftVariables.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         type: "any",
         initValue: initilizer && (() => initilizer),
       }),
     );
   }
 
-  protected addPushedVariable(name: string, initilizer?: ts.Expression) {
+  protected addPushedVariable(name: VariableRefName, initilizer?: ts.Expression) {
     this.pushedVariables.push(
       this.createNode("variable").addField({
-        name,
+        name: this.getRefName(name),
         type: "any",
         initValue: initilizer && (() => initilizer),
       }),
     );
   }
 
-  protected getSetState(name: string) {
-    return "set" + classCase(name);
+  protected getSetState(name: VariableRefName) {
+    return "set" + classCase(this.getRefName(name));
+  }
+
+  protected getRefName<T extends VariableRefName>(ref: T): string {
+    return <string>(ref instanceof VariableRef || ref instanceof Observer ? ref.name : ref);
+  }
+
+  protected getExpression(expr: unknown): string | (() => ts.Expression) {
+    return expr instanceof VariableRef || expr instanceof Observer
+      ? expr.name
+      : typeof expr === "string"
+      ? expr
+      : () => <ts.Expression>expr;
+  }
+
+  protected getExpressionValue(expr: unknown): string | ts.Expression {
+    const result = this.getExpression(expr);
+    if (typeof result === "function") return result();
+    return result;
   }
 
   private createFunctionRender() {
