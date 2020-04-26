@@ -286,12 +286,16 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.renderUnshiftChildNodes.push(element);
   }
 
-  protected addUseState(name: string, defaultValue: unknown) {
+  protected addUseState(name: string, value: unknown, setStateName?: string) {
     this.useStates.push(
       this.createNode("variable").addField({
-        arrayBinding: [name, this.getSetState(name)],
+        arrayBinding: [name, setStateName ?? this.getSetState(name)],
         initValue: () =>
-          ts.createCall(ts.createIdentifier(REACT.UseState), [TYPES.Any], [ts.createIdentifier(String(defaultValue))]),
+          ts.createCall(
+            ts.createIdentifier(REACT.UseState),
+            [TYPES.Any],
+            [ts.isObjectLiteralExpression(<ts.Node>value) ? <ts.Expression>value : ts.createIdentifier(String(value))],
+          ),
       }),
     );
   }
@@ -316,6 +320,19 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseEffect, [
             ts.createIdentifier(String(callback)),
+            ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
+          ]),
+      }),
+    );
+  }
+
+  protected addUseMemo(name: string, expression: unknown, deps: string[] = []) {
+    this.useEffects.push(
+      this.createNode("variable").addField({
+        name,
+        initValue: () =>
+          this.helper.createFunctionCall(REACT.UseMemo, [
+            typeof expression === "string" ? ts.createIdentifier(expression) : <ts.Expression>expression,
             ts.createArrayLiteral(deps.map(dep => ts.createIdentifier(dep))),
           ]),
       }),
@@ -348,7 +365,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
       type: hasDefault ? "subject" : "behavior",
       value: this.createNode("variable").addField({
         name,
-        initValue: `React.useMemo(() => ${expression}, [])`,
+        initValue: expression,
       }),
     });
   }
@@ -413,13 +430,13 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
             ),
             (<StatementGenerator<any>[]>[])
               .concat(this.unshiftVariables)
+              .concat(this.useObservers.map(i => i.value))
               .concat(this.useStates)
               .concat(this.useCallbacks)
               .concat(this.useEffects)
               .concat(this.useRefs)
-              .concat(this.useMemos)
-              .concat(this.useObservers.map(i => i.value))
               .concat(this.useObservables)
+              .concat(this.useMemos)
               .concat(this.pushedVariables),
           );
           return node;
@@ -529,12 +546,28 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   private createRootContext() {
     const { name, emit } = this.getState(BasicState.ContextInfo);
     if (!emit) return;
-    this.render.component.appendVariable(
+    // this.addPushedVariable(
+    //   name,
+    //   ts.createObjectLiteral([
+    //     ts.createPropertyAssignment(REACT.State, this.createRootContextStates()),
+    //     ts.createPropertyAssignment("data", this.createRootContextObservers()),
+    //   ]),
+    // );
+    this.addUseMemo(
       name,
-      ts.createObjectLiteral([
-        ts.createPropertyAssignment(REACT.State, this.createRootContextStates()),
-        ts.createPropertyAssignment("data", this.createRootContextObservers()),
-      ]),
+      ts.createArrowFunction(
+        [],
+        [],
+        [],
+        void 0,
+        void 0,
+        ts.createParen(
+          ts.createObjectLiteral([
+            ts.createPropertyAssignment(REACT.State, this.createRootContextStates()),
+            ts.createPropertyAssignment("data", this.createRootContextObservers()),
+          ]),
+        ),
+      ),
     );
   }
 
