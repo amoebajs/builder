@@ -189,6 +189,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.setState(BasicState.RootElementChangeFns, []);
     this.setState(BasicState.AppendChildrenHooks, []);
     this.setState(BasicState.ContextInfo, { name: this.isRoot ? rname : cname, emit: this.isRoot });
+    this.addAttributeWithSyntaxText("style", "props.style");
   }
 
   public afterInit() {
