@@ -55,7 +55,7 @@ export interface IBasicReactContainerState {
   [BasicState.PushedNodes]: (JsxElementGenerator | JsxExpressionGenerator)[];
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseObservers]: IObserverUse[];
-  [BasicState.UseObservables]: VariableGenerator[];
+  [BasicState.UseObservables]: StatementGenerator<any>[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: VariableGenerator[];
   [BasicState.UseRefs]: VariableGenerator[];
@@ -353,18 +353,21 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     });
   }
 
-  protected addUseObservables(name: string, target: string, defaultValue: unknown) {
+  protected addUseObservables(target: string, expr: unknown, varName?: string) {
+    const expression = () => {
+      const { name: context } = this.getState(BasicState.ContextInfo);
+      return ts.createIdentifier(
+        REACT.UseEffect +
+          `(() => { const __subp = ${context}.data.${target}.observable.subscribe(${expr}); return () => { __subp.unsubscribe(); } }, [])`,
+      );
+    };
     this.useObservables.push(
-      this.createNode("variable").addField({
-        name,
-        initValue: () => {
-          const { name: context } = this.getState(BasicState.ContextInfo);
-          return ts.createIdentifier(
-            REACT.UseEffect +
-              `(() => { const __subp = ${context}.data.${target}.observable.subscribe(${defaultValue}); return () => { __subp.unsubscribe(); } }, [])`,
-          );
-        },
-      }),
+      !!varName
+        ? this.createNode("variable").addField({
+            name: varName,
+            initValue: expression,
+          })
+        : this.createNode("statement").setValue(expression),
     );
   }
 

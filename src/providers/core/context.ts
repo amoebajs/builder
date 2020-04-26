@@ -191,7 +191,10 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
         this,
         this.provider.beforeFunctionsCreated(this, this.genContext.functions).map(i => i.emit()),
       ),
-      statements: this.provider.afterAllCreated(this, []),
+      statements: this.provider.afterStatementsCreated(
+        this,
+        this.provider.beforeStatementsCreated(this, this.genContext.statements).map(i => i.emit()),
+      ),
     };
   }
 

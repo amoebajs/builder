@@ -22,6 +22,7 @@ import {
   WebpackConfig,
 } from "../providers";
 import {
+  AnonymousStatementGenerator,
   BasicComponent,
   BasicComposition,
   BasicDirective,
@@ -103,6 +104,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(SourceFileContext, SourceFileBasicContext);
     this.useProvider(NodeGenerator);
     this.useProvider(StatementGenerator);
+    this.useProvider(AnonymousStatementGenerator);
     this.useProvider(DeclarationGenerator);
     this.useProvider(ExpressionGenerator);
     this.useProvider(FunctionGenerator);

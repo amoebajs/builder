@@ -1,6 +1,7 @@
 import ts from "typescript";
 import { InjectDIToken, Injector } from "@bonbons/di";
 import {
+  AnonymousStatementGenerator,
   ClassGenerator,
   EntityConstructor,
   FunctionGenerator,
@@ -99,6 +100,13 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return funcs;
   }
 
+  public beforeStatementsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    statements: AnonymousStatementGenerator[],
+  ): AnonymousStatementGenerator[] {
+    return statements;
+  }
+
   public afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],
@@ -127,7 +135,10 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
     return funcs;
   }
 
-  public afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[] {
+  public afterStatementsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    statements: ts.Statement[],
+  ): ts.Statement[] {
     return statements;
   }
 

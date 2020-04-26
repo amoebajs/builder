@@ -15,7 +15,13 @@ import { IInnerCompnentChildRef, IInnerCompositionChildRef, IInnerDirectiveChild
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
 import { IInnerComposition } from "../composition";
-import { ClassGenerator, FunctionGenerator, ImportGenerator, VariableGenerator } from "../typescript";
+import {
+  AnonymousStatementGenerator,
+  ClassGenerator,
+  FunctionGenerator,
+  ImportGenerator,
+  VariableGenerator,
+} from "../typescript";
 
 export type EntityType =
   | "directive"
@@ -114,6 +120,10 @@ export interface IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     funcs: FunctionGenerator[],
   ): FunctionGenerator[];
+  beforeStatementsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: AnonymousStatementGenerator[],
+  ): AnonymousStatementGenerator[];
   afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],
@@ -130,7 +140,7 @@ export interface IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     funcs: ts.FunctionDeclaration[],
   ): ts.FunctionDeclaration[];
-  afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
+  afterStatementsCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
 }
 
 export interface IEwsEntity {

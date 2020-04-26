@@ -8,6 +8,7 @@ import {
 } from "./entity";
 import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "../child-ref";
 import {
+  AnonymousStatementGenerator,
   ClassGenerator,
   FunctionGenerator,
   ImportGenerator,
@@ -23,19 +24,18 @@ export const ContextItemsGroup = {
   variable: VariableGenerator,
   class: ClassGenerator,
   function: FunctionGenerator,
+  statement: AnonymousStatementGenerator,
   ["jsx-element"]: JsxElementGenerator,
   ["jsx-attribute"]: JsxAttributeGenerator,
   ["jsx-expression"]: JsxExpressionGenerator,
 };
 
 export interface IFinalScopedContext {
-  // imports: ts.ImportDeclaration[];
   imports: InstanceType<typeof ContextItemsGroup["import"]>[];
   variables: InstanceType<typeof ContextItemsGroup["variable"]>[];
-  // classes: ts.ClassDeclaration[];
   classes: InstanceType<typeof ContextItemsGroup["class"]>[];
-  // functions: ts.FunctionDeclaration[];
   functions: InstanceType<typeof ContextItemsGroup["function"]>[];
+  statements: InstanceType<typeof ContextItemsGroup["statement"]>[];
 }
 
 export interface IFinalAstContext {
@@ -51,7 +51,7 @@ export interface IFinalGeneratorContext {
   variables: VariableGenerator[];
   classes: ClassGenerator[];
   functions: FunctionGenerator[];
-  statements: ts.Statement[];
+  statements: AnonymousStatementGenerator[];
 }
 
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {

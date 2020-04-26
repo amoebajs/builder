@@ -79,8 +79,8 @@ export class ReactEntityProvider extends BasicEntityProvider {
     return super.afterImportsCreated(context, imports);
   }
 
-  public afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]) {
-    return super.afterAllCreated(context, [
+  public afterStatementsCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]) {
+    return super.afterStatementsCreated(context, [
       ...statements,
       ts.createExpressionStatement(
         ts.createCall(
