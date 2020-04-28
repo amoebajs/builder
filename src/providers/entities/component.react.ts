@@ -390,7 +390,9 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
             ts.createIdentifier(REACT.UseRef),
             [TYPES.Any],
             [
-              "kind" in <any>defaultValue && ts.isObjectLiteralExpression(<any>defaultValue)
+              typeof defaultValue === "object" &&
+              "kind" in <any>defaultValue &&
+              ts.isObjectLiteralExpression(<any>defaultValue)
                 ? <ts.ObjectLiteralExpression>defaultValue
                 : ts.createIdentifier(String(defaultValue)),
             ],
@@ -411,14 +413,21 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     });
   }
 
-  protected addUseObservables(target: VariableRefName, expr: VariableRefName, varName?: VariableRefName) {
+  protected addUseObservables(
+    target: VariableRefName,
+    expr: VariableRefName,
+    varName?: VariableRefName,
+    deps: VariableRefName[] = [],
+  ) {
     const expression = () => {
       const { name: context } = this.getState(BasicState.ContextInfo);
       return ts.createIdentifier(
         REACT.UseEffect +
           `(() => { const __subp = ${context}.data.${this.getRefName(
             target,
-          )}.observable.subscribe(${this.getExpressionValue(expr)}); return () => { __subp.unsubscribe(); } }, [])`,
+          )}.observable.subscribe(${this.getExpressionValue(
+            expr,
+          )}); return () => { __subp.unsubscribe(); } }, [${deps.map(i => this.getRefName(i)).join(", ")}])`,
       );
     };
     this.useObservables.push(
