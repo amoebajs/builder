@@ -17,4 +17,8 @@ export class WebpackPluginsWebProvider implements WebpackPlugins {
   public createProgressPlugin(options?: Partial<import("./plugins.contract").IWebpackProgressPluginOptions>): Plugin {
     throw new Error("Method not implemented.");
   }
+
+  public createImportPlugin(options?: Partial<import("./plugins.contract").IWebpackImportPluginOptions>): Plugin {
+    throw new Error("Method not implemented.");
+  }
 }

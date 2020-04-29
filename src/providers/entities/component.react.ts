@@ -7,6 +7,7 @@ import {
   IAfterCreate,
   IAfterDirectivesAttach,
   IAfterInit,
+  IComplexLogicDefine,
   IComponentProp,
   IPureObject,
   Injectable,
@@ -20,7 +21,7 @@ import {
   resolveObservables,
   resolveSyntaxInsert,
 } from "../../core";
-import { REACT, TYPES, classCase, is } from "../../utils";
+import { REACT, RXJS, TYPES, classCase, is } from "../../utils";
 import { ReactHelper, ReactRender } from "../entity-helper";
 
 export type VariableRefName = string | VariableRef | Observer;
@@ -67,7 +68,7 @@ export interface IBasicReactContainerState {
   [BasicState.UseObservers]: IObserverUse[];
   [BasicState.UseObservables]: StatementGenerator<any>[];
   [BasicState.UseCallbacks]: VariableGenerator[];
-  [BasicState.UseEffects]: VariableGenerator[];
+  [BasicState.UseEffects]: (StatementGenerator | VariableGenerator)[];
   [BasicState.UseRefs]: VariableGenerator[];
   [BasicState.UseMemos]: VariableGenerator[];
   [BasicState.ContextInfo]: IContextInfo;
@@ -353,7 +354,18 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     );
   }
 
-  protected addUseEffect(name: VariableRefName, expression: unknown, deps: VariableRefName[] = []) {
+  protected addUseEffect(name: VariableRefName | null, expression: unknown, deps: VariableRefName[] = []) {
+    if (is.nullOrUndefined(name)) {
+      return this.useEffects.push(
+        this.createNode("statement").setValue(() =>
+          ts.createIdentifier(
+            `${REACT.UseEffect}(${expression}, [${deps
+              .map(dep => ts.createIdentifier(this.getRefName(dep)))
+              .join(", ")}])`,
+          ),
+        ),
+      );
+    }
     this.useEffects.push(
       this.createNode("variable").addField({
         name: this.getRefName(name),
@@ -413,30 +425,15 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     });
   }
 
-  protected addUseObservables(
-    target: VariableRefName,
-    expr: VariableRefName,
-    varName?: VariableRefName,
-    deps: VariableRefName[] = [],
-  ) {
-    const expression = () => {
-      const { name: context } = this.getState(BasicState.ContextInfo);
-      return ts.createIdentifier(
-        REACT.UseEffect +
-          `(() => { const __subp = ${context}.data.${this.getRefName(
-            target,
-          )}.observable.subscribe(${this.getExpressionValue(
-            expr,
-          )}); return () => { __subp.unsubscribe(); } }, [${deps.map(i => this.getRefName(i)).join(", ")}])`,
-      );
-    };
+  protected addUseObservables(name: VariableRefName, target: VariableRefName) {
+    const { name: context } = this.getState(BasicState.ContextInfo);
+    const observer = `${context}.data.${this.getRefName(target)}`;
     this.useObservables.push(
-      !!varName
-        ? this.createNode("variable").addField({
-            name: this.getRefName(varName),
-            initValue: expression,
-          })
-        : this.createNode("statement").setValue(expression),
+      this.createNode("variable").addField({
+        name: this.getRefName(name),
+        initValue: () =>
+          ts.createIdentifier(`${REACT.UseObservable}<any>(() => ${observer}.observable, ${observer}.data)`),
+      }),
     );
   }
 
@@ -460,26 +457,30 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     );
   }
 
+  protected createComplexLogicExpression(exp: IComplexLogicDefine) {
+    return this.helper.useComplexLogicExpression(exp, this.getState(BasicState.ContextInfo).name);
+  }
+
   protected getSetState(name: VariableRefName) {
     return "set" + classCase(this.getRefName(name));
+  }
+
+  protected nextObserverData(target: string | Observer, payload: string | Record<string, any>) {
+    const next = this.getNamedObserver(target, "next");
+    const data = this.getNamedObserver(target, "data");
+    return `${next}({ ...${data}, ...(${typeof payload === "string" ? payload : JSON.stringify(payload)}) });`;
   }
 
   protected getRefName<T extends VariableRefName>(ref: T): string {
     return <string>(ref instanceof VariableRef || ref instanceof Observer ? ref.name : ref);
   }
 
-  protected getExpression(expr: unknown): string | (() => ts.Expression) {
+  private getExpression(expr: unknown): string | (() => ts.Expression) {
     return expr instanceof VariableRef || expr instanceof Observer
       ? expr.name
       : typeof expr === "string"
       ? expr
       : () => <ts.Expression>expr;
-  }
-
-  protected getExpressionValue(expr: unknown): string | ts.Expression {
-    const result = this.getExpression(expr);
-    if (typeof result === "function") return result();
-    return result;
   }
 
   private createFunctionRender() {
@@ -502,10 +503,10 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
               .concat(this.unshiftVariables)
               .concat(this.useObservers.map(i => i.value))
               .concat(this.useStates)
+              .concat(this.useObservables)
               .concat(this.useCallbacks)
               .concat(this.useEffects)
               .concat(this.useRefs)
-              .concat(this.useObservables)
               .concat(this.useMemos)
               .concat(this.pushedVariables),
           );
@@ -584,20 +585,25 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   }
 
   private initFrameworkImports() {
-    const { emit } = this.getState(BasicState.ContextInfo);
-    if (!emit) return;
-    if (this.useObservers.filter(i => i.type === "subject").length > 0) {
+    if (this.useObservers.findIndex(i => i.type === "subject") >= 0) {
       this.addImports([
         this.createNode("import")
-          .addNamedBinding("Subject", "Subject")
-          .setModulePath("rxjs/_esm2015/internal/Subject"),
+          .addNamedBinding(RXJS.Subject, RXJS.Subject)
+          .setModulePath(RXJS.SubjectPath),
       ]);
     }
-    if (this.useObservers.filter(i => i.type === "behavior").length > 0) {
+    if (this.useObservers.findIndex(i => i.type === "behavior") >= 0) {
       this.addImports([
         this.createNode("import")
-          .addNamedBinding("BehaviorSubject", "BehaviorSubject")
-          .setModulePath("rxjs/_esm2015/internal/BehaviorSubject"),
+          .addNamedBinding(RXJS.BehaviorSubject, RXJS.BehaviorSubject)
+          .setModulePath(RXJS.BehaviorSubjectPath),
+      ]);
+    }
+    if (this.useObservables.length > 0) {
+      this.addImports([
+        this.createNode("import")
+          .setNamespaceName(REACT.RxjsHooks)
+          .setModulePath(REACT.RxjsHooksPackageName),
       ]);
     }
   }
@@ -616,13 +622,6 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   private createRootContext() {
     const { name, emit } = this.getState(BasicState.ContextInfo);
     if (!emit) return;
-    // this.addPushedVariable(
-    //   name,
-    //   ts.createObjectLiteral([
-    //     ts.createPropertyAssignment(REACT.State, this.createRootContextStates()),
-    //     ts.createPropertyAssignment("data", this.createRootContextObservers()),
-    //   ]),
-    // );
     this.addUseMemo(
       name,
       ts.createArrowFunction(

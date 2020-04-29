@@ -84,6 +84,7 @@ export class WebpackConfig {
                 loader: require.resolve("ts-loader"),
                 options: {
                   transpileOnly: true,
+                  getCustomTransformers: () => ({ before: [this.plugins.createImportPlugin({})] }),
                   compilerOptions: {
                     target: "es5",
                     module: "commonjs",

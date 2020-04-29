@@ -10,5 +10,9 @@ export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
     return connectReferenceName(this._host?.entityId!, this._name);
   }
 
+  public toString() {
+    return this.name;
+  }
+
   constructor() {}
 }

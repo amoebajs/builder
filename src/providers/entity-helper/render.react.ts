@@ -57,8 +57,8 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     this.ref["addUseObserver"](name, defaults);
   }
 
-  public appendObservable(name: string, expr: VariableRefName, varName?: VariableRefName) {
-    this.ref["addUseObservables"](name, expr, varName);
+  public appendObservable(name: VariableRefName, target: VariableRefName) {
+    this.ref["addUseObservables"](name, target);
   }
 
   public appendVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {

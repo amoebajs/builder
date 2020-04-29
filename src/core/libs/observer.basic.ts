@@ -17,6 +17,10 @@ export class Observer<T extends IInnerEwsEntity = IInnerEwsEntity> {
     return this._default;
   }
 
+  public toString() {
+    return this.name;
+  }
+
   public static Create<T>(value?: T) {
     return new Observer(value);
   }

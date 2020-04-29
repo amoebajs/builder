@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import HtmlWebPackPlugin from "html-webpack-plugin";
+import TsImportPlugin from "ts-import-plugin";
 import { Plugin, ProgressPlugin } from "webpack";
 import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
@@ -98,6 +99,23 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
         }
       }
     });
+  }
+
+  public createImportPlugin(_?: Partial<import("./plugins.contract").IWebpackImportPluginOptions>): Plugin {
+    return TsImportPlugin([
+      {
+        libraryDirectory: "../_esm5/internal/operators",
+        libraryName: "rxjs/operators",
+        camel2DashComponentName: false,
+        transformToDefaultImport: false,
+      },
+      {
+        libraryDirectory: "_esm5/internal",
+        libraryName: "rxjs",
+        camel2DashComponentName: false,
+        transformToDefaultImport: false,
+      },
+    ]);
   }
 }
 

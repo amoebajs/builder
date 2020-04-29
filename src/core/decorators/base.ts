@@ -34,6 +34,7 @@ export const defaultFrameworkDepts: IFrameworkDepts = {
     react: "^16.12.0",
     reactDom: "^16.12.0",
     rxjs: "^6.5.0",
+    "rxjs-hooks": "^0.6.2",
   },
 };
 

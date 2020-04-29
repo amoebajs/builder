@@ -12,6 +12,8 @@ export interface IWebpackTemplatePluginOptions {
   addons: Record<string, IWebpackTemplateAddOnOptions[]>;
 }
 
+export interface IWebpackImportPluginOptions {}
+
 export interface IWebpackProgressPluginOptions {
   type: "emit" | "trigger";
   trigger(data: string): void;
@@ -21,4 +23,5 @@ export interface IWebpackProgressPluginOptions {
 export abstract class WebpackPlugins {
   public abstract createProgressPlugin(options?: Partial<IWebpackProgressPluginOptions>): Plugin;
   public abstract createTemplatePlugin(options?: Partial<IWebpackTemplatePluginOptions>): Plugin;
+  public abstract createImportPlugin(options?: Partial<IWebpackImportPluginOptions>): Plugin;
 }

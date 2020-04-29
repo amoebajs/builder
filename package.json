@@ -1,6 +1,6 @@
 {
   "name": "@amoebajs/builder",
-  "version": "0.0.2-alpha.1588075762201",
+  "version": "0.0.2-alpha.1588141510772",
   "main": "lib/index.js",
   "types": "es/index.d.ts",
   "module": "es/index.js",
@@ -51,6 +51,7 @@
     "react": "^16.12.0",
     "reflect-metadata": "^0.1.13",
     "style-loader": "^1.0.1",
+    "ts-import-plugin": "^1.6.6",
     "ts-loader": "^6.2.1",
     "tslib": "^1.10.0",
     "typescript": "^3.7.2",
