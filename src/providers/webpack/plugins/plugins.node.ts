@@ -104,13 +104,19 @@ export class WebpackPluginsNodeProvider implements WebpackPlugins {
   public createImportPlugin(_?: Partial<import("./plugins.contract").IWebpackImportPluginOptions>): Plugin {
     return TsImportPlugin([
       {
-        libraryDirectory: "../_esm5/internal/operators",
+        libraryName: "lodash",
+        libraryDirectory: <any>null,
+        camel2DashComponentName: false,
+        style: false,
+      },
+      {
+        libraryDirectory: "../_esm2015/internal/operators",
         libraryName: "rxjs/operators",
         camel2DashComponentName: false,
         transformToDefaultImport: false,
       },
       {
-        libraryDirectory: "_esm5/internal",
+        libraryDirectory: "_esm2015/internal",
         libraryName: "rxjs",
         camel2DashComponentName: false,
         transformToDefaultImport: false,
