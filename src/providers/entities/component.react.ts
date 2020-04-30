@@ -418,10 +418,9 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   }
 
   protected addUseObserver(name: VariableRefName, defaultValue?: unknown) {
-    const hasDefault = is.nullOrUndefined(defaultValue);
-    const expression = hasDefault ? "new Subject()" : `new BehaviorSubject(${defaultValue})`;
+    const expression = `new BehaviorSubject(${defaultValue ?? "null"})`;
     this.useObservers.push({
-      type: hasDefault ? "subject" : "behavior",
+      type: "behavior",
       value: this.createNode("variable").addField({
         name: this.getRefName(name),
         initValue: expression,
@@ -597,14 +596,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
   }
 
   private initFrameworkImports() {
-    if (this.useObservers.findIndex(i => i.type === "subject") >= 0) {
-      this.addImports([
-        this.createNode("import")
-          .addNamedBinding(RXJS.Subject, RXJS.Subject)
-          .setModulePath(RXJS.SubjectPath),
-      ]);
-    }
-    if (this.useObservers.findIndex(i => i.type === "behavior") >= 0) {
+    if (this.useObservers.length > 0) {
       this.addImports([
         this.createNode("import")
           .addNamedBinding(RXJS.BehaviorSubject, RXJS.BehaviorSubject)
