@@ -7,6 +7,7 @@ import {
   resolveParams,
 } from "./base";
 import { Extends, resolveExtends } from "./extends";
+import { resolveDirective } from "./directive";
 
 export const COMPONENT_DEFINE = "ambjs::component_define";
 export const REQUIRE_DEFINE = "ambjs::require_define";
@@ -39,6 +40,13 @@ export function resolveComponent(target: EntityConstructor<any>, defaults: Parti
     const parent = resolveComponent(extendMeta.parent, {});
     metadata.dependencies = {
       ...parent.dependencies,
+      ...metadata.dependencies,
+    };
+  }
+  const requires = resolveRequire(target);
+  for (const req of requires) {
+    metadata.dependencies = {
+      ...resolveDirective(req.entity).dependencies,
       ...metadata.dependencies,
     };
   }
