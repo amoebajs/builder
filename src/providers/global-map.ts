@@ -12,8 +12,10 @@ import {
   resolveComponent,
   resolveComposition,
   resolveDirective,
+  resolveEntityRefs,
   resolveInputProperties,
   resolveModule,
+  resolveObservables,
   resolvePropertyGroups,
 } from "../core";
 import { BasicError } from "../errors";
@@ -25,6 +27,8 @@ export interface IMetadataGroup {
   inputs: Record<string, any>;
   attaches: Record<string, any>;
   groups: Record<string, any>;
+  references: Record<string, any>;
+  observers: Record<string, any>;
   entityExtensions?: Partial<IFrameworkStructure<Record<string, any>>>;
 }
 
@@ -207,6 +211,8 @@ export function getEitityMetadata(mdname: EntityConstructor<any>, provider?: Bas
     groups: resolvePropertyGroups(mdname),
     inputs: resolveInputProperties(mdname),
     attaches: resolveAttachProperties(mdname),
+    references: resolveEntityRefs(mdname),
+    observers: resolveObservables(mdname),
   };
   if (!!provider) {
     result.entityExtensions = provider!.resolveExtensionsMetadata(mdname);
