@@ -14,9 +14,7 @@ export interface IPrettierFileCreateOptions extends IFileCreateOptions {
 export const REACT = {
   NS: "React",
   DomNS: "ReactDOM",
-  RxjsHooks: "RxjsHooks",
   PackageName: "react",
-  RxjsHooksPackageName: "rxjs-hooks",
   Props: "props",
   State: "state",
   Component: "Component",
@@ -29,7 +27,8 @@ export const REACT = {
   UseEffect: "React.useEffect",
   UseRef: "React.useRef",
   UseMemo: "React.useMemo",
-  UseObservable: "RxjsHooks.useObservable",
+  UseObservable: "__useObservable",
+  UseRxjsWatch: "__useRxjsWatch",
 };
 
 export const RXJS = {

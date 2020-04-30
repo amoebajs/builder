@@ -12,6 +12,7 @@ export enum BasicState {
   UseMemos = "compUseMemos",
   UseObservers = "compUseObservers",
   UseObservables = "compUseObservables",
+  UseRxjsWatches = "compUseRxjsWatches",
   ContextInfo = "rootContextInfo",
   UnshiftVariables = "unshiftVariables",
   PushedVariables = "pushedVariables",

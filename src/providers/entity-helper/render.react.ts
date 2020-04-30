@@ -101,6 +101,10 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     return this.ref["useObservables"];
   }
 
+  public getNamedObserver(name: VariableRefName, target?: "observable" | "next" | "data") {
+    return this.ref["getNamedObserver"](name, target);
+  }
+
   public createStateAccessSyntax(name: string) {
     const contextName = (this.ref["getState"](BasicState.ContextInfo) as any).name;
     let reverse = false;

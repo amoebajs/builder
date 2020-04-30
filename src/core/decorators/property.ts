@@ -8,7 +8,7 @@ import {
   resolveParams,
   setDisplayI18NMeta,
 } from "./base";
-import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase } from "../base/common";
+import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, MetaEntityRefType } from "../base/common";
 import { resolveExtends } from "./extends";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
@@ -19,6 +19,7 @@ export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
   useEnums: IMetaTypeEnumInfo | null;
   useMap: IMetaTypeMapInfo | null;
+  useRef: boolean | MetaEntityRefType;
   useExpression: boolean;
   required: boolean;
 }
@@ -60,6 +61,7 @@ const defaultInput: IInputPropertyContract = {
   useEnums: null,
   useMap: null,
   useExpression: false,
+  useRef: false,
   required: false,
   description: null,
   i18nDescription: null,
@@ -137,7 +139,8 @@ function createBasicMeta(
     : null;
   const designType = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
   const meta = <IInputPropertyContract>metadata;
-  const useExpr = meta.useExpression && meta.useExpression !== null;
+  const useExpr = meta.useExpression === true;
+  const useObser = meta.useRef !== false;
   const useMap = meta.useMap && meta.useMap !== null;
   const useEnums = meta.useEnums && meta.useEnums !== null;
   const data: IPropertyBase = {
@@ -147,7 +150,8 @@ function createBasicMeta(
     description: descMeta,
     required: (<IInputPropertyContract>metadata).required ?? false,
     type: {
-      expressionType: useExpr ? "complexLogic" : "literal",
+      expressionType: useExpr ? "complexLogic" : useObser ? "entityRef" : "literal",
+      entityRefType: meta.useRef === "observable" ? "observable" : "reference",
       meta: useMap ? "map" : useEnums ? "enums" : getMetaOfConstructor(designType),
       enumsInfo: useEnums ? meta.useEnums : null,
       mapInfo: useMap ? meta.useMap : null,

@@ -2,6 +2,7 @@ import ts from "typescript";
 import { Injector } from "@bonbons/di";
 import {
   EntityConstructor,
+  FunctionGenerator,
   IBasicEntityProvider,
   IInnerCompnentChildRef,
   IInnerComponent,
@@ -51,11 +52,11 @@ export class ReactEntityProvider extends BasicEntityProvider {
   protected async attachComponent(instance: IInnerComponent, options: IInnerCompnentChildRef["__options"]) {
     await super.attachComponent(instance, options);
     const template = Object.getPrototypeOf(instance).constructor;
-    this._setEventTrigger(template, instance);
+    this._setObservables(template, instance);
     return instance;
   }
 
-  private _setEventTrigger(template: EntityConstructor<any>, instance: IInnerComponent) {
+  private _setObservables(template: EntityConstructor<any>, instance: IInnerComponent) {
     const observables = resolveObservables(template).observables;
     for (const key in observables) {
       if (observables.hasOwnProperty(key)) {
@@ -77,6 +78,44 @@ export class ReactEntityProvider extends BasicEntityProvider {
       this.helper.createNamespaceImport("react-dom", REACT.DomNS).emit(),
     );
     return super.afterImportsCreated(context, imports);
+  }
+
+  public afterFunctionsCreated(context: SourceFileContext<IBasicEntityProvider>, funcs: ts.FunctionDeclaration[]) {
+    return super.afterFunctionsCreated(context, [
+      // 桥接observable和组件state
+      new FunctionGenerator()
+        .setName(REACT.UseObservable)
+        .pushParam({ name: "observable$" })
+        .pushParam({ name: "initValue" })
+        .setBody(
+          [
+            `const [state, setState] = ${REACT.UseState}(initValue)`,
+            `${REACT.UseEffect}(() => { const subp = observable$.subscribe((value: any) => setState(value)); return () => subp.unsubscribe(); })`,
+            "return state;",
+          ].join(";"),
+        )
+        .emit(),
+      // watch一个observable的能力
+      new FunctionGenerator()
+        .setName(REACT.UseRxjsWatch)
+        .pushParam({ name: "observable$" })
+        .pushParam({ name: "callback" })
+        .pushParam({ name: "useInit", type: "boolean", initValue: "true" })
+        .setReturnType("void")
+        .setBody(
+          [
+            `${REACT.UseEffect}(() => {`,
+            `const subp = observable$.subscribe((value: any) => {`,
+            `if (useInit) callback(value);`,
+            `useInit = true;`,
+            `});`,
+            `return () => subp.unsubscribe();`,
+            `})`,
+          ].join(" "),
+        )
+        .emit(),
+      ...funcs,
+    ]);
   }
 
   public afterStatementsCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]) {

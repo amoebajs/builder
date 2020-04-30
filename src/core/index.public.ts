@@ -26,6 +26,6 @@ export {
   BasicComponent,
 } from "./component";
 export { IComposition, BasicComposition } from "./composition";
-export { PropAttach, VariableRef, Observer } from "./libs";
+export { PropAttach, VariableRef, EntityVariableRef, Observer } from "./libs";
 export { BasicState } from "./react";
 export { ReconcilerEngine, IEngineOptions, ChildrenSlot, useReconciler } from "./reconciler";

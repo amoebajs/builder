@@ -4,6 +4,7 @@ import {
   AnonymousStatementGenerator,
   ClassGenerator,
   EntityConstructor,
+  EntityVariableRef,
   FunctionGenerator,
   IBasicEntityProvider,
   IComponentAttachMap,
@@ -185,7 +186,11 @@ export abstract class BasicEntityProvider implements IBasicEntityProvider {
           (<any>instance)[input.realName] = value.expression;
         }
         if (value.type === "entityRef") {
-          // TODO
+          const refVar = ((<any>instance)[input.realName] = new EntityVariableRef());
+          const { ref: hostname, type: reftype, expression: subname } = value.expression;
+          refVar["_name"] = subname;
+          refVar["_type"] = reftype;
+          refVar["_hostId"] = hostname;
         }
         // TODO 后续支持其他属性类型
       }

@@ -45,9 +45,20 @@ export interface IMetaTypeEnumRule {
 
 export type IMetaTypeEnumInfo = IMetaTypeEnumRule | IMetaTypeEnumRule["allowValues"] | IMetaTypeEnumRule["validate"];
 
+export type MetaExpressionType = "literal" | "complexLogic" | "entityRef";
+
+export type MetaEntityRefType = "reference" | "observable";
+
+export interface IEntityRefExpressionType {
+  ref: string;
+  type: MetaEntityRefType;
+  expression: string;
+}
+
 export interface IMetaType {
   meta: TypeLiteralMeta;
-  expressionType: "literal" | "complexLogic";
+  expressionType: MetaExpressionType;
+  entityRefType: MetaEntityRefType;
   enumsInfo: IMetaTypeEnumInfo | null;
   mapInfo: IMetaTypeMapInfo | null;
   constructor: any;
@@ -94,8 +105,8 @@ export interface ITypedSyntaxExpressionGroupMap<E extends unknown = never, P ext
 /** 组件、指令输入参数字典类型：字面量 */
 export type IComponentInputMap = ITypedSyntaxExpressionGroupMap<"literal", IBasicLiteralType>;
 
-/** 指令的输入参数字典类型：指令引用 */
-export type IDirectiveInputEntityRefMap = ITypedSyntaxExpressionGroupMap<"entityRef", IEntityRefExpression>;
+/** 指令的输入参数字典类型：实体引用 */
+export type IDirectiveInputEntityRefMap = ITypedSyntaxExpressionGroupMap<"entityRef", IEntityRefExpressionType>;
 
 /** 指令的输入参数字典类型：字面量+指令引用 */
 export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputEntityRefMap;
@@ -109,12 +120,7 @@ export interface IStateExpression extends ITypedSyntaxExpression<"state", string
 
 export interface IPropsExpression extends ITypedSyntaxExpression<"props", string, { reverse: boolean }> {}
 
-export interface IEntityRefExpression
-  extends ITypedSyntaxExpression<
-    "entityRef",
-    { ref: string; type: "reference" | "observable"; expression: string },
-    {}
-  > {}
+export interface IEntityRefExpression extends ITypedSyntaxExpression<"entityRef", IEntityRefExpressionType, {}> {}
 
 export interface IComplexLogicDefine {
   vars?: string[];

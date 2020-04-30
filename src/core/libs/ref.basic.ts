@@ -1,4 +1,4 @@
-import { IInnerEwsEntity } from "../base";
+import { IInnerEwsEntity, MetaEntityRefType } from "../base";
 import { connectReferenceName } from "../../utils";
 
 export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
@@ -12,6 +12,18 @@ export class VariableRef<T extends IInnerEwsEntity = IInnerEwsEntity> {
 
   public toString() {
     return this.name;
+  }
+
+  constructor() {}
+}
+
+export class EntityVariableRef {
+  private _name!: string;
+  private _hostId!: string;
+  private _type!: MetaEntityRefType;
+
+  public get name() {
+    return connectReferenceName(this._hostId, this._name);
   }
 
   constructor() {}

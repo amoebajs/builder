@@ -67,6 +67,7 @@ export interface IBasicReactContainerState {
   [BasicState.UseStates]: VariableGenerator[];
   [BasicState.UseObservers]: IObserverUse[];
   [BasicState.UseObservables]: StatementGenerator<any>[];
+  [BasicState.UseRxjsWatches]: StatementGenerator<any>[];
   [BasicState.UseCallbacks]: VariableGenerator[];
   [BasicState.UseEffects]: (StatementGenerator | VariableGenerator)[];
   [BasicState.UseRefs]: VariableGenerator[];
@@ -121,6 +122,10 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected get useObservables() {
     return this.getState(BasicState.UseObservables);
+  }
+
+  protected get useRxjsWatches() {
+    return this.getState(BasicState.UseRxjsWatches);
   }
 
   protected get renderTagName() {
@@ -184,6 +189,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.setState(BasicState.UseMemos, []);
     this.setState(BasicState.UseObservers, []);
     this.setState(BasicState.UseObservables, []);
+    this.setState(BasicState.UseRxjsWatches, []);
     this.setState(BasicState.UnshiftVariables, []);
     this.setState(BasicState.PushedVariables, []);
     this.setState(BasicState.FnsBeforeRender, []);
@@ -359,9 +365,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
       return this.useEffects.push(
         this.createNode("statement").setValue(() =>
           ts.createIdentifier(
-            `${REACT.UseEffect}(${expression}, [${deps
-              .map(dep => ts.createIdentifier(this.getRefName(dep)))
-              .join(", ")}])`,
+            `${REACT.UseEffect}(${expression}, [${deps.map(dep => this.getRefName(dep)).join(", ")}])`,
           ),
         ),
       );
@@ -415,7 +419,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
 
   protected addUseObserver(name: VariableRefName, defaultValue?: unknown) {
     const hasDefault = is.nullOrUndefined(defaultValue);
-    const expression = hasDefault ? "new Subject<any>()" : `new BehaviorSubject<any>(${defaultValue})`;
+    const expression = hasDefault ? "new Subject()" : `new BehaviorSubject(${defaultValue})`;
     this.useObservers.push({
       type: hasDefault ? "subject" : "behavior",
       value: this.createNode("variable").addField({
@@ -431,9 +435,16 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.useObservables.push(
       this.createNode("variable").addField({
         name: this.getRefName(name),
-        initValue: () =>
-          ts.createIdentifier(`${REACT.UseObservable}<any>(() => ${observer}.observable, ${observer}.data)`),
+        initValue: () => ts.createIdentifier(`${REACT.UseObservable}(${observer}.observable, ${observer}.data)`),
       }),
+    );
+  }
+
+  protected addUseRxjsWatch(name: VariableRefName, callback: VariableRefName, useInit = true) {
+    this.useRxjsWatches.push(
+      this.createNode("statement").setValue(() =>
+        ts.createIdentifier(`${REACT.UseRxjsWatch}(${name}, ${callback}, ${useInit})`),
+      ),
     );
   }
 
@@ -506,6 +517,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
               .concat(this.useObservables)
               .concat(this.useCallbacks)
               .concat(this.useEffects)
+              .concat(this.useRxjsWatches)
               .concat(this.useRefs)
               .concat(this.useMemos)
               .concat(this.pushedVariables),
@@ -597,13 +609,6 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
         this.createNode("import")
           .addNamedBinding(RXJS.BehaviorSubject, RXJS.BehaviorSubject)
           .setModulePath(RXJS.BehaviorSubjectPath),
-      ]);
-    }
-    if (this.useObservables.length > 0) {
-      this.addImports([
-        this.createNode("import")
-          .setNamespaceName(REACT.RxjsHooks)
-          .setModulePath(REACT.RxjsHooksPackageName),
       ]);
     }
   }
