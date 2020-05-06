@@ -60,8 +60,12 @@ export interface IComponentContract extends IBasicI18NContract {
   dependencies: Record<string, string>;
 }
 
+type RequireFields<T> = {
+  [key in keyof Omit<T, "entityId" | "setScopeId" | "setParentId">]?: T[key] | ((fields: any) => T[key]);
+};
+
 export type IRequireInputsContract<T = any> = T extends EntityConstructor<infer W>
-  ? Record<string, unknown | ((fields: any) => unknown)>
+  ? RequireFields<W> & Record<string, any>
   : never;
 
 export interface IRequireContract {
@@ -108,11 +112,14 @@ export function Component(define: any) {
 
 export function Require<T>(entity: EntityConstructor<T>): ClassDecorator;
 export function Require<T>(entity: EntityConstructor<T>, scopeId: string | symbol): ClassDecorator;
-export function Require<T>(entity: EntityConstructor<T>, inputs: IRequireInputsContract<T>): ClassDecorator;
+export function Require<T>(
+  entity: EntityConstructor<T>,
+  inputs: IRequireInputsContract<EntityConstructor<T>>,
+): ClassDecorator;
 export function Require<T>(
   entity: EntityConstructor<T>,
   scopeId: string | symbol,
-  inputs: IRequireInputsContract<T>,
+  inputs: IRequireInputsContract<EntityConstructor<T>>,
 ): ClassDecorator;
 export function Require(entity: EntityConstructor<any>, ...args: any[]) {
   const [p01, p02] = args;
