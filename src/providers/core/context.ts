@@ -10,9 +10,11 @@ import {
   IDynamicRefPluginOptions,
   IInnerCompositionChildRef,
   IInnerSolidEntity,
+  IPropertyBase,
   ISourceBuildOptions,
   Injectable,
   ReconcilerEngine,
+  resolveInputProperties,
   resolveRequire,
 } from "../../core";
 import {
@@ -282,7 +284,8 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   ) {
     if ("__refRequires" in ref) {
       const requires = resolveRequire(value);
-      for (const { entity, inputs, scopeId } of requires) {
+      for (const { entity, inputs: params, scopeId } of requires) {
+        const inputs = resolveInputProperties(entity);
         const [importId, nameId] = this._checkCreateId(entity, ref["__entityId"], scopeId);
         ref["__refRequires"].push((context: any) =>
           this.createDirectiveRef(
@@ -290,7 +293,7 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
               refEntityId: importId,
               entityName: nameId,
               options: {
-                input: resentRequireInputs(inputs, context),
+                input: resentRequireInputs(params, context, Object.entries(inputs)),
               },
             },
             <any>ref,
@@ -362,17 +365,22 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   }
 }
 
-function resentRequireInputs(inputs: Record<string, unknown>, context: any): IDirectiveInputMap {
-  return Object.entries(inputs).reduce(
-    (p, c) => ({
+function resentRequireInputs(
+  params: Record<string, unknown>,
+  context: any,
+  inputs: [string, IPropertyBase][],
+): IDirectiveInputMap {
+  return Object.entries(params).reduce((p, c) => {
+    const found = inputs.find(i => i[1].realName === c[0] || i[0] === c[0]);
+    if (!found) return p;
+    return {
       ...p,
-      [c[0]]: {
+      [found[0]]: {
         type: "literal",
         expression: typeof c[1] === "function" ? c[1](context) : c[1],
       },
-    }),
-    {},
-  );
+    };
+  }, {});
 }
 
 export function setBaseChildRefInfo(
