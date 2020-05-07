@@ -140,7 +140,7 @@ function createBasicMeta(
   const designType = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
   const meta = <IInputPropertyContract>metadata;
   const useExpr = meta.useExpression === true;
-  const useObser = meta.useRef !== false;
+  const useObser = !!meta.useRef;
   const useMap = meta.useMap && meta.useMap !== null;
   const useEnums = meta.useEnums && meta.useEnums !== null;
   const data: IPropertyBase = {
