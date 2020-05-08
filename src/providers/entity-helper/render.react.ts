@@ -37,15 +37,15 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     }
   }
 
-  public appendState(VariableRefName: string, defaultValue: unknown) {
+  public appendState(name: VariableRefName, defaultValue: unknown) {
     this.ref["addUseState"](name, defaultValue);
   }
 
-  public appendCallback(VariableRefName: string, callback: unknown, deps?: VariableRefName[]) {
+  public appendCallback(name: VariableRefName, callback: unknown, deps?: VariableRefName[]) {
     this.ref["addUseCallback"](name, callback, deps);
   }
 
-  public appendEffect(VariableRefName: string, callback: unknown, deps?: VariableRefName[]) {
+  public appendEffect(name: VariableRefName, callback: unknown, deps?: VariableRefName[]) {
     this.ref["addUseEffect"](name, callback, deps);
   }
 
@@ -61,7 +61,7 @@ export class ReactEntityRenderDelegate<T> extends EntityRenderDelegate<T> {
     this.ref["addUseObservables"](name, target);
   }
 
-  public appendVariable(name: string, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
+  public appendVariable(name: VariableRefName, initilizer?: ts.Expression, type: "push" | "unshift" = "push") {
     this.ref[type === "push" ? "addPushedVariable" : "addUnshiftVariable"](name, initilizer);
   }
 

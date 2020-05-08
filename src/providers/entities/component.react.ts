@@ -387,6 +387,7 @@ export abstract class ReactComponent<T extends Partial<IBasicReactContainerState
     this.useEffects.push(
       this.createNode("variable").addField({
         name: this.getRefName(name),
+        type: "any",
         initValue: () =>
           this.helper.createFunctionCall(REACT.UseMemo, [
             typeof result === "function" ? result() : ts.createIdentifier(result),

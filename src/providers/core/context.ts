@@ -123,7 +123,9 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
   public createRoot(options: ICompChildRefPluginOptions, slot = "app") {
     this.rootSlot = slot;
     this.root = this.createComponentRef(options);
-    const component = this.components.find(i => i.importId === options.refEntityId)!;
+    const component =
+      this.components.find(i => i.importId === options.refEntityId) ??
+      this.compositions.find(i => i.importId === options.refEntityId)!;
     const value = this.getEntity(component);
     this._setComponentOrCompositionChildren(options, <any>this.root);
     this._resolveComponentRequires(<any>this.root, value);
