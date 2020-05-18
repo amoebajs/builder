@@ -1,7 +1,22 @@
 import ts from "typescript";
+import isEqual from "lodash/isEqual";
+import pick from "lodash/pick";
 import { InjectScope, Injector } from "@bonbons/di";
-import { BasicComponentChildRef, BasicDirectiveChildRef, GlobalMap, IMapEntry } from "#providers";
-import { EntityConstructor, Injectable } from "#core";
+import {
+  EntityConstructor,
+  ICompositeChildRefPluginOptions,
+  ICompositionCreateOptions,
+  IDirectiveInputMap,
+  IDynamicRefPluginOptions,
+  IInnerCompositionChildRef,
+  IInnerSolidEntity,
+  IPropertyBase,
+  ISourceBuildOptions,
+  Injectable,
+  ReconcilerEngine,
+  resolveInputProperties,
+  resolveRequire,
+} from "../../core";
 import {
   EntityType,
   IBasicEntityProvider,
@@ -16,6 +31,9 @@ import {
   SourceFileContext,
 } from "../../core";
 import { NotFoundError } from "../../errors";
+import { GlobalMap, IMapEntry } from "../global-map";
+import { BasicComponentChildRef, BasicCompositionChildRef, BasicDirectiveChildRef } from "../entities";
+import { connectParentChildEntityScope, createEntityId, is } from "../../utils";
 
 interface IContextTreeNode {
   scopeid: string | symbol;
@@ -26,11 +44,25 @@ interface IContextTreeNode {
 
 @Injectable(InjectScope.New)
 export class SourceFileBasicContext<T extends IBasicEntityProvider> extends SourceFileContext<T> {
-  constructor(protected injector: Injector, private globalMap: GlobalMap) {
+  private uniqueList: Record<string, IInnerSolidEntity[]> = {};
+
+  constructor(
+    public readonly reconciler: ReconcilerEngine,
+    protected readonly injector: Injector,
+    private globalMap: GlobalMap,
+  ) {
     super();
     this.components = [];
     this.directives = [];
+    this.compositions = [];
     this.dependencies = {};
+    this.genContext = {
+      imports: [],
+      variables: [],
+      functions: [],
+      classes: [],
+      statements: [],
+    };
     this.astContext = {
       imports: [],
       variables: [],
@@ -38,6 +70,22 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
       classes: [],
       statements: [],
     };
+  }
+
+  public getDefaultEntityId(entity: IInnerSolidEntity): string {
+    const keepList = this.uniqueList[entity.__refId];
+    if (keepList) {
+      const found = keepList.find(i =>
+        isEqual(pick(i.__options, ["input", "attach"]), pick(entity.__options, ["input", "attach"])),
+      );
+      if (found) {
+        return found.__entityId;
+      }
+      keepList.push(entity);
+      return entity.__entityId;
+    }
+    this.uniqueList[entity.__refId] = [entity];
+    return entity.__entityId;
   }
 
   public setProvider(provider: string) {
@@ -55,8 +103,16 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this;
   }
 
-  public build() {
+  public importCompositions(compositions: ICompositionCreateOptions[]) {
+    this.compositions.push(...compositions);
+    return this;
+  }
+
+  public build(options: Partial<ISourceBuildOptions> = {}) {
     this.dependencies = this._resolveDependencies();
+    if (!is.nullOrUndefined(options.codeShakes)) {
+      this.useCodeShakes = options.codeShakes;
+    }
     return this;
   }
 
@@ -64,9 +120,16 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     return this.dependencies;
   }
 
-  public async createRoot(options: ICompChildRefPluginOptions, slot = "app"): Promise<void> {
+  public createRoot(options: ICompChildRefPluginOptions, slot = "app") {
     this.rootSlot = slot;
-    this.root = await this._createComponentRef(options);
+    this.root = this.createComponentRef(options);
+    const component =
+      this.components.find(i => i.importId === options.refEntityId) ??
+      this.compositions.find(i => i.importId === options.refEntityId)!;
+    const value = this.getEntity(component);
+    this._setComponentOrCompositionChildren(options, <any>this.root);
+    this._resolveComponentRequires(<any>this.root, value);
+    return this;
   }
 
   public async callCompilation(): Promise<void> {
@@ -108,19 +171,34 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     }
     // 暂时没有控制范围, component / directive
     const { imports = [], functions = [], classes = [], variables = [] } = node.container;
-    this.astContext.imports.push(...imports.map(i => i.emit()));
-    this.astContext.functions.push(...functions.map(i => i.emit()));
-    this.astContext.classes.push(...classes.map(i => i.emit()));
-    this.astContext.variables.push(...variables.map(i => i.emit()));
+    this.genContext.imports.push(...imports);
+    this.genContext.functions.push(...functions);
+    this.genContext.classes.push(...classes);
+    this.genContext.variables.push(...variables);
   }
 
   private callStatementsHooks() {
     this.astContext = {
-      imports: this.provider.afterImportsCreated(this, this.astContext.imports),
-      variables: this.provider.afterVariablesCreated(this, this.astContext.variables),
-      classes: this.provider.afterClassesCreated(this, this.astContext.classes),
-      functions: this.provider.afterFunctionsCreated(this, this.astContext.functions),
-      statements: this.provider.afterAllCreated(this, []),
+      imports: this.provider.afterImportsCreated(
+        this,
+        this.provider.beforeImportsCreated(this, this.genContext.imports).map(i => i.emit()),
+      ),
+      variables: this.provider.afterVariablesCreated(
+        this,
+        this.provider.beforeVariablesCreated(this, this.genContext.variables).map(i => i.emit()),
+      ),
+      classes: this.provider.afterClassesCreated(
+        this,
+        this.provider.beforeClassesCreated(this, this.genContext.classes).map(i => i.emit()),
+      ),
+      functions: this.provider.afterFunctionsCreated(
+        this,
+        this.provider.beforeFunctionsCreated(this, this.genContext.functions).map(i => i.emit()),
+      ),
+      statements: this.provider.afterStatementsCreated(
+        this,
+        this.provider.beforeStatementsCreated(this, this.genContext.statements).map(i => i.emit()),
+      ),
     };
   }
 
@@ -138,47 +216,93 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     );
   }
 
-  private async _createComponentRef(options: ICompChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
+  protected createComponentRef(options: IDynamicRefPluginOptions, parent?: IInnerCompnentChildRef) {
+    const composition = this.compositions.find(i => i.importId === options.refEntityId)!;
+    if (composition) return this.createCompositionRef(options, parent);
+    const tOptions: ICompChildRefPluginOptions = <any>options;
+    const component = this.components.find(i => i.importId === tOptions.refEntityId)!;
     const ref = this.injector.get(BasicComponentChildRef);
-    const target = this.components.find(i => i.importId === options.refEntityId)!;
-    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
-    this._setBaseChildRefInfo(<any>ref, options, value, parent);
-    ref["__options"] = options.options;
-    for (const iterator of options.components) {
-      ref["__refComponents"].push(await this._createComponentRef(iterator, <any>ref));
-    }
-    for (const iterator of options.directives) {
-      ref["__refDirectives"].push(await this._createDirectiveRef(iterator, <any>ref));
+    const value = this.getEntity(component);
+    setBaseChildRefInfo(this, <any>ref, tOptions, value, parent);
+    if (!!parent) {
+      // 非根节点，直接递归
+      // 根节点，优先创建
+      this._setComponentOrCompositionChildren(tOptions, ref);
+      this._resolveComponentRequires(ref, value);
     }
     return <IInnerCompnentChildRef>(<unknown>ref);
   }
 
-  private async _createDirectiveRef(options: IDirecChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
+  protected createDirectiveRef(options: IDirecChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
     const ref = this.injector.get(BasicDirectiveChildRef);
     const target = this.directives.find(i => i.importId === options.refEntityId)!;
-    const { value } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
-    this._setBaseChildRefInfo(ref, options, value, parent);
-    ref["__options"] = options.options;
+    const value = this.getEntity(target);
+    setBaseChildRefInfo(this, ref, options, value, parent);
     return <IInnerDirectiveChildRef>(<unknown>ref);
   }
 
-  private _setBaseChildRefInfo(
-    ref: BasicDirectiveChildRef,
-    options: IDirecChildRefPluginOptions,
-    template: EntityConstructor<any>,
-    parent?: IInnerCompnentChildRef,
-  ) {
-    ref.setEntityId(options.entityName);
-    ref["__refId"] = options.refEntityId;
-    ref["__refConstructor"] = template;
-    ref["__entityId"] = options.entityName;
-    ref["__context"] = this;
-    ref["__provider"] = this.provider;
-    if (parent) {
-      ref.setParentId(parent.__scope);
-      ref["__parentRef"] = parent;
+  protected createCompositionRef(options: ICompositeChildRefPluginOptions, parent?: IInnerCompnentChildRef) {
+    const ref = this.injector.get(BasicCompositionChildRef);
+    const target = this.compositions.find(i => i.importId === options.refEntityId)!;
+    const value = this.getEntity(target);
+    setBaseChildRefInfo(this, <any>ref, options, value, parent);
+    if (!!parent) {
+      this._setComponentOrCompositionChildren(options, ref);
+      this._resolveComponentRequires(ref, value);
     }
-    return ref;
+    return <IInnerCompositionChildRef>(<unknown>ref);
+  }
+
+  private getEntity(component: IDirectiveCreateOptions | ICompositionCreateOptions | IComponentCreateOptions): any {
+    const { value } = this._resolveMetadataOfEntity(component.moduleName, component.type, component.templateName);
+    return value;
+  }
+
+  private _setComponentOrCompositionChildren(
+    options: ICompChildRefPluginOptions,
+    ref: BasicComponentChildRef<any>,
+  ): void;
+  private _setComponentOrCompositionChildren(
+    options: ICompositeChildRefPluginOptions,
+    ref: BasicCompositionChildRef<any>,
+  ): void;
+  private _setComponentOrCompositionChildren(
+    options: ICompChildRefPluginOptions | ICompositeChildRefPluginOptions,
+    ref: BasicComponentChildRef<any> | BasicCompositionChildRef<any>,
+  ) {
+    for (const iterator of options.components) {
+      (<BasicComponentChildRef<any>>ref)["__refComponents"].push(this.createComponentRef(iterator, <any>ref));
+    }
+    if ("directives" in options) {
+      for (const iterator of options.directives) {
+        (<BasicComponentChildRef<any>>ref)["__refDirectives"].push(this.createDirectiveRef(iterator, <any>ref));
+      }
+    }
+  }
+
+  private _resolveComponentRequires(
+    ref: BasicComponentChildRef<any> | BasicCompositionChildRef<any>,
+    value: EntityConstructor<any>,
+  ) {
+    if ("__refRequires" in ref) {
+      const requires = resolveRequire(value);
+      for (const { entity, inputs: params, scopeId } of requires) {
+        const inputs = resolveInputProperties(entity);
+        const [importId, nameId] = this._checkCreateId(entity, ref["__entityId"], scopeId);
+        ref["__refRequires"].push((context: any) =>
+          this.createDirectiveRef(
+            {
+              refEntityId: importId,
+              entityName: nameId,
+              options: {
+                input: resentRequireInputs(params, context, Object.entries(inputs)),
+              },
+            },
+            <any>ref,
+          ),
+        );
+      }
+    }
   }
 
   private _resolveDependencies() {
@@ -196,25 +320,93 @@ export class SourceFileBasicContext<T extends IBasicEntityProvider> extends Sour
     const { metadata: moduleMeta } = this._resolveMetadataOfEntity(target.moduleName, "module");
     const { metadata } = this._resolveMetadataOfEntity(target.moduleName, target.type, target.templateName);
     return {
-      ...moduleMeta.entity.dependencies,
-      ...metadata.entity.dependencies,
+      ...(<any>moduleMeta.entity).dependencies,
+      ...(<any>metadata.entity).dependencies,
     };
+  }
+
+  private _checkCreateId(entity: any, parentScope?: string, thisScope?: string | symbol): [string, string] {
+    let newId = (thisScope ?? createEntityId()).toString();
+    if (!is.nullOrUndefined(parentScope)) {
+      newId = connectParentChildEntityScope(parentScope, newId);
+    }
+    const exist = this.globalMap.getDirectiveByType(entity);
+    if (exist) {
+      const target = this.directives.find(i => i.moduleName === exist.moduleName && i.templateName === exist.name)!;
+      if (target) {
+        return [target.importId, newId];
+      } else {
+        this.directives.push({
+          moduleName: exist.moduleName!,
+          templateName: exist.name!,
+          importId: newId,
+          type: "directive",
+        });
+      }
+    }
+    return [newId, newId];
   }
 
   private _resolveMetadataOfEntity(
     moduleName: string,
-    type: "component" | "directive" | "module",
+    type: "component" | "directive" | "composition" | "module",
     templateName?: string,
   ) {
     let target!: IMapEntry<any>;
     if (type === "module") {
       target = this.globalMap.getModule(moduleName);
     } else {
-      target = this.globalMap[type === "component" ? "getComponent" : "getDirective"](moduleName, templateName!);
+      target = this.globalMap[
+        type === "component" ? "getComponent" : type === "composition" ? "getComposition" : "getDirective"
+      ](moduleName, templateName!);
     }
     if (!target) {
       throw new NotFoundError(`${type} [${moduleName}${templateName && "."}${templateName}] not found`);
     }
     return target;
   }
+}
+
+function resentRequireInputs(
+  params: Record<string, unknown>,
+  context: any,
+  inputs: [string, IPropertyBase][],
+): IDirectiveInputMap {
+  return Object.entries(params).reduce((p, c) => {
+    const found = inputs.find(i => i[1].realName === c[0] || i[0] === c[0]);
+    if (!found) return p;
+    return {
+      ...p,
+      [found[0]]: {
+        type: "literal",
+        expression: typeof c[1] === "function" ? c[1](context) : c[1],
+      },
+    };
+  }, {});
+}
+
+export function setBaseChildRefInfo(
+  context: SourceFileContext<IBasicEntityProvider>,
+  ref: BasicDirectiveChildRef,
+  options: IDirecChildRefPluginOptions,
+  template: EntityConstructor<any>,
+  parent?: IInnerCompnentChildRef,
+) {
+  ref.setScopeId(options.entityName);
+  ref["__refId"] = options.refEntityId;
+  ref["__refConstructor"] = template;
+  ref["__entityId"] = options.entityName;
+  ref["__context"] = context;
+  ref["__provider"] = context.provider;
+  if (parent) {
+    ref.setParentId(parent.__scope);
+    ref["__parentRef"] = parent;
+  }
+  if (context.root) {
+    // 暂时不考虑composition
+    // TODO: 考虑是否支持composition根节点
+    ref["__rootRef"] = <IInnerCompnentChildRef>context.root;
+  }
+  ref["__options"] = options.options;
+  return ref;
 }

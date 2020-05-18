@@ -6,3 +6,5 @@ export * from "./directive";
 export * from "./libs";
 export * from "./typescript";
 export * from "./react";
+export * from "./reconciler";
+export * from "./composition";

@@ -1,7 +1,7 @@
 import ts from "typescript";
-import uuid from "uuid/v4";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { BasicError } from "#errors";
+import { BasicError } from "../../errors";
+import { createEntityId } from "../../utils";
 import {
   IComponentAttachMap,
   IComponentInputMap,
@@ -11,14 +11,27 @@ import {
   MapValueType,
 } from "./common";
 import { ContextItemsGroup, IFinalScopedContext, IScopeStructure, SourceFileContext } from "./context";
-import { IFrameworkDepts } from "../decorators";
-import { IInnerCompnentChildRef, IInnerDirectiveChildRef } from "../child-ref";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef, IInnerDirectiveChildRef } from "../child-ref";
 import { IInnerComponent } from "../component";
 import { IInnerDirective } from "../directive";
+import { IInnerComposition } from "../composition";
+import {
+  AnonymousStatementGenerator,
+  ClassGenerator,
+  FunctionGenerator,
+  ImportGenerator,
+  VariableGenerator,
+} from "../typescript";
 
-// export type ImportStatementsUpdater = (statements: ts.ImportDeclaration[]) => void;
-
-export type EntityType = "directive" | "component" | "childref" | "componentChildRef" | "directiveChildRef" | "entity";
+export type EntityType =
+  | "directive"
+  | "component"
+  | "composition"
+  | "childref"
+  | "componentChildRef"
+  | "directiveChildRef"
+  | "compositionChildRef"
+  | "entity";
 
 export type IBasicComponentAppendType = "push" | "unshift" | "reset";
 
@@ -36,9 +49,14 @@ export interface IComponentCreateOptions extends IBasicImportEntityCreateOptions
   type: "component";
 }
 
+export interface ICompositionCreateOptions extends IBasicImportEntityCreateOptions {
+  type: "composition";
+}
+
 export interface IEntitiesGroup {
   components: IComponentCreateOptions[];
   directives: IDirectiveCreateOptions[];
+  compositions: ICompositionCreateOptions[];
 }
 
 export interface IDirecChildRefPluginOptions {
@@ -56,7 +74,7 @@ export interface ICompChildRefPluginOptions {
   refEntityId: string;
   /** entity name will emit into source code */
   entityName: string;
-  components: ICompChildRefPluginOptions[];
+  components: IDynamicRefPluginOptions[];
   directives: IDirecChildRefPluginOptions[];
   options: {
     input: IComponentInputMap;
@@ -65,20 +83,18 @@ export interface ICompChildRefPluginOptions {
   };
 }
 
-export interface IComponentPluginOptions<T extends InjectDIToken<any>> extends IDirectivePluginOptions<T> {
-  provider: keyof IFrameworkDepts;
-  components?: IComponentPluginOptions<any>[];
-  directives?: IDirectivePluginOptions<any>[];
-  children?: ICompChildRefPluginOptions[];
-  dependencies?: { [prop: string]: any };
+export interface ICompositeChildRefPluginOptions {
+  /** entity id */
+  refEntityId: string;
+  /** entity name will emit into source code */
+  entityName: string;
+  components: IDynamicRefPluginOptions[];
+  options: {
+    input: IComponentInputMap;
+  };
 }
 
-export interface IDirectivePluginOptions<T extends InjectDIToken<any>> {
-  id: string;
-  provider: keyof IFrameworkDepts;
-  template: T;
-  input?: IDirectiveInputMap;
-}
+export type IDynamicRefPluginOptions = ICompChildRefPluginOptions | ICompositeChildRefPluginOptions;
 
 export interface IBasicEntityProvider {
   attachInstance(
@@ -89,7 +105,25 @@ export interface IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     ref: IInnerDirectiveChildRef,
   ): Promise<IInnerDirective>;
+  attachInstance(
+    context: SourceFileContext<IBasicEntityProvider>,
+    ref: IInnerCompositionChildRef,
+  ): Promise<IInnerComposition>;
   resolveExtensionsMetadata(template: InjectDIToken<any>): {};
+  beforeImportsCreated(context: SourceFileContext<IBasicEntityProvider>, imports: ImportGenerator[]): ImportGenerator[];
+  beforeVariablesCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    variables: VariableGenerator[],
+  ): VariableGenerator[];
+  beforeClassesCreated(context: SourceFileContext<IBasicEntityProvider>, classes: ClassGenerator[]): ClassGenerator[];
+  beforeFunctionsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: FunctionGenerator[],
+  ): FunctionGenerator[];
+  beforeStatementsCreated(
+    context: SourceFileContext<IBasicEntityProvider>,
+    funcs: AnonymousStatementGenerator[],
+  ): AnonymousStatementGenerator[];
   afterImportsCreated(
     context: SourceFileContext<IBasicEntityProvider>,
     imports: ts.ImportDeclaration[],
@@ -106,39 +140,12 @@ export interface IBasicEntityProvider {
     context: SourceFileContext<IBasicEntityProvider>,
     funcs: ts.FunctionDeclaration[],
   ): ts.FunctionDeclaration[];
-  afterAllCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
-}
-
-export interface IRootPageCreateOptions<T extends InjectDIToken<any>> extends IComponentPluginOptions<T> {
-  attach?: IComponentAttachMap;
-  passContext: SourceFileContext<IBasicEntityProvider>;
-}
-
-export interface IComponentPropertiesOptions {
-  input: IDirectiveInputMap;
-  attach: IComponentAttachMap;
-  props: IComponentPropMap;
-}
-
-export interface IRootComponentCreateOptions extends IComponentCreateOptions {
-  components?: IComponentCreateOptions[];
-  directives?: IDirectiveCreateOptions[];
-  children?: ICompChildRefPluginOptions[];
-  attach: { [prop: string]: any };
-}
-
-export function createEntityId() {
-  return (
-    "E" +
-    uuid()
-      .split("-")
-      .join("")
-  );
+  afterStatementsCreated(context: SourceFileContext<IBasicEntityProvider>, statements: ts.Statement[]): ts.Statement[];
 }
 
 export interface IEwsEntity {
   readonly entityId: string;
-  setEntityId(id: string): this;
+  setScopeId(id: string): this;
   setParentId(id: string): this;
 }
 
@@ -203,8 +210,8 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     return this.__scope;
   }
 
-  public setEntityId(id: string): this {
-    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z]{7,48}$/.test(id)) throw new BasicError("entity id is invalid.");
+  public setScopeId(id: string): this {
+    if (!id || !/^[a-zA-Z]{1,1}[0-9a-zA-Z_]{2,256}$/.test(id)) throw new BasicError("entity id is invalid.");
     this.__scope = id;
     return this;
   }
@@ -215,7 +222,12 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
   }
 
   protected async onInit(): Promise<void> {
-    return Promise.resolve();
+    this.__context.scopedContext.set(this.__scope, {
+      scope: this.__scope,
+      type: this.__etype,
+      parent: this.__parent,
+      container: {},
+    });
   }
 
   //#region  pretected methods
@@ -271,18 +283,7 @@ export class BasicCompilationEntity<T extends IPureObject = IPureObject> {
     args: A[],
     type: IBasicComponentAppendType,
   ) {
-    let context = this.__context.scopedContext.get(this.__scope);
-    if (!context) {
-      this.__context.scopedContext.set(
-        this.__scope,
-        (context = {
-          scope: this.__scope,
-          type: this.__etype,
-          parent: this.__parent,
-          container: {},
-        }),
-      );
-    }
+    const context = this.__context.scopedContext.get(this.__scope)!;
     if (type === "reset") {
       context.container[target] = <any>args;
     } else {

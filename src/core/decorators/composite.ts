@@ -1,45 +1,42 @@
-import { EntityConstructor, IConstructor } from "./base";
-import { BasicComposition } from "../libs";
+import { EntityConstructor, IBasicI18NContract, UnnamedPartial, defineEntityMetaType, resolveParams } from "./base";
 
-export const COMPOSITE_DEFINE = "ambjs::composite_define";
+export const COMPOSITION_DEFINE = "ambjs::composition_define";
 
 export interface ICompositionDelegate {}
 
-export interface ICompositeContract {
-  name: string;
-  entity: EntityConstructor<any> | null;
-  delegate: IConstructor<BasicComposition> | null;
+export interface ICompositionContract extends IBasicI18NContract {
+  name: string | null;
+  version: string | number;
+  displayName: string | null;
 }
 
-const defaultComposite: ICompositeContract = {
-  name: "",
-  entity: null,
-  delegate: null,
+const defaultComposite: ICompositionContract = {
+  name: null,
+  version: "0.0.1",
+  displayName: null,
+  description: null,
+  i18nDescription: null,
+  i18nName: null,
 };
 
-export function Composite(entity: EntityConstructor<any>) {
-  return function compositeDefine(target: any, propertyKey: string) {
-    const designType = Reflect.getMetadata("design:type", target, propertyKey);
-    defineComposite(target.constructor, {
+export function Composition(name: string): ClassDecorator;
+export function Composition(params: UnnamedPartial<ICompositionContract>): ClassDecorator;
+export function Composition(define: any) {
+  const decoParams = resolveParams<ICompositionContract>(define);
+  return function compositeDefine(target: EntityConstructor<any>) {
+    defineComposition(target, {
       ...defaultComposite,
-      entity,
-      delegate: designType === Object ? null : designType,
-      name: propertyKey,
+      ...decoParams,
     });
+    defineEntityMetaType(target, "composition");
+    return <any>target;
   };
 }
 
-export function defineComposite(target: EntityConstructor<any>, metadata: ICompositeContract) {
-  return Reflect.defineMetadata(
-    COMPOSITE_DEFINE,
-    {
-      ...resolveCompositions(target),
-      [metadata.name]: metadata,
-    },
-    target,
-  );
+export function defineComposition(target: EntityConstructor<any>, metadata: ICompositionContract) {
+  return Reflect.defineMetadata(COMPOSITION_DEFINE, metadata, target);
 }
 
-export function resolveCompositions(target: EntityConstructor<any>) {
-  return <{ [prop: string]: ICompositeContract }>Reflect.getMetadata(COMPOSITE_DEFINE, target) || {};
+export function resolveComposition(target: EntityConstructor<any>, defaults: Partial<ICompositionContract> = {}) {
+  return <ICompositionContract>Reflect.getMetadata(COMPOSITION_DEFINE, target) || defaults;
 }

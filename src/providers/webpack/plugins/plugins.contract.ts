@@ -1,28 +1,27 @@
 import { Plugin } from "webpack";
-import { Injectable } from "#core/decorators";
+import { Injectable } from "../../../core";
 
-export interface IWebpackTemplateScriptOptions {
-  type: "inline-javascript" | "src-javascript";
-  defer?: string | boolean;
-  async?: string | boolean;
-  value: string;
+export interface IWebpackTemplateAddOnOptions {
+  attributes?: string[];
+  properties?: Record<string, any>;
 }
 
-export interface IWebpackTemplateStyleOptions {
-  type: "rel-stylesheet" | "inline-style";
-  value: string;
-}
-
-export interface IWebpackTemplateOptions {
-  title: string;
+export interface IWebpackTemplatePluginOptions {
   path: string;
-  charset: string;
-  styles: IWebpackTemplateStyleOptions[];
-  scripts: IWebpackTemplateScriptOptions[];
+  title: string;
+  addons: Record<string, IWebpackTemplateAddOnOptions[]>;
+}
+
+export interface IWebpackImportPluginOptions {}
+
+export interface IWebpackProgressPluginOptions {
+  type: "emit" | "trigger";
+  trigger(data: string): void;
 }
 
 @Injectable()
 export abstract class WebpackPlugins {
-  public abstract createProgressPlugin(): Plugin;
-  public abstract createTemplatePlugin(options?: Partial<IWebpackTemplateOptions>): Plugin;
+  public abstract createProgressPlugin(options?: Partial<IWebpackProgressPluginOptions>): Plugin;
+  public abstract createTemplatePlugin(options?: Partial<IWebpackTemplatePluginOptions>): Plugin;
+  public abstract createImportPlugin(options?: Partial<IWebpackImportPluginOptions>): Plugin;
 }

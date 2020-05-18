@@ -1,6 +1,6 @@
 import ts from "typescript";
 import { InjectScope } from "@bonbons/di";
-import { is } from "#utils/is";
+import { is } from "../../utils";
 import { Injectable } from "../decorators";
 import { StatementGenerator } from "./statement";
 
@@ -9,10 +9,15 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   protected defaultName: string | undefined = void 0;
   protected namespaceName: string | undefined = void 0;
   protected modulePath = "demo";
-  protected namedBinds: Record<string, string | undefined> = {};
+  protected namedBinds: Record<string, string[]> = {};
 
-  public addNamedBinding(name: string, alias?: string) {
-    this.namedBinds[name] = alias;
+  public addNamedBinding(variable: string, source: string) {
+    const exist = this.namedBinds[variable];
+    if (is.nullOrUndefined(exist)) {
+      this.namedBinds[variable] = is.nullOrUndefined(source) ? [variable] : [source];
+    } else if (!is.nullOrUndefined(source)) {
+      exist.push(...[source].filter(e => exist.findIndex(i => i === e) < 0));
+    }
     return this;
   }
 
@@ -20,8 +25,8 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
     if (isAlias) {
       const entries = Object.entries(this.namedBinds);
       for (const [n, a] of entries) {
-        if (a === name) {
-          delete this.namedBinds[n];
+        if (a.findIndex(i => i === name)) {
+          this.namedBinds[n] = this.namedBinds[n].filter(i => i !== name);
           break;
         }
       }
@@ -66,7 +71,9 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
       let nameBindings: ts.NamedImports | undefined = void 0;
       if (Object.keys(this.namedBinds).length > 0) {
         nameBindings = ts.createNamedImports(
-          Object.entries(this.namedBinds).map(([n, a]) => createNamedAsImport(a, n)),
+          Object.entries(this.namedBinds)
+            .map(([n, ss]) => createNamedAsImport(ss, n))
+            .reduce((p, c) => [...p, ...c], []),
         );
       }
       importClause =
@@ -80,9 +87,11 @@ export class ImportGenerator extends StatementGenerator<ts.ImportDeclaration> {
   }
 }
 
-function createNamedAsImport(alias: string | undefined, name: string): ts.ImportSpecifier {
-  return ts.createImportSpecifier(
-    is.nullOrUndefined(alias) ? void 0 : ts.createIdentifier(name),
-    ts.createIdentifier(alias || name),
+function createNamedAsImport(source: string[], name: string): ts.ImportSpecifier[] {
+  return source.map(a =>
+    ts.createImportSpecifier(
+      is.nullOrUndefined(a) || a === "" || a === name ? void 0 : ts.createIdentifier(a),
+      ts.createIdentifier(name),
+    ),
   );
 }

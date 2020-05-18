@@ -1,7 +1,7 @@
 import ts from "typescript";
-import { kebabCase } from "lodash";
+import kebabCase from "lodash/kebabCase";
 import { InjectDIToken, Injector } from "@bonbons/di";
-import { IFrameworkDepts, Injectable } from "#core/decorators";
+import { ICompositionCreateOptions, IFrameworkDepts, Injectable } from "../core";
 import { Path } from "./path/path.contract";
 import { HtmlBundle } from "./html-bundle";
 import { GlobalMap } from "./global-map";
@@ -21,6 +21,8 @@ export interface IDirectiveDefine {
   name: string;
   id: string;
 }
+
+export interface ICompositionDefine extends IDirectiveDefine {}
 
 export interface IComponentDefine extends IDirectiveDefine {}
 
@@ -45,6 +47,7 @@ export interface IPageCreateOptions {
   provider: keyof IFrameworkDepts;
   components?: IComponentDefine[];
   directives?: IDirectiveDefine[];
+  compositions?: ICompositionDefine[];
   page: IPageDefine;
 }
 
@@ -99,8 +102,9 @@ export class Builder {
       .setProvider(provider)
       .importComponents(mapComp(configs.components))
       .importDirectives(mapDire(configs.directives))
-      .build();
-    await context.createRoot(mapComponentChild([configs.page])[0]);
+      .importCompositions(mapCpsi(configs.compositions))
+      .build({ codeShakes: true })
+      .createRoot(mapComponentChild([configs.page])[0]);
     await context.callCompilation();
     const sourceFile = await context.createSourceFile();
     const printer = ts.createPrinter();
@@ -128,13 +132,20 @@ function buildResult(source: string, depts: Record<string, string>): ISourceCrea
   for (const key in depts) {
     if (depts.hasOwnProperty(key)) {
       const version = depts[key];
-      dependencies[kebabCase(key)] = version;
+      dependencies[resolvePackageName(key)] = version;
     }
   }
   return {
     sourceCode: source,
     dependencies,
   };
+}
+
+function resolvePackageName(name: string) {
+  if (/^[a-zA-Z]+$/.test(name)) {
+    return kebabCase(name);
+  }
+  return name;
 }
 
 function transpileModule(transpile: Partial<ISourceCreateTranspileOptions>, result: ISourceCreateResult) {
@@ -198,5 +209,14 @@ function mapDire(directives: IDirectiveDefine[] = []) {
     templateName: i.name,
     importId: i.id,
     type: "directive",
+  }));
+}
+
+function mapCpsi(compositions: ICompositionDefine[] = []) {
+  return compositions.map<ICompositionCreateOptions>(i => ({
+    moduleName: i.module,
+    templateName: i.name,
+    importId: i.id,
+    type: "composition",
   }));
 }

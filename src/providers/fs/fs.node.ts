@@ -1,5 +1,5 @@
 import * as fs from "fs-extra";
-import { Injectable } from "#core";
+import { Injectable } from "../../core";
 import { Fs } from "./fs.contract";
 
 @Injectable()

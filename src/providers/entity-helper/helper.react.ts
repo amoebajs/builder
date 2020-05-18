@@ -1,12 +1,20 @@
 import ts from "typescript";
+import kebabCase from "lodash/kebabCase";
+import camelCase from "lodash/camelCase";
 import { InjectScope } from "@bonbons/di";
-import { is } from "#utils/is";
-import { ImportGenerator, Injectable, JsxElementGenerator, resolveSyntaxInsert } from "#core";
-import { camelCase, kebabCase } from "lodash";
-import { IJsxAttrDefine } from "#core/typescript/jsx-attribute";
-import { IJsxElementDefine } from "#core/typescript/jsx-element";
-import { IJsxAttrs } from "#utils/constants";
+import { IJsxAttrs, REACT, TYPES, is } from "../../utils";
+import {
+  IComplexLogicExpression,
+  IPropsExpression,
+  IStateExpression,
+  ImportGenerator,
+  Injectable,
+  JsxElementGenerator,
+  resolveSyntaxInsert,
+} from "../../core";
 import { BasicHelper } from "./helper.basic";
+import { IJsxAttrDefine } from "../../core/typescript/jsx-attribute";
+import { IJsxElementDefine } from "../../core/typescript/jsx-element";
 
 export interface IFrontLibImports {
   default?: string;
@@ -24,19 +32,10 @@ export interface IFrontLibImportOptions {
 
 @Injectable(InjectScope.Singleton)
 export class ReactHelper extends BasicHelper {
-  public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
-    return ts.createObjectLiteral(
-      Object.entries(value)
-        .filter(i => i[1] !== void 0)
-        .map(([n, v]) =>
-          ts.createPropertyAssignment(
-            ts.createIdentifier(n),
-            resolveSyntaxInsert(typeof v, v, (_, e) => e),
-          ),
-        ),
-      true,
-    );
-  }
+  public readonly DEFAULT_CONTEXT_NAME = REACT.Props + ".CONTEXT";
+  public readonly DEFAULT_ROOT_CONTEXT_NAME = "__CONTEXT__";
+  public readonly DEFINE_IS_REGEXP = /^([0-9a-zA-Z_]+)\s+=\s+(.+)$/;
+  public readonly CEVALUE_REGEXP = /^\$\((!)?([0-9a-zA-Z_!]+)\s+\|\s+bind:(state|props|setState)\)$/;
 
   public createViewElement(
     tagnname: string,
@@ -79,39 +78,6 @@ export class ReactHelper extends BasicHelper {
     );
   }
 
-  public resolvePropState(expression: string): ts.PropertyAccessExpression;
-  public resolvePropState(expression: string, type: "props" | "state"): ts.PropertyAccessExpression;
-  public resolvePropState(
-    expression: string,
-    options: Partial<{
-      type: "props" | "state";
-      defaultValue: any;
-      defaultCheck: "||" | "??";
-    }>,
-  ): ts.PropertyAccessExpression;
-  public resolvePropState(expression: string, sec?: any) {
-    let type: "props" | "state" = "props";
-    let defaultCheck: "||" | "??" = "||";
-    let defaultValue: any = null;
-    if (typeof sec === "string") type = <any>sec;
-    if (typeof sec === "object") {
-      if (sec.type) type = sec.type;
-      if (sec.defaultCheck) defaultCheck = sec.defaultCheck;
-      if (sec.defaultValue !== null && sec.defaultValue !== void 0) {
-        defaultValue = sec.defaultValue;
-      }
-    }
-    let expr: ts.Expression = ts.createPropertyAccess(ts.createThis(), type + "." + expression.toString());
-    if (defaultValue !== null) {
-      expr = ts.createBinary(
-        expr,
-        defaultCheck === "||" ? ts.SyntaxKind.BarBarToken : ts.SyntaxKind.QuestionQuestionToken,
-        resolveSyntaxInsert(typeof defaultValue, defaultValue, (_, __) => this.createLiteral(defaultValue)),
-      );
-    }
-    return expr;
-  }
-
   public createReactPropsAccess(
     propName: string,
     options?: Partial<{
@@ -120,7 +86,7 @@ export class ReactHelper extends BasicHelper {
     }>,
   ) {
     const { defaultValue, checkOperatorForDefaultValue = "||" } = options || {};
-    let expr: ts.Expression = this.createPropertyAccess("props", propName);
+    let expr: ts.Expression = this.createPropertyAccess(REACT.Props, propName);
     if (!is.undefined(defaultValue)) {
       expr = ts.createBinary(
         expr,
@@ -132,16 +98,32 @@ export class ReactHelper extends BasicHelper {
   }
 
   public createReactPropsMixinAccess(propName: string, obj: Record<string, string | number | boolean | ts.Expression>) {
-    const access = this.createPropertyAccess("props", propName);
+    const access = this.createPropertyAccess(REACT.Props, propName);
     const objExp = this.createObjectAttr(obj);
     return ts.createObjectLiteral([ts.createSpreadAssignment(access), ...objExp.properties]);
   }
 
-  public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
-    return ts.createCall(
-      ts.createIdentifier(name),
+  public createJsxArrowEventHandler(expression: ts.Expression) {
+    return ts.createJsxExpression(
       undefined,
-      parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
+      ts.createArrowFunction(
+        [],
+        [],
+        [
+          ts.createParameter(
+            [],
+            [],
+            ts.createToken(ts.SyntaxKind.DotDotDotToken),
+            ts.createIdentifier("args"),
+            undefined,
+            TYPES.Any,
+            undefined,
+          ),
+        ],
+        undefined,
+        undefined,
+        ts.createBlock([ts.createStatement(expression)], false),
+      ),
     );
   }
 
@@ -177,6 +159,52 @@ export class ReactHelper extends BasicHelper {
       importList.push(this.createImport(stylePath));
     }
     return importList;
+  }
+
+  public useStateExpression(exp: IStateExpression, contextName: string) {
+    const [p01, ...ps] = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}${contextName}?.state?.${[p01, "value", ...ps].join("?.")}`;
+  }
+
+  public useObserverExpression(exp: IStateExpression, contextName: string) {
+    const [p01, ...ps] = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}${contextName}?.notification?.${[p01, "data", ...ps].join("?.")}`;
+  }
+
+  public usePropExpression(exp: IPropsExpression) {
+    const ps = String(exp.expression).split(".");
+    return `${this.useReverse(exp)}props?.${ps.join("?.")}`;
+  }
+
+  public useComplexLogicExpression(exp: IComplexLogicExpression["expression"], contextName: string) {
+    const { vars = [], expressions = [] } = exp;
+    const context: Array<string> = [];
+    for (const each of vars) {
+      const result = this.DEFINE_IS_REGEXP.exec(each);
+      if (result) {
+        const value = this.useBindExpression(result[2].trimLeft(), contextName);
+        context.push(`let ${result[1]} = ${value};`);
+      }
+    }
+    return [...context, ...expressions].join(" ");
+  }
+
+  public useBindExpression(target: string, contextName = this.DEFAULT_CONTEXT_NAME) {
+    const matched = this.CEVALUE_REGEXP.exec(target);
+    let value = undefined;
+    if (matched !== null) {
+      const [, reverse, vName, vType] = matched;
+      if (vType === "props") {
+        value = `${reverse || ""}${REACT.Props}?.${vName}`;
+      } else {
+        value = `${reverse || ""}${contextName}?.${REACT.State}?.${vName}?.${vType === "state" ? "value" : "setState"}`;
+      }
+    }
+    return value;
+  }
+
+  private useReverse(exp: IStateExpression | IPropsExpression) {
+    return exp.extensions?.reverse ?? false ? "!" : "";
   }
 }
 

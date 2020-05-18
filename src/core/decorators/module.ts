@@ -1,4 +1,16 @@
-import { EntityConstructor, IModuleContract, defaultFrameworkDepts, defineModule } from "./base";
+import { EntityConstructor, IFrameworkDepts, defaultFrameworkDepts, defineEntityMetaType } from "./base";
+
+export const MODULE_DEFINE = "ambjs::module_define";
+
+export interface IModuleContract {
+  name: string | null;
+  displayName: string | null;
+  provider: keyof IFrameworkDepts;
+  components: EntityConstructor<any>[];
+  directives: EntityConstructor<any>[];
+  compositions: EntityConstructor<any>[];
+  dependencies: Record<string, string>;
+}
 
 const defaults: IModuleContract = {
   name: null,
@@ -6,8 +18,17 @@ const defaults: IModuleContract = {
   provider: "react",
   components: [],
   directives: [],
+  compositions: [],
   dependencies: {},
 };
+
+export function defineModule(target: EntityConstructor<any>, metadata: IModuleContract) {
+  return Reflect.defineMetadata(MODULE_DEFINE, metadata, target);
+}
+
+export function resolveModule(target: EntityConstructor<any>, defaults: Partial<IModuleContract> = {}) {
+  return <IModuleContract>Reflect.getMetadata(MODULE_DEFINE, target) || defaults;
+}
 
 export function Module(define: Partial<IModuleContract> = {}) {
   return function moduleFactory(target: EntityConstructor<any>) {
@@ -19,6 +40,7 @@ export function Module(define: Partial<IModuleContract> = {}) {
         ...options.dependencies,
       };
     }
+    defineEntityMetaType(target, "module");
     defineModule(target, options);
     return <any>target;
   };

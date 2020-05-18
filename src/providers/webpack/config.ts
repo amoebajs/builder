@@ -1,7 +1,7 @@
 import { Plugin } from "webpack";
-import { Injectable } from "#core/decorators";
+import { Injectable } from "../../core";
 import { Path } from "../path/path.contract";
-import { IWebpackTemplateOptions, WebpackPlugins } from "./plugins/plugins.contract";
+import { IWebpackTemplatePluginOptions, WebpackPlugins } from "./plugins/plugins.contract";
 
 export interface IWebpackEntryOptions {
   app: string;
@@ -14,20 +14,28 @@ export interface IWebpackOutputOptions {
 }
 
 export interface IWebpackTypeScriptOptions {
-  tsconfig: string;
-  importPlugins: any[];
+  compilerOptions: Record<string, any>;
 }
 
 export interface IWebpackSandboxOptions {
   rootPath: string;
   dependencies: { [prop: string]: string };
+  install: Partial<IWebpackInstallOptions>;
+}
+
+export interface IWebpackInstallOptions {
+  command: string;
+  args: string[];
   registry: string;
+  disturl: string;
+  type: "emit" | "trigger";
+  trigger(data: string, type: "stdout" | "stderr"): void;
 }
 
 export interface IWebpackOptions {
   entry?: Partial<IWebpackEntryOptions>;
   output?: Partial<IWebpackOutputOptions>;
-  template?: Partial<IWebpackTemplateOptions>;
+  template?: Partial<IWebpackTemplatePluginOptions>;
   typescript?: Partial<IWebpackTypeScriptOptions>;
   sandbox?: Partial<IWebpackSandboxOptions>;
   mode?: "production" | "development";
@@ -76,8 +84,19 @@ export class WebpackConfig {
                 loader: require.resolve("ts-loader"),
                 options: {
                   transpileOnly: true,
-                  configFile: options.typescript?.tsconfig ?? "tsconfig.jsx.json",
-                  compilerOptions: { module: "es2015" },
+                  getCustomTransformers: () => ({ before: [this.plugins.createImportPlugin({})] }),
+                  compilerOptions: {
+                    target: "es5",
+                    module: "commonjs",
+                    lib: ["es5", "es6", "dom"],
+                    jsx: "react",
+                    sourceMap: true,
+                    esModuleInterop: true,
+                    skipLibCheck: true,
+                    importHelpers: true,
+                    outDir: "build/output",
+                    ...options.typescript?.compilerOptions,
+                  },
                 },
               },
             ],

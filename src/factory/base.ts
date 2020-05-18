@@ -1,22 +1,31 @@
 import { DIContainer, InjectDIToken, InjectScope } from "@bonbons/di";
 import {
   BasicComponentChildRef,
+  BasicCompositionChildRef,
   BasicDirectiveChildRef,
   BasicEntityProvider,
   BasicHelper,
+  BasicRender,
   Builder,
+  EntityRenderDelegate,
   GlobalMap,
   HtmlBundle,
   ReactComponent,
+  ReactComposition,
   ReactDirective,
   ReactEntityProvider,
+  ReactEntityRenderDelegate,
   ReactHelper,
+  ReactReconcilerEngine,
   ReactRender,
   SourceFileBasicContext,
   WebpackConfig,
-} from "#providers";
-import { CommonModule, LayoutModule, ZentModule } from "#plugins";
+} from "../providers";
 import {
+  AnonymousStatementGenerator,
+  BasicComponent,
+  BasicComposition,
+  BasicDirective,
   DeclarationGenerator,
   EntityConstructor,
   ExpressionGenerator,
@@ -29,12 +38,13 @@ import {
   JsxElementGenerator,
   JsxExpressionGenerator,
   NodeGenerator,
+  ReconcilerEngine,
   SourceFileContext,
   StatementGenerator,
   VariableGenerator,
   getInjectScope,
   resolveDepts,
-} from "#core";
+} from "../core";
 
 export interface IFactoryOptions {
   trace: boolean;
@@ -50,7 +60,7 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
   private __pre_entity_providers: [string, any][] = [];
   private __pre_modules: any[] = [];
 
-  public get builder() {
+  public get builder(): Builder {
     this.parse();
     // check if circular
     // console.log(Array.from(this._di["map"]["values"]()).filter((i: any) => !i.fac));
@@ -76,16 +86,25 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(HtmlBundle);
     this.useProvider(Builder);
     this.useProvider(BasicEntityProvider);
+    this.useProvider(BasicComponent);
+    this.useProvider(BasicDirective);
+    this.useProvider(BasicComposition);
     this.useProvider(ReactDirective);
     this.useProvider(ReactComponent);
+    this.useProvider(ReactComposition);
     this.useProvider(BasicHelper);
+    this.useProvider(BasicRender);
     this.useProvider(ReactHelper);
     this.useProvider(ReactRender);
+    this.useProvider(EntityRenderDelegate);
+    this.useProvider(ReactEntityRenderDelegate);
     this.useProvider(BasicDirectiveChildRef);
     this.useProvider(BasicComponentChildRef);
+    this.useProvider(BasicCompositionChildRef);
     this.useProvider(SourceFileContext, SourceFileBasicContext);
     this.useProvider(NodeGenerator);
     this.useProvider(StatementGenerator);
+    this.useProvider(AnonymousStatementGenerator);
     this.useProvider(DeclarationGenerator);
     this.useProvider(ExpressionGenerator);
     this.useProvider(FunctionGenerator);
@@ -94,14 +113,11 @@ export class BaseFactory<O extends IFactoryOptions = IFactoryOptions> {
     this.useProvider(JsxExpressionGenerator);
     this.useProvider(JsxAttributeGenerator);
     this.useProvider(JsxElementGenerator);
+    this.useProvider(ReconcilerEngine, ReactReconcilerEngine);
   }
 
   /** @override can be overrided */
-  protected initModules() {
-    this.useModule(CommonModule);
-    this.useModule(LayoutModule);
-    this.useModule(ZentModule);
-  }
+  protected initModules() {}
 
   /** @override can be overrided */
   protected initEntityProviders() {

@@ -1,2 +1,2 @@
-export * from "./basic";
-export * from "./react";
+export { BasicEntityProvider } from "./basic";
+export { ReactEntityProvider } from "./react";

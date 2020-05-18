@@ -1,10 +1,10 @@
 import webpack from "webpack";
 import { spawn } from "child_process";
-import { BasicError } from "#errors";
-import { Injectable } from "#core";
+import { BasicError } from "../../../errors";
+import { Injectable } from "../../../core";
 import { Path } from "../../path/path.contract";
 import { Fs } from "../../fs/fs.contract";
-import { IWebpackOptions, WebpackConfig } from "../config";
+import { IWebpackInstallOptions, IWebpackOptions, IWebpackSandboxOptions, WebpackConfig } from "../config";
 import { WebpackBuild } from "./build.contract";
 
 const yarn = /^win/.test(process.platform) ? "yarn.cmd" : "yarn";
@@ -14,54 +14,67 @@ export class WebpackBuildNodeProvider implements WebpackBuild {
   constructor(protected path: Path, protected fs: Fs, protected config: WebpackConfig) {}
 
   public async buildSource(options: IWebpackOptions): Promise<void> {
-    let promise = Promise.resolve(0);
-    if (options.sandbox) {
-      const sandbox = options.sandbox;
-      promise = writeDeptsFile(this.fs, this.path, sandbox.rootPath!, sandbox.dependencies, sandbox.registry);
+    if (options.sandbox !== void 0) {
+      await initSandbox(this.fs, this.path, options.sandbox);
     }
-    return promise.then(
-      () =>
-        new Promise((resolve, reject) => {
-          webpack(this.config.getConfigs(options), (err, stats) => {
-            if (err) {
-              return reject(new BasicError(err));
-            }
-            if (stats.hasErrors()) {
-              return reject(new BasicError(stats.toString()));
-            }
-            return resolve();
-          });
-        }),
-    );
+    return new Promise((resolve, reject) => {
+      webpack(this.config.getConfigs(options), (err, stats) => {
+        if (err) {
+          return reject(new BasicError(err));
+        }
+        if (stats.hasErrors()) {
+          return reject(new BasicError(stats.toString()));
+        }
+        return resolve();
+      });
+    });
   }
 }
 
-export async function writeDeptsFile(
-  fs: Fs,
-  path: Path,
-  rootPath: string,
-  dependencies: { [prop: string]: string } = {},
-  registry?: string,
-) {
+export async function initSandbox(fs: Fs, path: Path, sandbox: Partial<IWebpackSandboxOptions>) {
   return fs
-    .writeFile(path.join(rootPath, "package.json"), JSON.stringify({ dependencies }, null, "  "))
-    .then(() => callYarnInstall(rootPath, registry));
+    .writeFile(
+      path.join(sandbox.rootPath!, "package.json"),
+      JSON.stringify({ dependencies: sandbox.dependencies! }, null, "  "),
+    )
+    .then(() => callYarnInstall(sandbox.rootPath!, sandbox.install));
 }
 
-function callYarnInstall(sandboxPath: string, registry?: string): number | PromiseLike<number> {
+function callYarnInstall(root: string, options: Partial<IWebpackInstallOptions> = {}): number | PromiseLike<number> {
   const args: string[] = [];
-  if (registry) args.push(`--registry=${registry}`);
+  if (options.registry !== void 0) args.push(`--registry=${options.registry}`);
+  if (options.disturl !== void 0) args.push(`--disturl=${options.disturl}`);
   return new Promise((resolve, reject) => {
-    spawn(yarn, args, {
-      env: { ...process.env },
-      cwd: sandboxPath,
-      stdio: ["pipe", process.stdout, process.stderr],
-    }).on("exit", (code, signal) => {
-      if (code === 0) {
-        resolve(code);
-      } else {
-        reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
-      }
-    });
+    if (options.type === "trigger") {
+      const cp = spawn(options.command ?? yarn, options?.args ?? args, {
+        env: Object.assign({}, process.env),
+        cwd: root,
+      });
+      cp.stdout.on("data", (data: Buffer) => {
+        options.trigger && options.trigger(data.toString(), "stdout");
+      });
+      cp.stderr.on("data", (data: Buffer) => {
+        options.trigger && options.trigger(data.toString(), "stderr");
+      });
+      cp.on("exit", (code, signal) => {
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
+        }
+      });
+    } else {
+      spawn(yarn, args, {
+        env: { ...process.env },
+        cwd: root,
+        stdio: ["pipe", process.stdout, process.stderr],
+      }).on("exit", (code, signal) => {
+        if (code === 0) {
+          resolve(code);
+        } else {
+          reject(new Error(`child process exit with code ${code} [${signal || "-"}]`));
+        }
+      });
+    }
   });
 }

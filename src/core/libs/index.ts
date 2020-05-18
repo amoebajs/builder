@@ -1,2 +1,3 @@
 export * from "./attach.basic";
-export * from "./composite.basic";
+export * from "./ref.basic";
+export * from "./observer.basic";

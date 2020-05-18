@@ -1,16 +1,22 @@
 import { InjectScope } from "@bonbons/di";
 import {
   BasicChildRef,
+  IAfterChildrenRender,
+  IAfterCreate,
+  IAfterDirectivesAttach,
+  IAfterInit,
+  IAfterRender,
+  IAfterRequiresInit,
   IComponentChildRefPrivates,
+  ICompositionChildRefPrivates,
   IDirectiveChildRefPrivates,
-  IInnerCompnentChildRef,
   IInnerComponent,
-  IInnerDirective,
   IInnerDirectiveChildRef,
+  IInnerSolidEntity,
   IPureObject,
   Injectable,
   SourceFileContext,
-} from "#core";
+} from "../../core";
 
 @Injectable(InjectScope.New)
 export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
@@ -26,12 +32,45 @@ export abstract class BasicDirectiveChildRef<T extends IPureObject = IPureObject
     super();
     this["__etype"] = "directiveChildRef";
   }
+}
+
+@Injectable(InjectScope.New)
+export abstract class BasicCompositionChildRef<T extends IPureObject = IPureObject> extends BasicChildRef<T> {
+  protected __options: ICompositionChildRefPrivates["__options"] = {
+    input: {},
+  };
+  protected __refComponents: ICompositionChildRefPrivates["__refComponents"] = [];
+
+  public get entityInputs(): ICompositionChildRefPrivates["__options"]["input"] {
+    return this.__options.input;
+  }
+
+  protected __instanceRef!: ICompositionChildRefPrivates["__instanceRef"];
+
+  constructor() {
+    super();
+    this["__etype"] = "compositionChildRef";
+  }
 
   protected async bootstrap() {
-    const instance: IInnerDirective = await super.bootstrap();
-    await instance.onInit();
-    await instance.onAttach();
-    return instance;
+    const compRef = await this.__instanceRef.onEmit(<any>this);
+    // 非根组件，尝试优化shake重复代码
+    // 暂时关闭
+    // if (this.__context.root.__entityId !== this.__entityId) {
+    //   const componentName = decideComponentName(this.__context, {
+    //     target: <any>this,
+    //     components: (compRef && compRef.__refComponents) || [],
+    //     directives: (compRef && compRef.__refDirectives) || [],
+    //   });
+    //   if (componentName !== this.__entityId) {
+    //     return this.__instanceRef;
+    //   }
+    // }
+    if (compRef) {
+      await compRef.onInit();
+      await compRef.bootstrap();
+    }
+    return this.__instanceRef;
   }
 }
 
@@ -44,6 +83,9 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
   };
   protected __refComponents: IComponentChildRefPrivates["__refComponents"] = [];
   protected __refDirectives: IComponentChildRefPrivates["__refDirectives"] = [];
+  protected __refRequires: IComponentChildRefPrivates["__refRequires"] = [];
+
+  private __allDirectives: IComponentChildRefPrivates["__refDirectives"] = [];
 
   constructor() {
     super();
@@ -52,40 +94,106 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
 
   protected async onInit() {
     await super.onInit();
-    const refs: (IInnerCompnentChildRef | IInnerDirectiveChildRef)[] = [
-      ...this.__refComponents,
-      ...this.__refDirectives,
-    ];
+    this.__allDirectives.push(...this.__refDirectives);
+    for (const func of this.__refRequires) {
+      this.__allDirectives.push(func(this.__instanceRef));
+    }
+    // 新增afterReqsInit钩子
+    if (hasAfterReqsInit(this.__instanceRef)) {
+      await this.__instanceRef.afterRequiresInit();
+    }
+    const refs: (IInnerSolidEntity | IInnerDirectiveChildRef)[] = [...this.__refComponents, ...this.__allDirectives];
     for (const ref of refs) {
       await ref.onInit();
     }
   }
 
   protected async bootstrap() {
-    const instance: IInnerComponent = await super.bootstrap();
-    await instance.onInit();
-    // 非根组件，尝试优化shake重复代码
-    if (this.__context.root.__entityId !== this.__entityId) {
-      const componentName = decideComponentName(this.__context, <any>this);
-      if (componentName !== this.__entityId) {
-        return instance;
-      }
+    const instance: IInnerComponent = this.__instanceRef;
+    if (hasAfterCreate(instance)) {
+      await instance.afterCreate();
     }
+    await instance.onInit();
+    // 新增afterInit钩子
+    if (hasAfterInit(instance)) {
+      await instance.afterInit();
+    }
+    for (const directive of this.__allDirectives) {
+      await directive.__instanceRef.onInit();
+    }
+    // __entityId与root.__entityId不同，证明是非根组件
+    // entityId和__entityId相同，无法证明是否已经执行过代码优化
+    // 满足上面两个条件，尝试优化shake重复代码
+    // 暂时关闭
+    // if (this.__context.root.__entityId !== this.__entityId && this.__entityId === this.entityId) {
+    //   const componentName = decideComponentName(this.__context, {
+    //     target: <any>this,
+    //     directives: this.__refDirectives,
+    //     components: this.__refComponents,
+    //   });
+    //   if (componentName !== this.__entityId) {
+    //     return instance;
+    //   }
+    // }
     for (const component of this.__refComponents) {
+      component.__instanceRef.onInit();
       instance.__children.push({
-        component: decideComponentName(this.__context, component),
+        component: component.__entityId,
+        // 尝试优化shake重复代码
+        // 优化成功后，entityId和__entityId将会不在相同
+        // entityId代表当前范围，表现为element的key字段
+        // __entityId则表现为真正引用的组件名称
+        // 暂时关闭
+        // component: decideComponentName(this.__context, {
+        //   target: component,
+        //   directives: (<IInnerCompnentChildRef>component).__refDirectives,
+        //   components: (<IInnerCompnentChildRef>component).__refComponents,
+        // }),
         id: component.__entityId,
-        props: { ...component.__options.props },
+        props: { ...(<any>component.__options).props },
       });
       await component.bootstrap();
     }
-    for (const directive of this.__refDirectives) {
-      await directive.bootstrap();
-    }
     await instance.onChildrenRender();
+    if (hasAfterChildrenRender(instance)) {
+      await instance.afterChildrenRender();
+    }
+    for (const directive of this.__allDirectives) {
+      await directive.__instanceRef.onAttach();
+    }
+    if (hasAfterDirecsAttach(instance)) {
+      await instance.afterDirectivesAttach();
+    }
     await instance.onRender();
+    if (hasAfterRender(instance)) {
+      await instance.afterRender();
+    }
     return instance;
   }
+}
+
+function hasAfterCreate(instance: any): instance is IAfterCreate {
+  return "afterCreate" in instance && typeof instance["afterCreate"] === "function";
+}
+
+function hasAfterInit(instance: any): instance is IAfterInit {
+  return "afterInit" in instance && typeof instance["afterInit"] === "function";
+}
+
+function hasAfterReqsInit(instance: any): instance is IAfterRequiresInit {
+  return "afterRequiresInit" in instance && typeof instance["afterRequiresInit"] === "function";
+}
+
+function hasAfterChildrenRender(instance: any): instance is IAfterChildrenRender {
+  return "afterChildrenRender" in instance && typeof instance["afterChildrenRender"] === "function";
+}
+
+function hasAfterRender(instance: any): instance is IAfterRender {
+  return "afterRender" in instance && typeof instance["afterRender"] === "function";
+}
+
+function hasAfterDirecsAttach(instance: any): instance is IAfterDirectivesAttach {
+  return "afterDirectivesAttach" in instance && typeof instance["afterDirectivesAttach"] === "function";
 }
 
 /**
@@ -99,17 +207,20 @@ export abstract class BasicComponentChildRef<T extends IPureObject = IPureObject
  * @param {IChildRef} i
  * @returns
  */
-function decideComponentName(context: SourceFileContext<any>, i: IInnerCompnentChildRef) {
-  const inputLen = Object.keys(i.__options.input).length;
-  const attachLen = Object.keys(i.__options.attach).length;
-  let defaultEntityId = i.__entityId;
-  // inputs/attaches 参数未定义，不重复生成组件
-  if (inputLen === 0 && attachLen === 0) {
-    defaultEntityId = context.defaultCompRefRecord[i.__refId];
-    if (defaultEntityId === void 0) {
-      defaultEntityId = i.__entityId;
-      context.defaultCompRefRecord[i.__refId] = i.__entityId;
-    }
-  }
-  return defaultEntityId;
+function decideComponentName(
+  context: SourceFileContext<any>,
+  options: {
+    target: IInnerSolidEntity;
+    components?: any[];
+    directives?: any[];
+  },
+) {
+  const i = options.target;
+  const compsLen = (options.components || []).length;
+  const direcLen = (options.directives || []).length;
+  const defaultEntityId = i.__entityId;
+  if (!context["useCodeShakes"]) return defaultEntityId;
+  if (compsLen !== 0 || direcLen !== 0) return defaultEntityId;
+  // 参数未定义，不重复生成组件
+  return context.getDefaultEntityId(i);
 }

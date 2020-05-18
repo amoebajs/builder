@@ -1,6 +1,6 @@
 import cheerio from "cheerio";
-import { BasicError } from "#errors";
-import { Injectable } from "#core/decorators";
+import { BasicError } from "../errors";
+import { Injectable } from "../core";
 import { Path } from "./path/path.contract";
 import { Fs } from "./fs/fs.contract";
 

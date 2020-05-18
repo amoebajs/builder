@@ -1,22 +1,4 @@
 {
   "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../scripts-build",
-    "baseUrl": "../",
-    "paths": {
-      "#core": ["./src/core/index.ts"],
-      "#errors": ["./src/errors/index.ts"],
-      "#factory": ["./src/factory/index.ts"],
-      "#providers": ["./src/providers/index.ts"],
-      "#plugins": ["./src/plugins/index.ts"],
-      "#utils": ["./src/utils/index.ts"],
-      "#core/*": ["./src/core/*"],
-      "#errors/*": ["./src/errors/*"],
-      "#factory/*": ["./src/factory/*"],
-      "#providers/*": ["./src/providers/*"],
-      "#plugins/*": ["./src/plugins/*"],
-      "#utils/*": ["./src/utils/*"]
-    }
-  },
   "include": ["."]
 }

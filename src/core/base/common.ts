@@ -1,6 +1,4 @@
-export interface IPureObject {
-  [prop: string]: any;
-}
+export interface IPureObject extends Record<string, any> {}
 
 export type MapValueType<T> = T extends Map<any, infer V> ? V : never;
 
@@ -22,7 +20,7 @@ export interface IDescriptionMeta extends IWeakDescriptionMeta {
 
 export type IBasicLiteralType = string | boolean | number | object;
 
-export interface IEntityRefExpression {
+export interface ICildAttachRefExpression {
   id: string;
   value: string;
 }
@@ -47,8 +45,20 @@ export interface IMetaTypeEnumRule {
 
 export type IMetaTypeEnumInfo = IMetaTypeEnumRule | IMetaTypeEnumRule["allowValues"] | IMetaTypeEnumRule["validate"];
 
+export type MetaExpressionType = "literal" | "complexLogic" | "entityRef";
+
+export type MetaEntityRefType = "reference" | "observable";
+
+export interface IEntityRefExpressionType {
+  ref: string;
+  type: MetaEntityRefType;
+  expression: string;
+}
+
 export interface IMetaType {
   meta: TypeLiteralMeta;
+  expressionType: MetaExpressionType;
+  entityRefType: MetaEntityRefType;
   enumsInfo: IMetaTypeEnumInfo | null;
   mapInfo: IMetaTypeMapInfo | null;
   constructor: any;
@@ -60,15 +70,20 @@ export interface IPropertyBase extends IUnitBase {
   realName: string;
   group: string | null;
   type: IMetaType;
+  required: boolean;
 }
 
 /**
  * 基本可扩展参数结构体
  */
-export interface ITypedSyntaxExpression<E extends unknown = never, P extends unknown = unknown> {
+export interface ITypedSyntaxExpression<
+  E extends unknown = never,
+  P extends unknown = unknown,
+  T extends Record<string, unknown> = Record<string, unknown>
+> {
   type: E;
-  syntaxType?: TypeLiteralMeta;
   expression: P;
+  extensions?: Partial<T>;
 }
 
 export type RecordValue<T> = T extends Record<string, infer P> ? P : never;
@@ -90,14 +105,36 @@ export interface ITypedSyntaxExpressionGroupMap<E extends unknown = never, P ext
 /** 组件、指令输入参数字典类型：字面量 */
 export type IComponentInputMap = ITypedSyntaxExpressionGroupMap<"literal", IBasicLiteralType>;
 
-/** 指令的输入参数字典类型：指令引用 */
-export type IDirectiveInputDirectiveRefMap = ITypedSyntaxExpressionGroupMap<"directiveRef", IEntityRefExpression>;
+/** 指令的输入参数字典类型：实体引用 */
+export type IDirectiveInputEntityRefMap = ITypedSyntaxExpressionGroupMap<"entityRef", IEntityRefExpressionType>;
 
 /** 指令的输入参数字典类型：字面量+指令引用 */
-export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputDirectiveRefMap;
+export type IDirectiveInputMap = IComponentInputMap | IDirectiveInputEntityRefMap;
 
 /** 组件的附加参数字典类型：child附加列表 */
-export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<IEntityRefExpression>>;
+export type IComponentAttachMap = ITypedSyntaxExpressionMap<"childRefs", Array<ICildAttachRefExpression>>;
+
+export interface ILiteralExpression extends ITypedSyntaxExpression<"literal", any, { type: TypeLiteralMeta }> {}
+
+export interface IStateExpression extends ITypedSyntaxExpression<"state", string, { reverse: boolean }> {}
+
+export interface IPropsExpression extends ITypedSyntaxExpression<"props", string, { reverse: boolean }> {}
+
+export interface IEntityRefExpression extends ITypedSyntaxExpression<"entityRef", IEntityRefExpressionType, {}> {}
+
+export interface IComplexLogicDefine {
+  vars?: string[];
+  expressions: string[];
+}
+
+export interface IComplexLogicExpression extends ITypedSyntaxExpression<"complexLogic", IComplexLogicDefine, {}> {}
+
+export type IComponentProp =
+  | ILiteralExpression
+  | IStateExpression
+  | IPropsExpression
+  | IEntityRefExpression
+  | IComplexLogicExpression;
 
 /** comp-child的prop参数字典类型：字面量+状态 */
-export type IComponentPropMap = ITypedSyntaxExpressionMap<"literal" | "state" | "props" | "directiveRef", any>;
+export type IComponentPropMap = Record<string, IComponentProp>;

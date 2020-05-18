@@ -1,7 +1,14 @@
 import ts from "typescript";
-import { EntityType, ICompChildRefPluginOptions, IComponentCreateOptions, IDirectiveCreateOptions } from "./entity";
-import { IInnerCompnentChildRef } from "../child-ref";
 import {
+  EntityType,
+  ICompChildRefPluginOptions,
+  IComponentCreateOptions,
+  ICompositionCreateOptions,
+  IDirectiveCreateOptions,
+} from "./entity";
+import { IInnerCompnentChildRef, IInnerCompositionChildRef } from "../child-ref";
+import {
+  AnonymousStatementGenerator,
   ClassGenerator,
   FunctionGenerator,
   ImportGenerator,
@@ -10,25 +17,25 @@ import {
   JsxExpressionGenerator,
   VariableGenerator,
 } from "../typescript";
+import { ReconcilerEngine } from "../reconciler";
 
 export const ContextItemsGroup = {
   import: ImportGenerator,
   variable: VariableGenerator,
   class: ClassGenerator,
   function: FunctionGenerator,
+  statement: AnonymousStatementGenerator,
   ["jsx-element"]: JsxElementGenerator,
   ["jsx-attribute"]: JsxAttributeGenerator,
   ["jsx-expression"]: JsxExpressionGenerator,
 };
 
 export interface IFinalScopedContext {
-  // imports: ts.ImportDeclaration[];
   imports: InstanceType<typeof ContextItemsGroup["import"]>[];
   variables: InstanceType<typeof ContextItemsGroup["variable"]>[];
-  // classes: ts.ClassDeclaration[];
   classes: InstanceType<typeof ContextItemsGroup["class"]>[];
-  // functions: ts.FunctionDeclaration[];
   functions: InstanceType<typeof ContextItemsGroup["function"]>[];
+  statements: InstanceType<typeof ContextItemsGroup["statement"]>[];
 }
 
 export interface IFinalAstContext {
@@ -39,6 +46,14 @@ export interface IFinalAstContext {
   statements: ts.Statement[];
 }
 
+export interface IFinalGeneratorContext {
+  imports: ImportGenerator[];
+  variables: VariableGenerator[];
+  classes: ClassGenerator[];
+  functions: FunctionGenerator[];
+  statements: AnonymousStatementGenerator[];
+}
+
 export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   scope: string | symbol;
   parent: string | symbol | undefined;
@@ -46,25 +61,36 @@ export interface IScopeStructure<TYPE extends EntityType, ENTITY> {
   container: ENTITY;
 }
 
+export interface ISourceBuildOptions {
+  codeShakes: boolean;
+}
+
 export interface IScopedContext
   extends Map<string | symbol, IScopeStructure<EntityType, Partial<IFinalScopedContext>>> {}
 
+export type IInnerSolidEntity = IInnerCompnentChildRef | IInnerCompositionChildRef;
+
 export abstract class SourceFileContext<T extends any> {
   public scopedContext: IScopedContext = new Map();
+  public genContext!: IFinalGeneratorContext;
   public astContext!: IFinalAstContext;
   public provider!: T;
-  public root!: IInnerCompnentChildRef;
+  public reconciler!: ReconcilerEngine;
+  public root!: IInnerCompnentChildRef | IInnerCompositionChildRef;
   public rootSlot!: string;
   public components!: IComponentCreateOptions[];
   public directives!: IDirectiveCreateOptions[];
+  public compositions!: ICompositionCreateOptions[];
   public dependencies!: Record<string, string>;
-  public defaultCompRefRecord: Record<string, string> = {};
+  protected useCodeShakes!: boolean;
+  public abstract getDefaultEntityId(entity: IInnerSolidEntity): string;
   public abstract setProvider(provider: string): this;
   public abstract importComponents(components: IComponentCreateOptions[]): this;
   public abstract importDirectives(directives: IDirectiveCreateOptions[]): this;
-  public abstract build(): this;
+  public abstract importCompositions(compositions: ICompositionCreateOptions[]): this;
+  public abstract build(options?: Partial<ISourceBuildOptions>): this;
   public abstract getDependencies(): Record<string, string>;
-  public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): Promise<void>;
+  public abstract createRoot(options: ICompChildRefPluginOptions, slot?: string): this;
   public abstract callCompilation(): Promise<void>;
   public abstract createSourceFile(): Promise<ts.SourceFile>;
 }

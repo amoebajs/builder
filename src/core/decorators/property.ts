@@ -1,7 +1,15 @@
 import { InjectDIToken } from "@bonbons/di";
-import { merge } from "lodash";
-import { EntityConstructor, IBasicI18NContract, UnnamedPartial, resolveParams, setDisplayI18NMeta } from "./base";
-import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, IPropertyGroupBase } from "../base/common";
+import merge from "lodash/merge";
+import {
+  EntityConstructor,
+  IBasicI18NContract,
+  UnnamedPartial,
+  resolveEntityMetaType,
+  resolveParams,
+  setDisplayI18NMeta,
+} from "./base";
+import { IMetaTypeEnumInfo, IMetaTypeMapInfo, IPropertyBase, MetaEntityRefType } from "../base/common";
+import { resolveExtends } from "./extends";
 
 export const PROP_INPUT_DEFINE = "ambjs::property_input_define";
 export const PROP_ATTACH_DEFINE = "ambjs::property_attach_define";
@@ -11,6 +19,9 @@ export interface IInputPropertyContract extends IPropertyGroupContract {
   group: string | null;
   useEnums: IMetaTypeEnumInfo | null;
   useMap: IMetaTypeMapInfo | null;
+  useRef: boolean | MetaEntityRefType;
+  useExpression: boolean;
+  required: boolean;
 }
 
 export interface IAttachPropertyContract extends IPropertyGroupContract {}
@@ -49,6 +60,9 @@ const defaultInput: IInputPropertyContract = {
   group: null,
   useEnums: null,
   useMap: null,
+  useExpression: false,
+  useRef: false,
+  required: false,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -64,12 +78,9 @@ export function Input(params?: any) {
   };
 }
 
-const defaultAttach: IInputPropertyContract = {
+const defaultAttach: IAttachPropertyContract = {
   name: null,
   displayName: null,
-  group: null,
-  useEnums: null,
-  useMap: null,
   description: null,
   i18nDescription: null,
   i18nName: null,
@@ -97,7 +108,7 @@ export function defineInputProperty(target: EntityConstructor<any>, metadata: RE
   );
 }
 
-export function defineAttachProperty(target: EntityConstructor<any>, metadata: REALNAME<IInputPropertyContract>) {
+export function defineAttachProperty(target: EntityConstructor<any>, metadata: REALNAME<IAttachPropertyContract>) {
   const data = createBasicMeta(metadata, target);
   return Reflect.defineMetadata(
     PROP_ATTACH_DEFINE,
@@ -109,14 +120,17 @@ export function defineAttachProperty(target: EntityConstructor<any>, metadata: R
   );
 }
 
-function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: InjectDIToken<any>) {
+function createBasicMeta(
+  metadata: REALNAME<IInputPropertyContract | IAttachPropertyContract>,
+  target: InjectDIToken<any>,
+) {
   const propName = !metadata.name ? metadata.realName : metadata.name;
   const nameMeta = {
     value: propName,
     displayValue: metadata.displayName || null,
     i18n: metadata.i18nName ?? {},
   };
-  const groupMeta = metadata.group || null;
+  const groupMeta = (<IInputPropertyContract>metadata).group || null;
   const descMeta = !!metadata.description
     ? {
         value: metadata.description,
@@ -124,15 +138,23 @@ function createBasicMeta(metadata: REALNAME<IInputPropertyContract>, target: Inj
       }
     : null;
   const designType = Reflect.getMetadata("design:type", target.prototype, metadata.realName);
+  const meta = <IInputPropertyContract>metadata;
+  const useExpr = meta.useExpression === true;
+  const useObser = !!meta.useRef;
+  const useMap = meta.useMap && meta.useMap !== null;
+  const useEnums = meta.useEnums && meta.useEnums !== null;
   const data: IPropertyBase = {
     realName: metadata.realName,
     name: nameMeta,
     group: groupMeta,
     description: descMeta,
+    required: (<IInputPropertyContract>metadata).required ?? false,
     type: {
-      meta: metadata.useMap !== null ? "map" : metadata.useEnums !== null ? "enums" : getMetaOfConstructor(designType),
-      enumsInfo: metadata.useEnums,
-      mapInfo: metadata.useMap,
+      expressionType: useExpr ? "complexLogic" : useObser ? "entityRef" : "literal",
+      entityRefType: meta.useRef === "observable" ? "observable" : "reference",
+      meta: useMap ? "map" : useEnums ? "enums" : getMetaOfConstructor(designType),
+      enumsInfo: useEnums ? meta.useEnums : null,
+      mapInfo: useMap ? meta.useMap : null,
       constructor: designType,
     },
   };
@@ -172,16 +194,43 @@ export function definePropertyGroup(target: EntityConstructor<any>, metadata: IP
   );
 }
 
-export function resolveInputProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
+export function resolveInputProperties(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const inputs = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_INPUT_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolveInputProperties(extendMeta.parent),
+      ...inputs,
+    };
+  }
+  return inputs;
 }
 
-export function resolveAttachProperties(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyBase }>Reflect.getMetadata(PROP_ATTACH_DEFINE, target) || {};
+export function resolveAttachProperties(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const attaches = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_ATTACH_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolveAttachProperties(extendMeta.parent),
+      ...attaches,
+    };
+  }
+  return attaches;
 }
 
-export function resolvePropertyGroups(target: EntityConstructor<any>) {
-  return <{ [prop: string]: IPropertyGroupBase }>Reflect.getMetadata(PROP_GROUP_DEFINE, target) || {};
+export function resolvePropertyGroups(target: EntityConstructor<any>): Record<string, IPropertyBase> {
+  const groups = <Record<string, IPropertyBase>>Reflect.getMetadata(PROP_GROUP_DEFINE, target) || {};
+  const metaType = resolveEntityMetaType(target);
+  const extendMeta = resolveExtends(target);
+  if (extendMeta.type === metaType && extendMeta.parent) {
+    return {
+      ...resolvePropertyGroups(extendMeta.parent),
+      ...groups,
+    };
+  }
+  return groups;
 }
 
 function getGroupNameMeta(data: IPropertyBase) {

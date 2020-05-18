@@ -7,7 +7,6 @@ import {
   IEwsEntityProtectedHooks,
   IPureObject,
 } from "./base";
-import { IInnerComposite } from "./libs";
 
 export interface IComponent extends IEwsEntity {}
 
@@ -21,7 +20,6 @@ export interface IComponentPrivates extends IEwsEntityPrivates<"component"> {
   readonly __children: IChildElement[];
   readonly __components: IInnerComponent[];
   readonly __directives: IDirective[];
-  readonly __compositions: IInnerComposite[];
 }
 
 export interface IInnerComponent extends IComponent, IComponentPrivates, IComponentProtectedHooks {}
@@ -30,6 +28,30 @@ export interface IChildElement {
   component: string;
   id: string;
   props: IComponentPropMap;
+}
+
+export interface IAfterCreate {
+  afterCreate(): Promise<void> | void;
+}
+
+export interface IAfterInit {
+  afterInit(): Promise<void> | void;
+}
+
+export interface IAfterRequiresInit {
+  afterRequiresInit(): Promise<void> | void;
+}
+
+export interface IAfterChildrenRender {
+  afterChildrenRender(): Promise<void> | void;
+}
+
+export interface IAfterRender {
+  afterRender(): Promise<void> | void;
+}
+
+export interface IAfterDirectivesAttach {
+  afterDirectivesAttach(): Promise<void> | void;
 }
 
 export abstract class BasicComponent<T extends IPureObject = IPureObject> extends BasicCompilationEntity<T> {
@@ -48,7 +70,9 @@ export abstract class BasicComponent<T extends IPureObject = IPureObject> extend
   //#region hooks
 
   /** @override */
-  protected async onInit(): Promise<void> {}
+  protected async onInit(): Promise<void> {
+    await super.onInit();
+  }
 
   /** @override */
   protected async onChildrenRender(): Promise<void> {}

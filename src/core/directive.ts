@@ -20,7 +20,9 @@ export abstract class BasicDirective<T extends IPureObject = IPureObject> extend
   }
 
   /** @override */
-  protected async onInit(): Promise<void> {}
+  protected async onInit(): Promise<void> {
+    await super.onInit();
+  }
 
   /** @override */
   protected async onAttach(): Promise<void> {}

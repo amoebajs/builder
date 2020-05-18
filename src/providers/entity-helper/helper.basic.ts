@@ -1,11 +1,15 @@
 import ts from "typescript";
-import { InjectScope, Injector } from "@bonbons/di";
-import { ImportGenerator, Injectable, resolveSyntaxInsert } from "#core";
-import { is } from "#utils/is";
 import { Primitive } from "utility-types";
+import { InjectScope, Injector } from "@bonbons/di";
+import { ImportGenerator, Injectable, resolveSyntaxInsert } from "../../core";
+import { is } from "../../utils";
 
 @Injectable(InjectScope.Singleton)
 export class BasicHelper {
+  public get __engine(): typeof import("typescript") {
+    return ts;
+  }
+
   constructor(protected injector: Injector) {}
 
   public createPropertyAccess(object: string, propertyChain: string) {
@@ -69,11 +73,11 @@ export class BasicHelper {
         let name: string;
         if (is.string(named)) {
           name = named;
-          gen.addNamedBinding(name);
+          gen.addNamedBinding(name, name);
         } else {
           propertyName = named[0];
           name = named[1];
-          gen.addNamedBinding(name, propertyName);
+          gen.addNamedBinding(name ?? propertyName, propertyName);
         }
       });
     }
@@ -88,7 +92,7 @@ export class BasicHelper {
       const property = ts.createPropertyAssignment(key, expr);
       return property;
     });
-    const literal = ts.createObjectLiteral(properties, true);
+    const literal = ts.createObjectLiteral(properties);
     return literal;
   }
 
@@ -106,5 +110,30 @@ export class BasicHelper {
     });
     const literal = ts.createArrayLiteral(elements, true);
     return literal;
+  }
+
+  public createFunctionCall(name: string, parameters: (string | ts.Expression)[]) {
+    return ts.createCall(
+      ts.createIdentifier(name),
+      undefined,
+      parameters.map(param => (is.string(param) ? ts.createIdentifier(param) : param)),
+    );
+  }
+
+  public createObjectAttr(value: Record<string, number | string | boolean | ts.Expression>) {
+    return ts.createObjectLiteral(
+      Object.entries(value)
+        .filter(i => i[1] !== void 0)
+        .map(([n, v]) =>
+          ts.createPropertyAssignment(
+            ts.createIdentifier(n),
+            resolveSyntaxInsert(typeof v, v, (_, e) => e),
+          ),
+        ),
+    );
+  }
+
+  public createSyntaxExpression(expression: string): ts.Expression {
+    return ts.createIdentifier(expression);
   }
 }
